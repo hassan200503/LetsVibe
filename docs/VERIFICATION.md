@@ -4,7 +4,7 @@ Last updated: 2026-11-15. Rule: a claim is VERIFIED only if it was read from an 
 
 ## Environment of record
 
-- Windows (PowerShell 5.1), git 2.53.0, Node v24.16.0, npm 11.13.0, pnpm not installed.
+- Windows (PowerShell 5.1), git 2.53.0, Node v24.16.0, npm 11.13.0, pnpm 12.21.0 via a corepack user shim (`%LOCALAPPDATA%\corepack`, not on the default PATH).
 - Repo `hassan200503/our-universe`, branch `autonomous/couples-v2`, based on `main` @ `ebd08c4`.
 - No production access, no deployments, no mobile builds and no device tests were performed.
 
@@ -44,6 +44,12 @@ Commands were run from the repo root after `npm ci` on a clean checkout. These a
 | `npm run build` | PASS | Next 16.3.6 Turbopack. Warning: `package-lock.json` at `C:\Users\kkc36` is outside the git repo; set `turbopack.root`. |
 
 Dependency audit: critical `next@16.3.6` (fix `next@16.4.6`); high `@vercel/blob` chain (suggested fix `@vercel/blob@2.4.0`, semver-major), `sharp`, `source-map-js`, `undici`, `vite`; moderate/low as reported by npm. Counts and fixes change over time — rerun and re-record.
+
+### Current dependency state (after E0-004, 2026-11-15)
+
+- `next` and `eslint-config-next` are 16.4.6; `pnpm audit --prod` reports **no known vulnerabilities**.
+- `pnpm audit` reports two moderate **dev-only** findings: `esbuild <=0.24.2` via `drizzle-kit`'s legacy `@esbuild-kit` chain, and `minimatch <11.0.1` via ESLint tooling. Neither is shipped; documented in `docs/SECURITY.md` and revisit when upstream tools update.
+- `zod` is overridden to 4.6.7 in `pnpm-workspace.yaml` (pnpm 12 no longer reads `pnpm.overrides` in `package.json`) to replace the 4.1.11 pin under `@vercel/cli-config` (GHSA-mrhx-c7xc-m3w5).
 
 Current tests cover: trends engine, visibility/clock/verse logic, push key derivation, research parsing. No tests cover auth, chat, calls, room sync, gallery, storage or tenancy.
 
@@ -87,9 +93,9 @@ Current tests cover: trends engine, visibility/clock/verse logic, push key deriv
 | Story | Date | Evidence |
 | --- | --- | --- |
 | E0-001 | 2026-11-15 | This file, `.loop/audit.md`, `docs/PARITY.md`, `docs/adr/001-stack.md`, `prd.json`; baseline gate table above |
-| E0-002 | — | _pending_ |
-| E0-003 | — | _pending_ |
-| E0-004 | — | _pending_ |
+| E0-002 | 2026-11-15 | Monorepo move; gates in `.loop/progress.md` iteration 003; commit `2d46139` |
+| E0-003 | — | _pending (gitleaks H1)_ |
+| E0-004 | 2026-11-15 | Next 16.4.6; prod audit clean; dev-only 2 moderate; gates in `.loop/progress.md` iteration 004 |
 | E1-001 | — | _pending_ |
 | E1-002 | — | _pending_ |
 | E1-003 | — | _pending_ |

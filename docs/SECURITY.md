@@ -88,7 +88,8 @@ Actors: two members of a couple; anonymous internet; abusive authenticated users
 ## Dependency and build security
 
 - CI: pnpm frozen lockfile, typegen, typecheck, lint, tests, build; gitleaks full history; dependency audit; Semgrep/CodeQL (E0-003).
-- Current known critical: Next 16.3.6 advisory; patch to ≥16.4.6 (E0-004). Highs in blob/sharp/zod/undici/vite are triaged there.
+- Current versions (2026-11-15): Next 16.4.6 and eslint-config-next 16.4.6; `pnpm audit --prod` reports no known vulnerabilities. The zod override (4.6.7, in `pnpm-workspace.yaml`) replaces the exact 4.1.11 pin under `@vercel/cli-config` (GHSA-mrhx-c7xc-m3w5); recheck it when `@vercel/blob` updates.
+- `pnpm audit` still reports two moderate dev-only findings: `esbuild <=0.24.2` through `drizzle-kit`'s legacy `@esbuild-kit` chain, and `minimatch <11.0.1` through ESLint tooling. Neither is shipped at runtime; revisit when those tools update. No critical or high findings remain.
 - GitHub Actions pinned; least-privilege tokens; no secrets in PR workflows from forks.
 
 ## Verification and testing
@@ -106,6 +107,6 @@ See `docs/RUNBOOK.md` for steps. Severity levels: SEV1 cross-tenant exposure/act
 
 ## Known gaps (today)
 
-- No RLS; custom auth without recovery/MFA/revocation; in-memory login throttle; global AI/TURN secrets; no moderation/report/block; no CSAM scanning; no CSP/security headers verified; no observability; critical Next advisory; Vercel Hobby non-commercial.
+- No RLS; custom auth without recovery/MFA/revocation; in-memory login throttle; global AI/TURN secrets; no moderation/report/block; no CSAM scanning; no CSP/security headers verified; no observability; Vercel Hobby non-commercial.
 
 All are mapped to stories; none may remain open at public launch.

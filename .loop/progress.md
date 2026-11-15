@@ -41,3 +41,13 @@
 - Gates on the monorepo: `pnpm install --frozen-lockfile` pass; `pnpm typegen` pass; `pnpm typecheck` pass (domain + web); `pnpm lint` pass; `pnpm test` pass (5 files / 44 tests); `pnpm build` pass (Next 16.3.6, 33 pages).
 - Learnings: Turborepo needs the package-manager binary on PATH, not only `corepack pnpm`; keeping the root scripts on `corepack pnpm` removes the nested-shim failure; moving a tree with `git mv` preserves renames while package extraction still shows as add/delete.
 - Next: `E0-004` (patch critical/high advisories) because it is local and unblocked; `E0-003` remains partially blocked on gitleaks.
+
+## Iteration 004 - 2026-11-15 - E0-004 patch critical/high advisories
+
+- Upgraded `next` and `eslint-config-next` from 16.3.6 to 16.4.6, and `zod` to 4.6.7.
+- Before the upgrade, `pnpm audit --prod` showed 11 findings: 2 critical, 3 high, 5 moderate, 1 low. The two criticals were Next image/SVG and `use cache` typed-array RCE advisories; the highs were Next SSRF/Server Action DoS plus a transitive zod memory-exhaustion advisory.
+- `@vercel/blob@2.9.0` (latest) pulls `@vercel/cli-config@0.3.1`, which pins `zod@4.1.11`. Added `overrides: { zod: 4.6.7 }` to `pnpm-workspace.yaml`. pnpm 12 warns that `pnpm.overrides` in package.json is no longer read, so the root package field was removed.
+- After the upgrade, `pnpm audit --prod` reports **no known vulnerabilities**. Full `pnpm audit` reports only 2 moderate dev-tool findings: `esbuild <=0.24.2` through drizzle-kit's legacy `@esbuild-kit` chain, and `minimatch <11.0.1` through ESLint tooling. Both are documented in `docs/SECURITY.md`; neither ships at runtime.
+- Gates: `pnpm install --frozen-lockfile` pass (lockfile updated); `pnpm typegen` pass; `pnpm typecheck` pass (domain + web); `pnpm lint` pass; `pnpm test` pass (5 files / 44 tests); `pnpm build` pass (Next 16.4.6, 33 pages).
+- Learnings: pnpm 12 moved project settings (including overrides) to `pnpm-workspace.yaml`; the package.json field is silently ignored. A network DNS failure interrupted the first Next download; the retry reused the store and completed.
+- Next: `E0-007` (generic demo seed + one-command developer path). `E0-003` remains blocked on the missing gitleaks binary (H1).

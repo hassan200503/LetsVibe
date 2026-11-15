@@ -61,20 +61,20 @@
       "id": "E0-004",
       "epic": "E0",
       "title": "Patch critical/high dependency advisories",
-      "description": "Upgrade Next.js to a patched release and triage the high advisories in blob/sharp/zod/undici/vite without breaking build or tests.",
+      "description": "Upgrade Next.js and its ESLint config to the patched 16.4.6 release, resolve the transitive zod advisory with a pnpm 12 workspace override, and verify that production dependencies are audit-clean without breaking build or tests.",
       "acceptance": [
-        "Critical Next advisory resolved (>=16.4.6) with tests/build green",
-        "High advisories fixed or documented with reachability and compensating controls",
-        "npm audit reports zero critical and an accepted, dated list for remaining highs",
+        "Critical Next advisories resolved (Next 16.4.6) with tests/build green",
+        "pnpm audit --prod reports zero critical/high findings; remaining dev-only findings are documented with reachability",
+        "Transitive zod advisory fixed with a documented override",
         "No major-framework migration beyond the intended patch"
       ],
       "priority": 10,
       "dependsOn": [
         "E0-001"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "Upgraded next and eslint-config-next 16.3.6 -> 16.4.6, zod -> 4.6.7, and added a pnpm-workspace.yaml override for the exact 4.1.11 pin under @vercel/cli-config. pnpm audit --prod: no known vulnerabilities; full audit: 2 moderate dev-only (esbuild via drizzle-kit legacy chain, minimatch via ESLint). Gates: frozen-lockfile install, typegen, typecheck, lint, 44 tests, build 33 pages."
     },
     {
       "id": "E0-005",
