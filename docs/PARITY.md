@@ -1,0 +1,59 @@
+# Parity matrix — current web vs v1 targets
+
+Legend: **Yes** = shipped today; **Partial** = exists with a single-couple or incomplete implementation; **No** = missing; **v1** targets are what must be true for the MVP; **Mobile** is the Expo app (E8). Every row has at least one backlog story in `.loop/prd.json`; no row may be dropped without updating this file.
+
+| # | Feature | Target module | Web today | Web v1 target | iOS/Android v1 | Stories | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Sign up / sign in / sign out | apps/web, apps/mobile, packages/api-client | Partial (slug + passcode, seeded accounts) | Yes: email OTP/magic link, Apple, Google, sign out everywhere | Yes + secure session | E1-003, E1-004, E1-007 | No recovery or signup today; claim flow for founding couple. |
+| 2 | Invite / link partner | apps/web, apps/mobile, packages/domain | No | Yes: single-use invite link/code, 2-member cap, expiry/revoke, both must consent | Yes deep link | E1-005 | Invitations are the only way into a couple. |
+| 3 | Onboarding & personalisation | apps/web, apps/mobile, packages/domain | Partial (seed data, Hassan/Whitney hardcoded) | Yes: names, world names, start date, time zone, topics, notifications; resumable | Yes | E1-006, E1-013, E1-014 | Replaces seed-only setup. |
+| 4 | Home / journey clock / verses | apps/web, apps/mobile | Yes | Yes, per couple (start date, names, memories) | Yes | E8-002, E1-013 | Keep visual identity. |
+| 5 | Question of the day | packages/domain | Yes | Yes, per-couple time zone, reveal only after both answer, archive | Yes | E1-014 | Today hardcoded Nairobi. |
+| 6 | Chat text (send/edit/delete) | packages/sync-protocol, apps/web, apps/mobile | Yes | Yes over realtime, idempotent, offline queue on mobile | Yes | E3-002, E3-004, E3-009 | Polling 1.5 s today. |
+| 7 | Chat media / voice notes | packages/api-client, Supabase Storage | Partial (chat uses gallery API paths) | Yes: images/voice notes uploaded to couple bucket, progress/retry | Yes | E3-007, E6-002 | |
+| 8 | Replies, reactions, deleted-for-me/everyone, read/delivered, typing | packages/sync-protocol | Yes | Yes over broadcast; no writes on poll | Yes | E3-003, E3-004 | |
+| 9 | Voice/video 1:1 calls + ringing | packages/api-client, apps/mobile, TURN | Yes (P2P, polling signalling, Web Push) | Yes: realtime signalling, native ringing (CallKit/ConnectionService), TURN | Yes | E4-001, E4-002, E4-003 | OS-level ringing needs native modules; verify. |
+| 10 | Call history / missed calls | packages/domain | Partial (in-chat lines) | Yes: dedicated history, missed-call badge | Yes | E4-004 | |
+| 11 | Presence / last seen | packages/sync-protocol | Yes (polling writes) | Yes over realtime presence, no DB writes per tick | Yes | E4-006 | Privacy toggle required. |
+| 12 | Together room — YouTube | apps/web, apps/mobile (YouTube IFrame) | Yes (official IFrame) | Yes: sync, queue, attribution; compliance copy | Yes | E5-001, E5-002, E5-009 | No download/offline; verify RMF before build. |
+| 13 | Together room — uploaded songs/videos | apps/web, apps/mobile, Supabase Storage | Yes | Yes: couple Storage, explicit "shared with partner only" consent, quotas | Yes | E5-005, E6-003 | 150 MB limit today; revisit. |
+| 14 | Together room — licensed catalogue | packages/domain (provider interface) | No | Yes **only if** commercial licence terms verified; otherwise feature-flagged off | Same | E5-006, E5-007 | Jamendo terms UNVERIFIED. |
+| 15 | Together room — podcasts | packages/domain (podcast provider) | Partial (room accepts audio URLs) | Yes: curated/validated feeds, cross-platform sync | Yes | E5-001 | Podcast rights vary; use official feeds only. |
+| 16 | Countdown / external-service sync | packages/sync-protocol | No | Yes: shared countdown to "press play", no DRM claims | Yes | E5-007 | The honest alternative to screen-share. |
+| 17 | Screen share of streaming services | apps/web, apps/mobile (policy only) | Partial (calls support screenshare) | No promises: external services often block DRM; UI explains and offers countdown | Same | E4-007 | Store descriptions must not claim it works. |
+| 18 | Gallery photos/videos/songs | apps/web, apps/mobile, Supabase Storage | Yes (Vercel Blob/legacy base64) | Yes: Supabase Storage, resumable, thumbnails, signed URLs, per-couple quota | Yes + camera/photo picker | E6-001, E6-002, E6-005, E8-005 | Legacy `photos` table retired. |
+| 19 | Gallery comments / reactions / new badge | packages/sync-protocol | Yes | Yes over realtime, pagination | Yes | E6-005 | |
+| 20 | Our Story (memories, milestones, plans) | apps/web, apps/mobile | Yes | Yes, per couple, export/delete | Yes | E1-008, E8-002 | |
+| 21 | Personal worlds (profile, journal, radar, skills, projects, vault) | apps/web, apps/mobile | Partial (Hassan-specific content) | Yes: optional per person, generic vocabulary | Yes | E1-013, E8-007 | Public profile opt-in only. |
+| 22 | Discover feed + topics + source health | packages/domain, apps/web | Partial (global, 8 fixed topics/39 sources) | Yes: per-couple topic/source config, global ingest, saved items | Yes | E7-001, E7-002, E7-006 | |
+| 23 | Weekly digest / search | packages/domain, apps/web | Yes (global) | Yes, couple-scoped, per-couple time zone | Yes | E7-006, E7-007 | Search must never cross couples. |
+| 24 | Things We Are Learning | apps/web, apps/mobile | Yes | Yes, export/delete | Yes | E1-008 | |
+| 25 | Research (Gemini + OpenAlex, threads, quiz, share) | packages/domain, apps/web | Yes (global key, no quotas) | Yes: per-user quota/metering, BYO key optional, citations, moderation | Yes (read/share first) | E7-003, E7-004 | Cost control is a launch blocker. |
+| 26 | Settings (dates, interests, sources, passcode, keys, push) | apps/web, apps/mobile | Yes (passcode, global keys) | Yes: auth, account, couple, notifications, privacy, data export/delete, entitlements | Yes | E1-007, E1-008, E1-009, E10-004 | Keys become server-side entitlements. |
+| 27 | Public profile | apps/web | Yes (skills/projects only, opt-in) | Yes: opt-in, per-couple names, no personal posts | Same (view) | E2-005, E1-013 | Slug collision fix. |
+| 28 | Web Push / app-icon badge | packages/api-client, Expo push | Yes | Yes; notification preferences; quiet hours | Yes via APNs/FCM | E3-005, E3-006, E4-002 | |
+| 29 | PWA install / native app | apps/mobile, apps/web (PWA) | Partial (Android install guidance) | PWA remains as fallback; native app is primary for calls/push | Yes | E8-001…E8-009 | |
+| 30 | Account export / download my data | packages/domain | No | Yes: JSON + media manifest, async email link | Same | E1-008 | GDPR-style baseline. |
+| 31 | Account/couple deletion | packages/domain, Supabase Storage | No | Yes: in-app, 30-day grace, purge job, partner notification | Same | E1-009 | Apple 5.1.1(v) blocker. |
+| 32 | Age gate / ToS & privacy acceptance / consent | apps/web, apps/mobile | No | Yes: 18+, ToS/privacy checkboxes, consent log | Same | E9-004, E13-001 | |
+| 33 | Report / block / moderation queue | apps/web, apps/mobile, admin web | No | Yes: report chat/message/media/profile, block, admin queue with SLA | Same | E9-001, E9-002 | Apple 1.2 + Play UGC blocker. |
+| 34 | Admin/support console | apps/web (admin) | No | Minimal internal: search couple, audit log, moderation queue, quota overrides | No (web only) | E9-002, E2-006 | Break-glass only, audited. |
+| 35 | Accessibility | apps/web, apps/mobile, packages/ui-tokens | Partial (semantics, labels, reduced motion in places) | WCAG 2.2 AA on critical flows; keyboard; contrast | VoiceOver/TalkBack, dynamic type, reduced motion | E10-001, E10-002, E8-008 | |
+| 36 | Internationalisation | packages/i18n | No (English only) | English v1; locale/time-zone formatting correct; strings externalised | Same | E10-003, E1-014 | sw/fr post-launch. |
+| 37 | Offline / poor-network resilience | apps/mobile, packages/api-client | Partial (optimistic chat, ICE restart) | Web: queued sends, error states; Mobile: offline cache/queue, resync | Yes | E3-009, E5-002, E8-003 | Must test on 3G. |
+| 38 | Per-couple theming & identity | packages/ui-tokens | Partial (two hardcoded worlds) | Yes: world names/colours from settings; no names in global metadata | Yes | E1-013, E10-004 | Removes Hassan/Whitney from shared UI. |
+
+## Explicitly out of scope for v1
+
+- Spotify integration (verified quota constraints make it impossible for a small commercial service; see ADR-001).
+- Downloading or offline caching of YouTube/streaming content; any DRM circumvention; screen-share claims for external services.
+- Group couples (more than 2 members), couples matching, public social feed, followers.
+- Advertising, tracking, data sale.
+- WebRTC SFU/group calls (LiveKit remains a later ADR; P2P only for 1:1).
+- AI-generated couple counselling or mental-health advice; explicit crisis routing to external resources only.
+- Payments for premium plans (post-launch; entitlements model is prepared in E1-012).
+
+## Parity gate
+
+- No story that changes a row may merge until this matrix and the row's tests are updated.
+- Before store submission, a human signs off that every "v1 target" row is Yes or explicitly re-scoped here.

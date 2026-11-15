@@ -1,0 +1,2827 @@
+{
+  "version": 1,
+  "stories": [
+    {
+      "id": "E0-001",
+      "epic": "E0",
+      "title": "Bootstrap: audit, ADR, parity, backlog, docs and baseline gates",
+      "description": "Clone and audit the repo, verify external constraints, document keep/replace decisions, create the parity matrix and backlog, and record honest baseline gate results.",
+      "acceptance": [
+        "Audit records stack, features, assumptions, gate output, vulnerabilities and secret-scan limits",
+        "ADR-001 includes scored options and verified sources with dates",
+        "PARITY covers every audited feature with story references",
+        "prd.json covers E0-E13 with dependencies",
+        "Docs set and AGENTS.md exist; no secrets committed"
+      ],
+      "priority": 10,
+      "dependsOn": [],
+      "status": "done",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E0-002",
+      "epic": "E0",
+      "title": "pnpm + Turborepo monorepo with shared packages",
+      "description": "Move the Next.js app to apps/web and add packages for domain, api-client, sync-protocol, ui-tokens, i18n and config; update scripts, CI and imports in one mechanical green change.",
+      "acceptance": [
+        "pnpm install and pnpm -r typecheck pass; web builds from apps/web",
+        "Packages have no app-specific imports and are consumed by apps/web",
+        "CI paths, Vercel root directory and docs updated",
+        "No behavioural change; existing tests pass"
+      ],
+      "priority": 10,
+      "dependsOn": [
+        "E0-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E0-003",
+      "epic": "E0",
+      "title": "CI secret scanning, dependency audit and SAST",
+      "description": "Add gitleaks full-history scanning and dependency/SAST checks to CI with documented suppression policy.",
+      "acceptance": [
+        "gitleaks runs on push and PR over full history and fails on findings",
+        "Production dependency audit runs with a documented threshold and allowlist",
+        "Semgrep or CodeQL baseline runs and uploads results",
+        "No secrets found in the current history or a rotation plan exists"
+      ],
+      "priority": 10,
+      "dependsOn": [
+        "E0-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E0-004",
+      "epic": "E0",
+      "title": "Patch critical/high dependency advisories",
+      "description": "Upgrade Next.js to a patched release and triage the high advisories in blob/sharp/zod/undici/vite without breaking build or tests.",
+      "acceptance": [
+        "Critical Next advisory resolved (>=16.4.6) with tests/build green",
+        "High advisories fixed or documented with reachability and compensating controls",
+        "npm audit reports zero critical and an accepted, dated list for remaining highs",
+        "No major-framework migration beyond the intended patch"
+      ],
+      "priority": 10,
+      "dependsOn": [
+        "E0-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E0-005",
+      "epic": "E0",
+      "title": "Observability baseline: errors, logs, health, alerts",
+      "description": "Add Sentry (web and mobile), structured server logs with request ids, a health endpoint and basic alert routing; exclude message/media content from telemetry.",
+      "acceptance": [
+        "Unhandled server/client errors reach Sentry with release and route, no PII/content",
+        "Requests carry ids and emit structured logs",
+        "/api/health checks DB and storage read with safe output",
+        "Alerts for error-rate and uptime go to a monitored channel"
+      ],
+      "priority": 15,
+      "dependsOn": [
+        "E0-006"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E0-006",
+      "epic": "E0",
+      "title": "Separate staging and production environments",
+      "description": "Create isolated Supabase staging/production projects and Vercel environments, with no loop access to production and documented secret ownership.",
+      "acceptance": [
+        "Staging deploys automatically; production requires human action",
+        "Secrets are scoped per environment and never committed",
+        ".env.example matches required variables",
+        "Loop credentials cannot reach production data"
+      ],
+      "priority": 10,
+      "dependsOn": [
+        "E0-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E0-007",
+      "epic": "E0",
+      "title": "One-command developer experience and docs",
+      "description": "Make pnpm install/dev/test/build work from a fresh clone with local Supabase or PGlite, generic seed, and fix the Turbopack root warning.",
+      "acceptance": [
+        "Fresh clone: documented setup succeeds on Windows and macOS/Linux",
+        "Seed creates a generic demo couple, not Hassan/Whitney",
+        "typegen requirement is documented; turbopack.root set",
+        "README and AGENTS.md commands match reality"
+      ],
+      "priority": 10,
+      "dependsOn": [
+        "E0-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E0-008",
+      "epic": "E0",
+      "title": "CI gates and PR template",
+      "description": "Extend CI to typegen, typecheck, lint, unit tests, web build and (once ready) RLS tests and mobile typecheck; add a PR template with evidence and rollback.",
+      "acceptance": [
+        "Every gate is required on PRs; failures block merge",
+        "CI caching keeps median run under 10 minutes",
+        "PR template requires story id, gate evidence, parity and risk notes",
+        "No gate is silently skipped"
+      ],
+      "priority": 10,
+      "dependsOn": [
+        "E0-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E1-001",
+      "epic": "E1",
+      "title": "Identity schema: couples, members, invitations, profiles, consents",
+      "description": "Add the multi-tenant identity model and backfill the existing relationship into a couple while keeping existing queries compiling through an adapter.",
+      "acceptance": [
+        "couples, couple_members, invitations, profiles, consents tables exist with indexes",
+        "Existing relationship/people are migrated into a couple with both members",
+        "A person cannot be in more than one active couple in v1",
+        "Schema tests cover constraints (max 2 active members, invite single-use)"
+      ],
+      "priority": 20,
+      "dependsOn": [
+        "E0-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E1-002",
+      "epic": "E1",
+      "title": "RLS foundation helpers and core policies",
+      "description": "Create is_couple_member() and default-deny policies for identity and relationship tables, with storage/realtime authorization patterns documented.",
+      "acceptance": [
+        "RLS is enabled on identity tables and anonymous access is denied",
+        "Couple members can read/write only their couple rows",
+        "Helpers are SECURITY DEFINER with pinned search_path and reviewed",
+        "pgTAP tests prove member and non-member behaviour"
+      ],
+      "priority": 20,
+      "dependsOn": [
+        "E1-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E1-003",
+      "epic": "E1",
+      "title": "Supabase Auth: email OTP sign-in, sessions, claim flow",
+      "description": "Replace slug/passcode login with Supabase Auth for the web app, including server session verification, middleware and a one-time claim for the two existing accounts.",
+      "acceptance": [
+        "Sign-in email OTP works end to end; session is httpOnly/refresh-safe",
+        "Existing couple can claim accounts without losing data",
+        "Passcode login removed only after claim is verified on staging",
+        "Auth flows have tests and middleware coverage; no redirect loops"
+      ],
+      "priority": 20,
+      "dependsOn": [
+        "E1-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E1-004",
+      "epic": "E1",
+      "title": "Apple and Google sign-in (web + native)",
+      "description": "Add Apple and Google identity providers with nonce/state validation, account linking rules and store-compliant disclosure.",
+      "acceptance": [
+        "Apple and Google sign-in succeed on web and Expo",
+        "Identities link to one person; duplicate-account rule is enforced",
+        "4.8-compliant disclosure and Sign in with Apple are present on iOS",
+        "Tokens never reach logs or client-readable storage beyond the SDK"
+      ],
+      "priority": 20,
+      "dependsOn": [
+        "E1-003"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E1-005",
+      "epic": "E1",
+      "title": "Partner invitations",
+      "description": "Let a signed-in member invite exactly one partner via single-use link/code with expiry, revoke and acceptance rules.",
+      "acceptance": [
+        "Invite is single-use, expires after 24 hours by default (configurable), revocable, and capped at 2 active members",
+        "Accepting binds the invitee to the couple only after explicit consent",
+        "Expired/invalid/used invites show clear errors",
+        "Invite creation and acceptance are rate limited and audited"
+      ],
+      "priority": 20,
+      "dependsOn": [
+        "E1-003",
+        "E1-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E1-006",
+      "epic": "E1",
+      "title": "Onboarding wizard",
+      "description": "Collect names, world names, relationship start date, time zone, topics and notification preferences, resumable on web and native.",
+      "acceptance": [
+        "New members complete onboarding before seeing shared content",
+        "Progress persists and can resume; validation and defaults are clear",
+        "Values drive home, daily question, room and digest behaviour",
+        "Skipping optional fields yields a sensible default"
+      ],
+      "priority": 20,
+      "dependsOn": [
+        "E1-005"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E1-007",
+      "epic": "E1",
+      "title": "Account settings and session management",
+      "description": "Manage display name, email change with verification, active sessions and sign-out-everywhere.",
+      "acceptance": [
+        "Email change verifies both old and new address",
+        "Users can list and revoke sessions",
+        "Sign out everywhere invalidates refresh tokens",
+        "Sensitive changes are notified to the account email"
+      ],
+      "priority": 25,
+      "dependsOn": [
+        "E1-003"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E1-008",
+      "epic": "E1",
+      "title": "Export my data",
+      "description": "Async export of profile, shared content and a media manifest with secure expiring download links.",
+      "acceptance": [
+        "Export request queues a job and emails a short-lived link",
+        "Archive contains JSON for relational data and files/links for media",
+        "Only data the requester can access is included (RLS enforced)",
+        "Large exports are chunked and rate limited"
+      ],
+      "priority": 20,
+      "dependsOn": [
+        "E1-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E1-009",
+      "epic": "E1",
+      "title": "Delete account and couple data",
+      "description": "In-app deletion with 30-day grace, partner notification, complete purge job and audit trail, available on web and native.",
+      "acceptance": [
+        "Deletion is reachable in-app on web and iOS",
+        "Grace period allows cancel; purge removes DB rows and Storage objects",
+        "Partner is notified and retains their own export rights",
+        "Audit records the request and purge without content"
+      ],
+      "priority": 20,
+      "dependsOn": [
+        "E1-008"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E1-010",
+      "epic": "E1",
+      "title": "Unlink / leave a couple",
+      "description": "Define and implement leave semantics for shared vs personal content, with confirmation and no orphaned private data.",
+      "acceptance": [
+        "Either partner can leave at any time without the other's consent",
+        "Access to the shared space ends immediately for the leaver on unlink",
+        "Both can export their own contributions during a 30-day grace window; data is then deleted unless both opt to keep",
+        "Account can later join a new couple, and RLS/tests cover post-leave access"
+      ],
+      "priority": 25,
+      "dependsOn": [
+        "E1-009"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E1-011",
+      "epic": "E1",
+      "title": "Recovery and lockout support",
+      "description": "Cover lost email access, OTP failure and account lockout with admin-assisted, audited recovery.",
+      "acceptance": [
+        "Documented recovery flow with verification steps",
+        "Admin recovery requires break-glass reason and writes audit log",
+        "User is notified of any recovery action",
+        "No social-engineering shortcut bypasses email verification"
+      ],
+      "priority": 25,
+      "dependsOn": [
+        "E1-007"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E1-012",
+      "epic": "E1",
+      "title": "Entitlements and limits model",
+      "description": "Add a free-tier entitlement model for storage, AI usage, rooms and exports that can later support premium plans.",
+      "acceptance": [
+        "Entitlements are server-side, per couple, and cannot be edited by clients",
+        "Limits are enforced at upload/AI/room creation points",
+        "UI shows usage and clear limit errors",
+        "Admin overrides are audited"
+      ],
+      "priority": 25,
+      "dependsOn": [
+        "E1-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E1-013",
+      "epic": "E1",
+      "title": "Remove single-couple hardcoding",
+      "description": "Replace Hassan/Whitney names, world vocabulary, themes and metadata with per-couple settings and neutral fallbacks.",
+      "acceptance": [
+        "No shipped UI or metadata names the founding couple",
+        "World names/colours come from settings with accessible defaults",
+        "Public profile uses the couple's chosen display names only",
+        "Search for Hassan/Whitney finds only seed/demo fixtures, not app copy"
+      ],
+      "priority": 20,
+      "dependsOn": [
+        "E1-006"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E1-014",
+      "epic": "E1",
+      "title": "Per-couple time zone for daily questions and digests",
+      "description": "Compute local days from the couple's time zone instead of hardcoded Nairobi and cover DST/travel cases.",
+      "acceptance": [
+        "Daily question and digest use the couple's time zone",
+        "Both partners see the same question and reveal rules",
+        "DST transitions and time-zone changes are handled",
+        "Existing answers migrate without duplicates"
+      ],
+      "priority": 20,
+      "dependsOn": [
+        "E1-006"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E2-001",
+      "epic": "E2",
+      "title": "Roll out couple_id to all couple-owned tables",
+      "description": "Add couple_id, indexes and backfill for every couple-scoped table while relationship_id remains temporarily.",
+      "acceptance": [
+        "Every couple-owned table has a NOT NULL couple_id with an index",
+        "Backfill is correct and repeatable with a verification query",
+        "Foreign keys prevent cross-couple references where feasible",
+        "Schema documentation lists ownership for all 30+ tables"
+      ],
+      "priority": 30,
+      "dependsOn": [
+        "E1-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E2-002",
+      "epic": "E2",
+      "title": "RLS for all tables, storage and realtime",
+      "description": "Enable default-deny RLS on every table, Storage bucket policy and realtime channel authorization.",
+      "acceptance": [
+        "All tables have RLS enabled and explicit member policies",
+        "Storage buckets enforce couple paths server-side",
+        "Realtime private channels authorize via RLS",
+        "Service-role keys exist only in server envs and are never shipped"
+      ],
+      "priority": 30,
+      "dependsOn": [
+        "E2-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E2-003",
+      "epic": "E2",
+      "title": "Cross-couple regression test suite in CI",
+      "description": "Build pgTAP/storage tests that fail on any cross-couple read or write for every table and bucket, and gate merges on them.",
+      "acceptance": [
+        "A generated matrix covers every couple-owned table",
+        "Tests create two couples and prove isolation on select/insert/update/delete",
+        "Storage path traversal and signed URL cross-use are tested",
+        "CI fails if a new table lacks coverage"
+      ],
+      "priority": 30,
+      "dependsOn": [
+        "E2-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E2-004",
+      "epic": "E2",
+      "title": "Remove single-couple context resolution",
+      "description": "Replace ctxFor limit(1) and partners[0] with an explicit session-derived couple context used by all routes and actions.",
+      "acceptance": [
+        "No remaining limit(1) relationship lookup or hardcoded partner index",
+        "All server handlers resolve couple membership from the verified session",
+        "A request for another couple returns 404/403, never data",
+        "Context helpers have unit tests"
+      ],
+      "priority": 30,
+      "dependsOn": [
+        "E2-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E2-005",
+      "epic": "E2",
+      "title": "Visibility and public-profile review",
+      "description": "Audit visibleTo semantics, opt-in public profiles and slug uniqueness; prove personal data stays private.",
+      "acceptance": [
+        "Public profile requires explicit opt-in and shows only allowed fields",
+        "Slugs are unique per couple context, not global identity",
+        "Personal/shared/public rules are tested",
+        "No API can bypass visibility filters"
+      ],
+      "priority": 35,
+      "dependsOn": [
+        "E2-004"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E2-006",
+      "epic": "E2",
+      "title": "Admin audit log and break-glass access",
+      "description": "Add an immutable audit log and admin access requiring a reason for any couple-data view or action.",
+      "acceptance": [
+        "Admin actions record actor, reason, target and timestamp",
+        "Audit log is append-only and searchable by admins",
+        "Break-glass access expires and alerts",
+        "No admin UI exposes message/media content by default"
+      ],
+      "priority": 35,
+      "dependsOn": [
+        "E2-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E2-007",
+      "epic": "E2",
+      "title": "Retire legacy base64 photos table",
+      "description": "Move legacy photos into Storage and remove the base64-in-Postgres path.",
+      "acceptance": [
+        "All legacy photos are migrated with checksums",
+        "Gallery reads only the new schema",
+        "Legacy table access is removed and later dropped",
+        "Storage policy tests cover migrated objects"
+      ],
+      "priority": 35,
+      "dependsOn": [
+        "E6-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E2-008",
+      "epic": "E2",
+      "title": "Retention and cleanup jobs",
+      "description": "Schedule TTL cleanup for call signals, soft-deleted content, idle sessions and stale invites.",
+      "acceptance": [
+        "Call signals and stale invites expire automatically",
+        "Soft-delete purge respects grace periods and exports",
+        "Jobs are idempotent, monitored and report counts",
+        "Retention windows are documented in the privacy policy"
+      ],
+      "priority": 35,
+      "dependsOn": [
+        "E2-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E3-001",
+      "epic": "E3",
+      "title": "Realtime client and private channel convention",
+      "description": "Add a shared realtime provider using Supabase private channels with reconnect, auth refresh and polling fallback.",
+      "acceptance": [
+        "Channels are named per couple and authorized by RLS",
+        "Reconnect and token refresh are handled without duplicate subscriptions",
+        "A feature flag can fall back to polling",
+        "Web and native share the channel protocol types"
+      ],
+      "priority": 40,
+      "dependsOn": [
+        "E2-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E3-002",
+      "epic": "E3",
+      "title": "Chat realtime delivery with durable writes",
+      "description": "Send, edit and delete via server actions while delivering updates over realtime, keeping client_id idempotency.",
+      "acceptance": [
+        "Messages persist before broadcast; retries are idempotent",
+        "Recipients see new messages under 300 ms locally, without poll writes",
+        "Edit/delete permissions and time limits preserved",
+        "Polling fallback still works"
+      ],
+      "priority": 40,
+      "dependsOn": [
+        "E3-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E3-003",
+      "epic": "E3",
+      "title": "Read, delivered, typing and presence via broadcast",
+      "description": "Move per-tick writes off the polling path; throttle typing and presence broadcasts.",
+      "acceptance": [
+        "No DB write occurs merely because a client polled",
+        "Read/delivered receipts update reliably after reconnect",
+        "Typing indicators throttle and expire",
+        "Presence privacy setting is respected"
+      ],
+      "priority": 40,
+      "dependsOn": [
+        "E3-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E3-004",
+      "epic": "E3",
+      "title": "Replies, reactions and message actions parity",
+      "description": "Realtime updates for replies and reactions with full parity and tests.",
+      "acceptance": [
+        "Replies/reactions sync in realtime for both partners",
+        "Optimistic updates reconcile without duplicates",
+        "Delete-for-everyone removes content for both; delete-for-me is local",
+        "Existing tests pass and new realtime tests cover each action"
+      ],
+      "priority": 45,
+      "dependsOn": [
+        "E3-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E3-005",
+      "epic": "E3",
+      "title": "Message push notifications",
+      "description": "Deliver push for new messages on web and Expo with quiet hours, preview privacy and dedupe.",
+      "acceptance": [
+        "Push arrives when app is backgrounded with a content-free option",
+        "Per-partner quiet hours and per-type preferences apply",
+        "Duplicate pushes are suppressed; badges stay consistent",
+        "Push payloads carry no sensitive content by default"
+      ],
+      "priority": 40,
+      "dependsOn": [
+        "E3-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E3-006",
+      "epic": "E3",
+      "title": "Unread counts and app badge consistency",
+      "description": "Centralize unread counts and badge state across web, native and push.",
+      "acceptance": [
+        "Unread counts reconcile after reconnect and read receipts",
+        "Badge clears on open without losing new arrivals",
+        "Web and native show the same count",
+        "Counts are per couple and per device"
+      ],
+      "priority": 45,
+      "dependsOn": [
+        "E3-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E3-007",
+      "epic": "E3",
+      "title": "Chat image and voice-note uploads",
+      "description": "Attach images and voice notes stored in the couple bucket with progress and retry.",
+      "acceptance": [
+        "Uploads use couple-scoped paths and signed URLs",
+        "Progress, cancel and retry work; failures are visible",
+        "Voice notes play inline with duration metadata",
+        "Only the couple can access attachments"
+      ],
+      "priority": 45,
+      "dependsOn": [
+        "E6-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E3-008",
+      "epic": "E3",
+      "title": "Chat load test at target concurrency",
+      "description": "Prove chat at 1,500 concurrent users across 10,000 couples with realtime and DB within budget.",
+      "acceptance": [
+        "p95 message delivery under 1 s (target 500 ms); errors under 0.1%",
+        "Realtime connection counts stay within the selected plan",
+        "DB writes per message are bounded and documented",
+        "Results and plan sizing recorded in docs/ARCHITECTURE.md"
+      ],
+      "priority": 40,
+      "dependsOn": [
+        "E3-003",
+        "E11-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E3-009",
+      "epic": "E3",
+      "title": "Conversation pagination and jump-to-message",
+      "description": "Paginate long chats with stable cursors and deep links to a message.",
+      "acceptance": [
+        "Cursor pagination has no duplicates/gaps under concurrent inserts",
+        "Deep links open the right page and highlight the message",
+        "Memory stays bounded on long histories",
+        "Works offline with cached pages"
+      ],
+      "priority": 45,
+      "dependsOn": [
+        "E3-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E4-001",
+      "epic": "E4",
+      "title": "Realtime call signalling",
+      "description": "Replace polling signalling with realtime events and a reviewed call state machine and cleanup.",
+      "acceptance": [
+        "Offer/answer/ICE/candidates flow over private channel",
+        "State machine covers ring/accept/decline/miss/timeout/hangup/reconnect",
+        "Stale calls and signals are cleaned up",
+        "No signal polling remains"
+      ],
+      "priority": 50,
+      "dependsOn": [
+        "E3-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E4-002",
+      "epic": "E4",
+      "title": "Native ringing and call entry",
+      "description": "Wake the callee with push and route into the call via CallKit (iOS) and ConnectionService/full-screen intent (Android), plus web notification.",
+      "acceptance": [
+        "Backgrounded devices receive a ringing UI and can accept/decline",
+        "Permissions and audio routing are correct",
+        "Deep link opens the call after auth",
+        "Store policy for VoIP push and CallKit is followed"
+      ],
+      "priority": 50,
+      "dependsOn": [
+        "E4-001",
+        "E8-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E4-003",
+      "epic": "E4",
+      "title": "TURN provisioning and abuse limits",
+      "description": "Issue short-lived per-call TURN credentials with rate limits; no global relay secret in the client.",
+      "acceptance": [
+        "Credentials are per call/couple, short TTL and revocable",
+        "Relay usage is rate limited and monitored",
+        "Failures fall back to a clear message, not silent failure",
+        "No TURN secret is shipped to clients or logs"
+      ],
+      "priority": 50,
+      "dependsOn": [
+        "E4-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E4-004",
+      "epic": "E4",
+      "title": "Call history and missed-call badges",
+      "description": "Surface call history and missed calls consistently in chat, home and app icons.",
+      "acceptance": [
+        "History lists duration, direction and outcome",
+        "Missed calls increment badges and clear when viewed",
+        "History is couple-private and exportable",
+        "Old signal rows do not leak into history"
+      ],
+      "priority": 55,
+      "dependsOn": [
+        "E4-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E4-005",
+      "epic": "E4",
+      "title": "Call resilience and quality signals",
+      "description": "Handle ICE restarts, reconnects and degradation; capture anonymous quality metrics.",
+      "acceptance": [
+        "Transient network loss recovers without dropping the call",
+        "Poor conditions prompt audio-only or retry",
+        "Quality metrics are aggregated without content",
+        "Reconnect UX is tested on throttled networks"
+      ],
+      "priority": 55,
+      "dependsOn": [
+        "E4-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E4-006",
+      "epic": "E4",
+      "title": "Presence without per-tick writes",
+      "description": "Use realtime presence for online/last-seen and remove presence writes from polling.",
+      "acceptance": [
+        "Online state updates within 2 s without DB writes",
+        "Last-seen is stored at most on disconnect and stays private",
+        "Privacy toggle disables presence/last-seen",
+        "Pulse endpoint no longer upserts presence"
+      ],
+      "priority": 50,
+      "dependsOn": [
+        "E4-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E4-007",
+      "epic": "E4",
+      "title": "External-service screen-share policy and countdown mode",
+      "description": "Stop implying screen-share works for DRM services; implement shared countdown mode and clear copy.",
+      "acceptance": [
+        "Countdown sync is available for films/services without APIs",
+        "UI explains DRM/black-screen limits honestly",
+        "Store copy and screenshots make no unsupported claims",
+        "Feature flag can disable screen share entirely"
+      ],
+      "priority": 55,
+      "dependsOn": [
+        "E5-007"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E4-008",
+      "epic": "E4",
+      "title": "Call privacy and recording policy",
+      "description": "Ensure calls are not recorded by default and any future recording requires explicit two-party consent.",
+      "acceptance": [
+        "No recording path exists in v1",
+        "UI and policy state calls are not recorded",
+        "If recording is ever added, both parties consent with visible notice",
+        "Server logs never contain call content"
+      ],
+      "priority": 55,
+      "dependsOn": [
+        "E4-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E5-001",
+      "epic": "E5",
+      "title": "Media source provider interface",
+      "description": "Define a provider interface with YouTube, uploaded media, podcast audio and countdown implementations, including validation and attribution metadata.",
+      "acceptance": [
+        "Providers expose playable metadata, validation and licence/attribution fields",
+        "YouTube uses oEmbed/IFrame metadata without scraping or downloading",
+        "Unsupported URLs fail with a clear reason",
+        "Provider selection is server-validated"
+      ],
+      "priority": 55,
+      "dependsOn": [
+        "E0-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E5-002",
+      "epic": "E5",
+      "title": "Realtime room playback sync",
+      "description": "Move room state to realtime with play/pause/seek/queue, drift correction and late-joiner snapshots.",
+      "acceptance": [
+        "p95 sync drift stays under 500 ms (audio target 400 ms)",
+        "Late joiners receive a correct snapshot",
+        "Either partner can control playback; heartbeats are ≤1 per 5 s per client",
+        "Polling fallback remains for old clients"
+      ],
+      "priority": 55,
+      "dependsOn": [
+        "E3-001",
+        "E5-001",
+        "E5-013"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E5-003",
+      "epic": "E5",
+      "title": "Room chat, reactions, nudges and queue parity",
+      "description": "Realtime room chat/reactions/nudges and a shared queue with voting.",
+      "acceptance": [
+        "All room interactions sync in realtime",
+        "Queue edits are ordered and conflict-free",
+        "Reactions/nudges rate limit and expire",
+        "Chat in rooms is retained per room policy"
+      ],
+      "priority": 60,
+      "dependsOn": [
+        "E5-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E5-004",
+      "epic": "E5",
+      "title": "Persistent mini-player",
+      "description": "Keep room audio/video playing across navigation and refresh with correct resume state.",
+      "acceptance": [
+        "Player survives route changes and reloads",
+        "State resumes at the synced position",
+        "Only one player instance exists; no echo",
+        "Mobile behavior follows platform background-audio rules"
+      ],
+      "priority": 60,
+      "dependsOn": [
+        "E5-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E5-005",
+      "epic": "E5",
+      "title": "Room uploads and couple-only sharing",
+      "description": "Play uploaded songs/videos from couple Storage with explicit consent and signed playback URLs.",
+      "acceptance": [
+        "Uploads go to couple paths and are playable by both partners",
+        "Consent explains storage limits and partner visibility",
+        "Playback uses short-lived signed URLs",
+        "Deleting media stops room playback gracefully"
+      ],
+      "priority": 60,
+      "dependsOn": [
+        "E6-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E5-006",
+      "epic": "E5",
+      "title": "Licensed music catalogue behind verified licence",
+      "description": "Add a CC/catalogue provider only after checking terms and licence metadata; keep it feature-flagged off until legal confirms.",
+      "acceptance": [
+        "Licence terms for the provider are documented and approved",
+        "Per-track licence/attribution is stored and displayed",
+        "Non-commercial-only sources are blocked for a commercial service",
+        "Feature flag disables the provider without breaking rooms"
+      ],
+      "priority": 60,
+      "dependsOn": [
+        "E5-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E5-007",
+      "epic": "E5",
+      "title": "Countdown and external-service sync",
+      "description": "Implement shared countdown-to-play for services and content that cannot be embedded.",
+      "acceptance": [
+        "Both partners can start a countdown and see the same target time",
+        "Clock skew is handled using server time",
+        "Instructions are clear and do not promise in-app playback",
+        "No DRM bypass or black-screen capture claims"
+      ],
+      "priority": 60,
+      "dependsOn": [
+        "E5-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E5-008",
+      "epic": "E5",
+      "title": "Room load test at 300 rooms",
+      "description": "Prove 300 concurrent rooms and 1,500 users with bounded realtime and DB load.",
+      "acceptance": [
+        "p95 sync latency within target; no channel leaks",
+        "Realtime message rate stays within plan limits",
+        "Room creation has per-couple rate limits",
+        "Results documented with plan sizing"
+      ],
+      "priority": 55,
+      "dependsOn": [
+        "E5-002",
+        "E11-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E5-009",
+      "epic": "E5",
+      "title": "YouTube compliance implementation",
+      "description": "Ensure the official player, attribution, no download/offline use and store review notes comply with YouTube API Services policies.",
+      "acceptance": [
+        "Official IFrame player only; no proxying or downloading media",
+        "YouTube attribution/links and privacy disclosure present",
+        "No background audio for YouTube content",
+        "Store review notes describe compliance"
+      ],
+      "priority": 55,
+      "dependsOn": [
+        "E5-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E6-001",
+      "epic": "E6",
+      "title": "Couple-scoped Storage buckets and policies",
+      "description": "Create private buckets with couple paths and server-enforced access, replacing Blob as the primary store.",
+      "acceptance": [
+        "Buckets are private; paths start with the authenticated couple id",
+        "Storage policies deny cross-couple access and traversal",
+        "Signed URL expiry is short and configurable",
+        "Service-role use is server-only"
+      ],
+      "priority": 60,
+      "dependsOn": [
+        "E2-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E6-002",
+      "epic": "E6",
+      "title": "Resumable uploads with validation",
+      "description": "Web and native uploads with TUS/resumable behavior, progress, retry, MIME sniffing and size limits.",
+      "acceptance": [
+        "Interrupted uploads resume without duplicates",
+        "Server validates MIME/extension mismatch and enforces limits",
+        "Progress/cancel/retry are visible and accessible",
+        "Uploads are idempotent per client id"
+      ],
+      "priority": 60,
+      "dependsOn": [
+        "E6-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E6-003",
+      "epic": "E6",
+      "title": "Per-couple storage quotas",
+      "description": "Enforce storage count/bytes quotas server-side with usage UI and entitlement hooks.",
+      "acceptance": [
+        "Quota checks occur before upload and atomically reserve bytes",
+        "UI shows usage and clear upgrade/delete guidance",
+        "Deleting media releases quota",
+        "Admin overrides are audited"
+      ],
+      "priority": 65,
+      "dependsOn": [
+        "E1-012",
+        "E6-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E6-004",
+      "epic": "E6",
+      "title": "Upload moderation and quarantine",
+      "description": "Scan uploads with a CSAM hash-matching provider and text filters; quarantine and report before partner visibility.",
+      "acceptance": [
+        "Visual media is scanned before it becomes visible to the partner",
+        "Matches are quarantined, reported per law, and never shown",
+        "Failures fail closed with a clear user message",
+        "Provider contract and legal process are documented"
+      ],
+      "priority": 60,
+      "dependsOn": [
+        "E6-002",
+        "E9-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E6-005",
+      "epic": "E6",
+      "title": "Gallery comments, reactions and new badge realtime",
+      "description": "Move gallery reactions/comments to realtime with pagination and unread state.",
+      "acceptance": [
+        "Comments/reactions update live for both partners",
+        "Pagination is stable for long threads",
+        "New badge clears per viewer",
+        "Deletes remove content for both"
+      ],
+      "priority": 65,
+      "dependsOn": [
+        "E6-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E6-006",
+      "epic": "E6",
+      "title": "Image processing, EXIF and caching",
+      "description": "Strip EXIF, generate thumbnails/transforms, cache signed URLs safely and invalidate on delete.",
+      "acceptance": [
+        "GPS/EXIF is removed from uploads by default",
+        "Thumbnails render quickly without loading originals",
+        "Signed URL caching does not outlive expiry",
+        "Deletes invalidate CDN/cache"
+      ],
+      "priority": 65,
+      "dependsOn": [
+        "E6-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E6-007",
+      "epic": "E6",
+      "title": "Migrate existing Blob media",
+      "description": "Copy and verify existing Vercel Blob and legacy photos into couple Storage with checksums and rollback.",
+      "acceptance": [
+        "Every object is copied, checksummed and readable",
+        "Old paths are mapped without breaking gallery links",
+        "Rollback is possible until sign-off",
+        "Migration report lists misses"
+      ],
+      "priority": 65,
+      "dependsOn": [
+        "E6-001",
+        "E2-007"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E6-008",
+      "epic": "E6",
+      "title": "Media deletion and purge",
+      "description": "Delete media from DB, Storage and caches with a reliable purge queue.",
+      "acceptance": [
+        "User delete removes access immediately and purges bytes within the grace window",
+        "Failed purges retry and alert",
+        "Account deletion purges all objects",
+        "Partner sees deletion per product policy"
+      ],
+      "priority": 60,
+      "dependsOn": [
+        "E1-009",
+        "E6-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E7-001",
+      "epic": "E7",
+      "title": "Per-couple topics and source settings",
+      "description": "Make the 8 topics and 39 sources editable defaults rather than global constants.",
+      "acceptance": [
+        "Couples choose topics/sources during onboarding and settings",
+        "Default feed works with no choices",
+        "Disabled sources stop appearing for that couple",
+        "Settings persist across web/native"
+      ],
+      "priority": 70,
+      "dependsOn": [
+        "E1-006"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E7-002",
+      "epic": "E7",
+      "title": "Multi-tenant ingestion pipeline",
+      "description": "Keep a global source registry with per-couple subscriptions, filters and idempotent scheduled ingestion.",
+      "acceptance": [
+        "Ingest is idempotent and retries with backoff",
+        "Per-couple filters apply without duplicating content storage",
+        "Source health is visible per couple",
+        "Cron failures alert"
+      ],
+      "priority": 70,
+      "dependsOn": [
+        "E7-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E7-003",
+      "epic": "E7",
+      "title": "AI usage metering and quotas",
+      "description": "Meter Gemini usage per user/couple, enforce quotas, allow optional BYO key encrypted server-side, and control cost.",
+      "acceptance": [
+        "Every AI call records tokens/cost against an entitlement",
+        "Over-quota requests fail gracefully with reset guidance",
+        "BYO keys are encrypted at rest and never returned to clients",
+        "Admin usage overrides are audited"
+      ],
+      "priority": 65,
+      "dependsOn": [
+        "E1-012"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E7-004",
+      "epic": "E7",
+      "title": "AI safety and citation quality",
+      "description": "Add prompt-injection defences, output moderation, citation checks, crisis routing and privacy-safe logging.",
+      "acceptance": [
+        "Untrusted feed/web content cannot hijack system instructions",
+        "Unsafe outputs are blocked or rewritten with a safe fallback",
+        "Citations link to real retrieved sources",
+        "Crisis keywords route to external help; logs omit content"
+      ],
+      "priority": 70,
+      "dependsOn": [
+        "E7-003"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E7-005",
+      "epic": "E7",
+      "title": "Image licensing and attribution pipeline",
+      "description": "Allowlist image sources, store licence/attribution, and stop unlicensed hotlinking at scale.",
+      "acceptance": [
+        "Each image has source, licence and attribution metadata",
+        "Only allowlisted providers are used; fallbacks exist",
+        "Attribution renders where required",
+        "Broken/blocked images degrade gracefully"
+      ],
+      "priority": 70,
+      "dependsOn": [
+        "E7-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E7-006",
+      "epic": "E7",
+      "title": "Saved discoveries and weekly digest per couple",
+      "description": "Couple-scoped saving and a weekly digest aligned to the couple's time zone.",
+      "acceptance": [
+        "Saved items are couple-scoped and private",
+        "Digest sends per couple time zone and preferences",
+        "Unsubscribe and quiet hours work",
+        "Digest links deep-link correctly on web/native"
+      ],
+      "priority": 70,
+      "dependsOn": [
+        "E7-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E7-007",
+      "epic": "E7",
+      "title": "Tenant-scoped search",
+      "description": "Ensure global search queries only the caller's couple and never leaks counts or snippets.",
+      "acceptance": [
+        "Search results are filtered by RLS and explicit couple scope",
+        "Cross-couple queries return empty, not partial data",
+        "Search covers messages, memories, media metadata and discoveries",
+        "Performance tests cover 10k couples"
+      ],
+      "priority": 65,
+      "dependsOn": [
+        "E2-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E8-001",
+      "epic": "E8",
+      "title": "Expo app skeleton with auth and shared packages",
+      "description": "Create the Expo Router app with secure session storage, deep links, EAS project and shared type packages; CI typechecks it.",
+      "acceptance": [
+        "App builds for iOS and Android via EAS",
+        "Auth deep links and secure storage work",
+        "Shared packages resolve without duplication",
+        "CI typechecks the app and runs on PRs"
+      ],
+      "priority": 70,
+      "dependsOn": [
+        "E0-002",
+        "E1-003"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E8-002",
+      "epic": "E8",
+      "title": "Home, journey and daily question parity",
+      "description": "Bring the core home experience and daily question to native.",
+      "acceptance": [
+        "Journey clock, verse and daily question match web",
+        "Answer hiding and reveal rules are identical",
+        "Offline shows cached last state with a clear label",
+        "Pull-to-refresh and time-zone handling work"
+      ],
+      "priority": 75,
+      "dependsOn": [
+        "E8-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E8-003",
+      "epic": "E8",
+      "title": "Native chat with push and offline queue",
+      "description": "Chat parity with realtime, push, media and an offline outbox that survives restarts.",
+      "acceptance": [
+        "Messages send/retry offline and reconcile on reconnect",
+        "Push opens the right conversation",
+        "Read receipts and typing work in background/foreground transitions",
+        "No duplicate messages after retries"
+      ],
+      "priority": 70,
+      "dependsOn": [
+        "E8-001",
+        "E3-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E8-004",
+      "epic": "E8",
+      "title": "Native WebRTC calls",
+      "description": "Voice/video calls with react-native-webrtc, CallKit/ConnectionService, permissions, audio routing and reconnect.",
+      "acceptance": [
+        "Calls connect between iOS, Android and web",
+        "Audio routing (speaker/earpiece/Bluetooth) works",
+        "Background/locked-screen ringing works",
+        "Reconnect and hangup are reliable"
+      ],
+      "priority": 70,
+      "dependsOn": [
+        "E8-001",
+        "E4-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E8-005",
+      "epic": "E8",
+      "title": "Native gallery and camera uploads",
+      "description": "Gallery browsing plus camera/photo-picker uploads with resumable progress.",
+      "acceptance": [
+        "Photo/video capture and upload work with permissions handled",
+        "Progress and retry match web behavior",
+        "Large files resume after backgrounding",
+        "Deleted media disappears everywhere"
+      ],
+      "priority": 75,
+      "dependsOn": [
+        "E6-002",
+        "E8-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E8-006",
+      "epic": "E8",
+      "title": "Native room player and background audio",
+      "description": "Audio/video room playback with queue and platform background-audio rules.",
+      "acceptance": [
+        "Audio continues per platform policy with a visible control",
+        "Sync with partner stays within target",
+        "YouTube content remains foreground-only",
+        "Mini-player survives navigation"
+      ],
+      "priority": 75,
+      "dependsOn": [
+        "E5-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E8-007",
+      "epic": "E8",
+      "title": "Native onboarding, settings and deletion",
+      "description": "Full onboarding, settings, export and account deletion on native.",
+      "acceptance": [
+        "Onboarding and settings match web fields",
+        "Export request and deletion are available in-app",
+        "Session management signs out devices",
+        "Apple 5.1.1(v) evidence captured"
+      ],
+      "priority": 70,
+      "dependsOn": [
+        "E1-009",
+        "E8-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E8-008",
+      "epic": "E8",
+      "title": "Native accessibility and dynamic type",
+      "description": "VoiceOver/TalkBack labels, focus order, dynamic type and reduced motion across core screens.",
+      "acceptance": [
+        "Core flows pass screen-reader walkthroughs",
+        "Dynamic type does not clip critical UI",
+        "Reduced motion is respected",
+        "Accessibility checklist is in the repo"
+      ],
+      "priority": 75,
+      "dependsOn": [
+        "E8-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E8-009",
+      "epic": "E8",
+      "title": "EAS build profiles, versioning and OTA policy",
+      "description": "Define dev/preview/production profiles, versioning, update channels and rollback.",
+      "acceptance": [
+        "Build profiles are documented and reproducible",
+        "Version/build numbers increment automatically",
+        "OTA updates are limited to JS-safe changes with rollback",
+        "Store binaries map to source commits"
+      ],
+      "priority": 75,
+      "dependsOn": [
+        "E8-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E8-010",
+      "epic": "E8",
+      "title": "Verify API 36 and 16 KB page support",
+      "description": "Confirm the chosen Expo/RN/SDK versions meet Google Play API 36 and 16 KB page requirements before store builds.",
+      "acceptance": [
+        "Target SDK 36 is set and verified in the build",
+        "Native libraries are 16 KB aligned; Play pre-launch report passes",
+        "Expo/RN versions documented with sources",
+        "Upgrade path recorded if not supported"
+      ],
+      "priority": 70,
+      "dependsOn": [
+        "E8-009"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E9-001",
+      "epic": "E9",
+      "title": "Report and block across content types",
+      "description": "Report messages, profiles, media and rooms; block a partner or user with clear effects and evidence capture.",
+      "acceptance": [
+        "Report flow captures reason and context without exposing reporter by default",
+        "Blocking stops content and notifications per policy",
+        "Reports are stored securely and reach the admin queue",
+        "Abuse flows are tested end to end"
+      ],
+      "priority": 35,
+      "dependsOn": [
+        "E1-003"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E9-002",
+      "epic": "E9",
+      "title": "Moderation queue and admin actions",
+      "description": "Build a minimal admin console with SLAs, warn/remove/suspend, NCII escalation and audit.",
+      "acceptance": [
+        "Queue shows reports with age and priority",
+        "Actions are audited and reversible where appropriate",
+        "NCII and imminent-harm escalation steps are documented and tested",
+        "Response-time SLA is tracked"
+      ],
+      "priority": 35,
+      "dependsOn": [
+        "E9-001",
+        "E2-006"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E9-003",
+      "epic": "E9",
+      "title": "Public safety, contact and help pages",
+      "description": "Publish contact info, safety guidelines and reporting help required by Apple 1.2.",
+      "acceptance": [
+        "Contact email and response expectation are public",
+        "Safety guidelines cover UGC and reporting",
+        "Help is linked from settings and store listings",
+        "Pages are accessible and localized minimally"
+      ],
+      "priority": 35,
+      "dependsOn": [
+        "E9-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E9-004",
+      "epic": "E9",
+      "title": "Age gate, terms and consent log",
+      "description": "18+ attestation, ToS/privacy acceptance, consent records and re-consent on policy changes.",
+      "acceptance": [
+        "New users attest 18+ and accept terms before use",
+        "Consent version and timestamp are stored",
+        "Policy changes require re-consent",
+        "Declining blocks use with a clear path"
+      ],
+      "priority": 35,
+      "dependsOn": [
+        "E1-003"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E9-005",
+      "epic": "E9",
+      "title": "Abuse and rate limiting",
+      "description": "Per-IP/user/couple limits for auth, invites, uploads, AI and calls with bot protections.",
+      "acceptance": [
+        "Limits are server-side and shared across instances",
+        "Invite and OTP abuse is throttled",
+        "Limits return clear, non-enumerating errors",
+        "Anomalies alert"
+      ],
+      "priority": 35,
+      "dependsOn": [
+        "E1-003"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E9-006",
+      "epic": "E9",
+      "title": "Secret and key inventory with rotation",
+      "description": "Inventory all secrets, rotation owners and schedules; least-privilege service keys.",
+      "acceptance": [
+        "Every secret has an owner, scope and rotation date",
+        "Rotating session/TURN/AI keys is rehearsed",
+        "No long-lived secret is shared across environments",
+        "Access reviews are scheduled"
+      ],
+      "priority": 40,
+      "dependsOn": [
+        "E0-006"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E9-007",
+      "epic": "E9",
+      "title": "Incident response and breach runbook",
+      "description": "Write and rehearse an incident runbook with roles, communication and notification timelines.",
+      "acceptance": [
+        "Severity levels and roles are defined",
+        "Breach notification steps and legal contacts are documented",
+        "A tabletop exercise is completed and dated",
+        "Customer communication templates exist"
+      ],
+      "priority": 40,
+      "dependsOn": [
+        "E0-005"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E10-001",
+      "epic": "E10",
+      "title": "WCAG 2.2 AA web audit and fixes",
+      "description": "Audit and fix critical web flows for WCAG 2.2 AA, with automated axe checks.",
+      "acceptance": [
+        "Home, chat, call, gallery, settings pass axe with no critical issues",
+        "Keyboard and focus order work for core flows",
+        "Contrast and target sizes meet AA",
+        "Known exceptions are documented with dates"
+      ],
+      "priority": 80,
+      "dependsOn": [
+        "E0-007"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E10-002",
+      "epic": "E10",
+      "title": "Native accessibility audit",
+      "description": "Run VoiceOver/TalkBack audits and fix core native flows.",
+      "acceptance": [
+        "Sign-in, home, chat, call and gallery pass a11y checklists",
+        "All actionable elements have labels and hints",
+        "Focus order and modals behave correctly",
+        "Report is stored in docs"
+      ],
+      "priority": 80,
+      "dependsOn": [
+        "E8-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E10-003",
+      "epic": "E10",
+      "title": "i18n scaffold and locale formatting",
+      "description": "Externalize strings and format dates/numbers per locale; English launch but no hardcoded assumptions.",
+      "acceptance": [
+        "No user-facing string is hardcoded in components",
+        "Date/time/plural formatting uses a locale library",
+        "Pseudo-locale build catches truncation",
+        "RTL readiness is assessed"
+      ],
+      "priority": 80,
+      "dependsOn": [
+        "E0-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E10-004",
+      "epic": "E10",
+      "title": "Shared design tokens and per-couple theming",
+      "description": "Extract colours/spacing/type into tokens used by web and native; themes come from couple settings.",
+      "acceptance": [
+        "Tokens are the single source for both platforms",
+        "Two couple themes render correctly and accessibly",
+        "Dark/light contrast passes AA",
+        "No hardcoded brand names in the theme layer"
+      ],
+      "priority": 85,
+      "dependsOn": [
+        "E1-013",
+        "E8-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E10-005",
+      "epic": "E10",
+      "title": "Reduced motion and contrast verification",
+      "description": "Verify motion, animation and contrast settings across web and native.",
+      "acceptance": [
+        "prefers-reduced-motion disables non-essential motion",
+        "High-contrast mode remains usable",
+        "No flashing content violates guidelines",
+        "Checks are added to the a11y checklist"
+      ],
+      "priority": 85,
+      "dependsOn": [
+        "E10-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E11-001",
+      "epic": "E11",
+      "title": "Load-test harness and target-scale profile",
+      "description": "Build reusable load tests for 10,000 couples / 1,500 concurrent users and record baselines.",
+      "acceptance": [
+        "Harness can simulate chat, presence, rooms and calls at target scale",
+        "Baseline results are recorded with hardware/plan details",
+        "Bottlenecks have owners and stories",
+        "Harness runs in staging without affecting production"
+      ],
+      "priority": 80,
+      "dependsOn": [
+        "E0-007"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E11-002",
+      "epic": "E11",
+      "title": "Indexes, query budgets and pooling",
+      "description": "Review slow queries, add indexes and document pool/realtime limits at scale.",
+      "acceptance": [
+        "No query on hot paths exceeds budget at 10k couples",
+        "Indexes are justified by EXPLAIN evidence",
+        "Connection pooling is sized and documented",
+        "Realtime fan-out limits are mapped to the chosen plan"
+      ],
+      "priority": 85,
+      "dependsOn": [
+        "E11-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E11-003",
+      "epic": "E11",
+      "title": "Backup and restore drill",
+      "description": "Prove PITR and object-storage restore with documented RPO/RTO.",
+      "acceptance": [
+        "A staging restore to a point in time succeeds and is timed",
+        "Storage objects restore/verify with checksums",
+        "RPO/RTO are documented and acceptable",
+        "Drill is scheduled quarterly"
+      ],
+      "priority": 85,
+      "dependsOn": [
+        "E0-006"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E11-004",
+      "epic": "E11",
+      "title": "SLOs, alerts and status page",
+      "description": "Define SLOs for availability, chat delivery and call setup; add alerts and a status page/process.",
+      "acceptance": [
+        "SLOs have targets and measurement",
+        "Alerts page a monitored channel with runbooks",
+        "Status communication process exists",
+        "Dashboards show error rate, latency and saturation"
+      ],
+      "priority": 80,
+      "dependsOn": [
+        "E0-005"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E11-005",
+      "epic": "E11",
+      "title": "Cost model at 10,000 couples",
+      "description": "Model monthly cost for Supabase, Vercel, TURN, AI, push, storage and EAS; add budget alerts.",
+      "acceptance": [
+        "Unit costs and monthly estimate are documented with assumptions",
+        "Budget alerts exist at 50/80/100 percent",
+        "Storage/AI/TURN abuse controls map to cost lines",
+        "Plan choice (Pro vs Team) is justified by Realtime limits"
+      ],
+      "priority": 85,
+      "dependsOn": [
+        "E11-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E11-006",
+      "epic": "E11",
+      "title": "Abuse cost controls and anomaly detection",
+      "description": "Prevent storage/AI/relay cost abuse with quotas, anomaly detection and blocking.",
+      "acceptance": [
+        "Anomalies in uploads, AI calls and relay traffic alert and can auto-throttle",
+        "New accounts have conservative limits",
+        "Support can block abusive couples with audit",
+        "Cost per couple is tracked monthly"
+      ],
+      "priority": 85,
+      "dependsOn": [
+        "E9-005"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E11-007",
+      "epic": "E11",
+      "title": "Zero-downtime migration playbook",
+      "description": "Adopt expand/contract migrations and test them against prod-like data.",
+      "acceptance": [
+        "Playbook covers expand, backfill, dual-write and contract",
+        "Migrations are tested on a prod-sized copy",
+        "Rollback is possible at each step",
+        "CI rejects destructive migrations on main"
+      ],
+      "priority": 85,
+      "dependsOn": [
+        "E2-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E11-008",
+      "epic": "E11",
+      "title": "Disaster recovery plan",
+      "description": "Document region/provider outage response with RTO/RPO and a tested failover path.",
+      "acceptance": [
+        "Failure scenarios and responses are documented",
+        "RTO/RPO are approved",
+        "A failover tabletop is completed",
+        "Communication templates and owners are defined"
+      ],
+      "priority": 85,
+      "dependsOn": [
+        "E11-003"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E12-001",
+      "epic": "E12",
+      "title": "Unit coverage for rewritten domain modules",
+      "description": "Raise unit coverage on auth context, tenancy, chat, room sync, quotas and visibility.",
+      "acceptance": [
+        ">=80% line/branch coverage on rewritten domain modules",
+        "Coverage gate runs in CI with justified exclusions",
+        "No snapshot-only tests for critical logic",
+        "Tests are deterministic"
+      ],
+      "priority": 90,
+      "dependsOn": [
+        "E0-008"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E12-002",
+      "epic": "E12",
+      "title": "Playwright e2e for critical journeys",
+      "description": "Cover signup, invite, chat, gallery, export and deletion on web.",
+      "acceptance": [
+        "e2e runs in CI against a seeded staging-like environment",
+        "Flows use real auth and RLS",
+        "Failures capture trace/screenshots/video",
+        "Calls are stubbed via a deterministic test transport"
+      ],
+      "priority": 85,
+      "dependsOn": [
+        "E1-009",
+        "E3-002",
+        "E6-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E12-003",
+      "epic": "E12",
+      "title": "Maestro mobile e2e",
+      "description": "Cover native auth, chat, gallery and deletion flows in CI/preview devices.",
+      "acceptance": [
+        "Flows run on iOS and Android simulators",
+        "Auth uses test accounts with cleanup",
+        "Failures are easy to diagnose",
+        "Runs within CI budget"
+      ],
+      "priority": 90,
+      "dependsOn": [
+        "E8-003"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E12-004",
+      "epic": "E12",
+      "title": "Mandatory tenancy and security regression gate",
+      "description": "Make cross-couple and RLS tests a required check for every change touching schema, policies, routes or storage.",
+      "acceptance": [
+        "Gate runs on every PR and cannot be skipped by labels",
+        "New tables fail CI until policies/tests exist",
+        "Storage and realtime auth tests are included",
+        "Results are linked in the PR template"
+      ],
+      "priority": 85,
+      "dependsOn": [
+        "E2-003"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E12-005",
+      "epic": "E12",
+      "title": "Flaky-test quarantine and CI time budget",
+      "description": "Track flakes, quarantine with owners and keep CI reliable and fast.",
+      "acceptance": [
+        "Flake detection reports over the last N runs",
+        "Quarantined tests have owner and expiry",
+        "Median CI under 10 minutes",
+        "No silent retries for product-code tests"
+      ],
+      "priority": 90,
+      "dependsOn": [
+        "E12-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E12-006",
+      "epic": "E12",
+      "title": "API contract tests web/native",
+      "description": "Version the API client contract and test web/native compatibility.",
+      "acceptance": [
+        "API schemas are versioned and generated types are committed",
+        "Breaking changes fail contract tests",
+        "Mobile compatibility window is documented",
+        "Contract tests run in CI"
+      ],
+      "priority": 90,
+      "dependsOn": [
+        "E0-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E12-007",
+      "epic": "E12",
+      "title": "Web performance budgets",
+      "description": "Add Lighthouse CI budgets for LCP/INP/CLS on critical pages.",
+      "acceptance": [
+        "Budgets cover first-route JS ≤250 KB gzipped, LCP/INP/CLS and Lighthouse performance on critical pages",
+        "Regressions block merge or require an approved waiver",
+        "Budgets are based on measured mobile devices",
+        "Report is visible to the team"
+      ],
+      "priority": 90,
+      "dependsOn": [
+        "E10-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E13-001",
+      "epic": "E13",
+      "title": "Privacy policy, terms and safety guidelines",
+      "description": "Publish legally reviewed privacy policy, terms, safety guidelines and data-processing details at stable URLs.",
+      "acceptance": [
+        "Policy covers data categories, storage/AI/TURN processors, retention and rights",
+        "Terms cover UGC, acceptable use, suspension and age 18+",
+        "Safety guidelines explain reporting/blocking",
+        "Pages are linked from app, store listings and emails"
+      ],
+      "priority": 90,
+      "dependsOn": [
+        "E9-003"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E13-002",
+      "epic": "E13",
+      "title": "Apple privacy labels and tracking declaration",
+      "description": "Complete App Store privacy details and document no-tracking/ATT decision.",
+      "acceptance": [
+        "Data types collected/linked are accurate for Supabase, Sentry, push and AI",
+        "No tracking declaration matches SDKs",
+        "ATT decision is documented",
+        "Labels match the privacy policy"
+      ],
+      "priority": 90,
+      "dependsOn": [
+        "E13-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E13-003",
+      "epic": "E13",
+      "title": "Google Play Data Safety and content rating",
+      "description": "Complete the Data Safety form and content rating accurately.",
+      "acceptance": [
+        "Data collected/shared and security practices match reality",
+        "Deletion request path is declared",
+        "Content rating answers are consistent with UGC controls",
+        "Form evidence is stored"
+      ],
+      "priority": 90,
+      "dependsOn": [
+        "E13-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E13-004",
+      "epic": "E13",
+      "title": "Account deletion evidence for stores",
+      "description": "Prove in-app deletion on web and native and prepare review notes per Apple 5.1.1(v).",
+      "acceptance": [
+        "Deletion is discoverable in-app without contacting support",
+        "Review notes include path and test account",
+        "Deletion removes data per policy",
+        "Recorded evidence is stored"
+      ],
+      "priority": 90,
+      "dependsOn": [
+        "E1-009",
+        "E8-007"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E13-005",
+      "epic": "E13",
+      "title": "UGC compliance evidence pack (Apple 1.2)",
+      "description": "Assemble filtering, reporting, blocking, contact and response-time evidence.",
+      "acceptance": [
+        "Evidence shows mechanisms and SLAs for each 1.2 requirement",
+        "Moderation queue is operational",
+        "Contact info is public",
+        "Pack is included in review notes"
+      ],
+      "priority": 90,
+      "dependsOn": [
+        "E9-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E13-006",
+      "epic": "E13",
+      "title": "Google Play closed testing track",
+      "description": "If on a personal Play account, run the required closed test with 12 testers for 14 days; otherwise document organisation exemption.",
+      "acceptance": [
+        "Testing track has >=12 opted-in testers for 14 continuous days (if required)",
+        "Feedback is triaged and fixes tracked",
+        "Exemption evidence exists for organisation accounts",
+        "Dates recorded"
+      ],
+      "priority": 90,
+      "dependsOn": [],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E13-007",
+      "epic": "E13",
+      "title": "Production native builds and device verification",
+      "description": "Build signed iOS/Android releases targeting API 36 with 16 KB pages and test on physical devices.",
+      "acceptance": [
+        "AAB targets API 36; 16 KB check passes",
+        "iOS archive passes App Store validation",
+        "Critical flows pass on minimum/target OS devices",
+        "Build versions and commits are recorded"
+      ],
+      "priority": 90,
+      "dependsOn": [
+        "E8-009",
+        "E8-010"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E13-008",
+      "epic": "E13",
+      "title": "Store listings and review notes",
+      "description": "Prepare screenshots, copy, privacy links and review notes including YouTube/no-screen-share claims.",
+      "acceptance": [
+        "Listings describe the product accurately and avoid DRM claims",
+        "Screenshots show real UI with representative demo couple",
+        "Review notes explain UGC controls, calls and YouTube embed",
+        "All links resolve"
+      ],
+      "priority": 95,
+      "dependsOn": [
+        "E13-005"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E13-009",
+      "epic": "E13",
+      "title": "Kenya ODPC and cross-border compliance",
+      "description": "Confirm registration duties, cross-border transfer basis, DPIA and breach timelines with counsel.",
+      "acceptance": [
+        "Registration/exemption position documented",
+        "Cross-border transfer clauses and processor list are in the policy",
+        "DPIA completed for sensitive couple data",
+        "Breach notification timeline and owner are set"
+      ],
+      "priority": 90,
+      "dependsOn": [],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E13-010",
+      "epic": "E13",
+      "title": "Launch checklist and go/no-go",
+      "description": "Run a final gated checklist with rollback, monitoring window and support staffing.",
+      "acceptance": [
+        "All P0 stories closed and evidence linked",
+        "Rollback tested for web and staged app releases",
+        "Support/on-call coverage confirmed for launch week",
+        "Go/no-go signed by a human"
+      ],
+      "priority": 90,
+      "dependsOn": [
+        "E13-004",
+        "E13-007",
+        "E12-004"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E0-009",
+      "epic": "E0",
+      "title": "Extract design tokens from the existing look",
+      "description": "Move the colours, type, spacing, radii and motion values used by the current universe design into packages/ui-tokens so web and native can share them without changing the visual identity.",
+      "acceptance": [
+        "Tokens package builds and is consumed by the web app",
+        "A visual check of home/chat shows no unintended change",
+        "Reduced-motion tokens exist and are used by the main animations",
+        "Remaining hardcoded duplicates are documented with a removal plan"
+      ],
+      "priority": 10,
+      "dependsOn": [
+        "E0-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E0-010",
+      "epic": "E0",
+      "title": "Server-evaluated feature flags",
+      "description": "Add a small feature-flag layer for risky features (paywall, licensed catalogue, screen share, new sync transport) with safe defaults and per-couple allowlists.",
+      "acceptance": [
+        "Flags are evaluated server-side and cannot be forced by a client",
+        "Defaults keep unfinished/legal-gated features off",
+        "An allowlist can enable a flag for one staging couple",
+        "Flag changes are audited and covered by tests"
+      ],
+      "priority": 15,
+      "dependsOn": [
+        "E0-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E1-015",
+      "epic": "E1",
+      "title": "Optional password and MFA",
+      "description": "Let users add a password (with breached-password checking) and TOTP/passkey MFA, with recovery codes and store-compliant UX.",
+      "acceptance": [
+        "Password sign-in works alongside OTP and rejects breached passwords",
+        "TOTP enrolment, verification and recovery codes work",
+        "MFA can be removed only after re-authentication",
+        "Recovery paths are documented and tested"
+      ],
+      "priority": 30,
+      "dependsOn": [
+        "E1-003",
+        "E1-007"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E1-016",
+      "epic": "E1",
+      "title": "Flag-gated paywall UI",
+      "description": "Add entitlement-driven paywall screens behind a flag, without enabling billing or hardcoding prices until a human decides the model.",
+      "acceptance": [
+        "Paywall renders plan benefits from entitlements, not hardcoded prices",
+        "Flag off means no paywall anywhere",
+        "Platform billing rules are researched and recorded in an ADR before enabling",
+        "Purchase paths are stubbed and clearly disabled in v1"
+      ],
+      "priority": 30,
+      "dependsOn": [
+        "E1-012",
+        "E0-010"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E3-010",
+      "epic": "E3",
+      "title": "Shared calendar with two time zones",
+      "description": "Give each couple a shared calendar showing events in both partners' local times, with reminders that respect notification preferences.",
+      "acceptance": [
+        "Events are couple-scoped and show both local times",
+        "Create/edit/delete works on web and native",
+        "Reminders honour quiet hours and per-partner time zones",
+        "DST and travel changes do not shift events unexpectedly"
+      ],
+      "priority": 45,
+      "dependsOn": [
+        "E1-006",
+        "E1-014"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E3-011",
+      "epic": "E3",
+      "title": "Shared lists and bucket list with progress",
+      "description": "Add shared lists (including a bucket list) with check-off, ordering and progress that syncs between partners.",
+      "acceptance": [
+        "Lists and items are couple-scoped with realtime updates",
+        "Check-off progress is consistent after reconnect",
+        "Bucket-list completions can link to a memory or gallery item",
+        "Offline edits queue and reconcile without duplicates"
+      ],
+      "priority": 45,
+      "dependsOn": [
+        "E3-001",
+        "E1-006"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E3-012",
+      "epic": "E3",
+      "title": "Notes and time-capsule letters",
+      "description": "Let partners write shared notes and time-capsule letters that stay sealed until a chosen date.",
+      "acceptance": [
+        "Notes are couple-private and editable per rules",
+        "Letters are sealed server-side until the open date and cannot be read early via API",
+        "Notification is sent when a letter opens",
+        "Content is included in export and purged on deletion"
+      ],
+      "priority": 45,
+      "dependsOn": [
+        "E1-006"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E3-013",
+      "epic": "E3",
+      "title": "Check-ins and thinking-of-you nudges",
+      "description": "Add an optional daily check-in and a rate-limited nudge that sends a gentle notification, with quiet hours respected.",
+      "acceptance": [
+        "Check-in state is per person and optionally shared with the partner",
+        "Nudges are rate limited and respect quiet hours and notification settings",
+        "No covert tracking or presence disclosure beyond explicit state",
+        "Both partners can disable check-ins and nudges"
+      ],
+      "priority": 45,
+      "dependsOn": [
+        "E3-005"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E3-014",
+      "epic": "E3",
+      "title": "Couple quizzes and games",
+      "description": "Add lightweight asynchronous quizzes/games based on the couple's own answers or curated prompts.",
+      "acceptance": [
+        "A quiz can be started, answered and revealed by both partners",
+        "No timed pressure or streak punishment",
+        "Questions avoid sensitive topics unless the couple opts in",
+        "Results are couple-private and exportable"
+      ],
+      "priority": 50,
+      "dependsOn": [
+        "E1-006"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E3-015",
+      "epic": "E3",
+      "title": "Long-distance mode",
+      "description": "Show both partners' local times and a countdown to the next visit, with no location access unless explicitly shared.",
+      "acceptance": [
+        "Both local times and day boundaries are correct",
+        "Next-visit countdown is editable and time-zone aware",
+        "No location permission or background tracking is requested",
+        "Mode can be turned off with no residual presence sharing"
+      ],
+      "priority": 45,
+      "dependsOn": [
+        "E1-006"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E3-016",
+      "epic": "E3",
+      "title": "App lock and discreet notification options",
+      "description": "Add biometric/PIN app lock on native and discreet notification text or neutral app icon options for safety.",
+      "acceptance": [
+        "App lock can be enabled per device and fails closed",
+        "Notification previews can be fully hidden per partner/device",
+        "Discreet icon option follows platform capabilities and store rules",
+        "No covert monitoring or hidden permissions are added"
+      ],
+      "priority": 45,
+      "dependsOn": [
+        "E1-003",
+        "E3-005",
+        "E8-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E4-009",
+      "epic": "E4",
+      "title": "Call during media and picture-in-picture",
+      "description": "Let a couple keep a video call visible in picture-in-picture while a room plays, with correct audio focus.",
+      "acceptance": [
+        "PiP call works over the room on supported platforms",
+        "Audio focus rules prevent echo and unexpected ducking",
+        "Controls remain reachable and accessible",
+        "Unsupported platforms get a clear audio-only fallback"
+      ],
+      "priority": 55,
+      "dependsOn": [
+        "E4-002",
+        "E5-004"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E5-010",
+      "epic": "E5",
+      "title": "Public-domain and CC video library",
+      "description": "Add a curated video provider for public-domain/CC sources with per-item licence and attribution metadata.",
+      "acceptance": [
+        "Only allowlisted, licence-verified sources are playable",
+        "Licence and attribution render with each item",
+        "No downloads or DRM circumvention",
+        "Provider can be disabled by flag without breaking rooms"
+      ],
+      "priority": 60,
+      "dependsOn": [
+        "E5-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E5-011",
+      "epic": "E5",
+      "title": "Shared playlists and now-playing state",
+      "description": "Persist shared playlists and now-playing status so rooms resume and either partner can see what is queued.",
+      "acceptance": [
+        "Playlists are couple-scoped and reorderable",
+        "Now-playing state survives reload and late join",
+        "Queue history is available without leaking across couples",
+        "Empty/ended states are clear on both platforms"
+      ],
+      "priority": 60,
+      "dependsOn": [
+        "E5-002",
+        "E5-003"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E5-012",
+      "epic": "E5",
+      "title": "Background playback and lock-screen controls for allowed sources",
+      "description": "Support background audio and lock-screen controls only for sources whose licences/platform rules allow it; YouTube remains foreground-only.",
+      "acceptance": [
+        "Background playback works for uploads/podcasts/CC sources where allowed",
+        "YouTube never plays in the background and the UI says so",
+        "Lock-screen/Media Session controls work and stay in sync",
+        "Audio focus, interruptions and calls are handled"
+      ],
+      "priority": 60,
+      "dependsOn": [
+        "E5-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E5-013",
+      "epic": "E5",
+      "title": "Sync-protocol package and deterministic simulator",
+      "description": "Build packages/sync-protocol with events, server-clock estimation, drift correction and a CI simulator before the UI consumes it.",
+      "acceptance": [
+        "Events use {type, positionMs, serverTimeMs, seq, authorId} with server-assigned ordering",
+        "Drift rules: ignore <150 ms, rate-nudge 150-1000 ms, hard seek >1000 ms",
+        "Heartbeats at most 1 per 5 s per client; handlers are idempotent",
+        "Simulator covers latency, jitter, loss and reorder and asserts p95 drift <500 ms"
+      ],
+      "priority": 55,
+      "dependsOn": [
+        "E0-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E7-008",
+      "epic": "E7",
+      "title": "Curated date ideas and activity library",
+      "description": "Add an offline-capable library of date ideas and activities with categories, saves and plans.",
+      "acceptance": [
+        "Content is licence-clean and attributed where needed",
+        "Library is readable offline on native",
+        "Saved/planned activities are couple-scoped",
+        "No external API is required for core browsing"
+      ],
+      "priority": 70,
+      "dependsOn": [
+        "E1-006"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E7-010",
+      "epic": "E7",
+      "title": "Optional places and map ideas with location off by default",
+      "description": "Add optional saved places/map ideas; location sharing is off by default, per-person and visibly revocable.",
+      "acceptance": [
+        "No location permission is requested unless the user opts in",
+        "Shared location is visible, per-person and instantly revocable",
+        "No background or covert location tracking exists",
+        "Places are couple-private and exportable"
+      ],
+      "priority": 75,
+      "dependsOn": [
+        "E1-006",
+        "E9-004"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E8-011",
+      "epic": "E8",
+      "title": "Home-screen widgets",
+      "description": "Add read-only home-screen widgets for days together, next-visit countdown and partner local time where the platform allows.",
+      "acceptance": [
+        "Widgets render correctly on supported iOS/Android versions",
+        "Data refreshes within platform budgets without background abuse",
+        "Widgets hide content under a discreet mode",
+        "Unsupported platforms degrade gracefully"
+      ],
+      "priority": 80,
+      "dependsOn": [
+        "E8-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E8-012",
+      "epic": "E8",
+      "title": "Low-bandwidth mode and offline reading",
+      "description": "Add a low-bandwidth mode with no autoplay, smaller images and deferred sync, plus offline reading of core screens.",
+      "acceptance": [
+        "Mode can be manual or auto-detected on slow networks",
+        "No autoplay video; images are resized; sync defers politely",
+        "Home, chat history, story and lists are readable offline",
+        "Queued sends and uploads resume on reconnect"
+      ],
+      "priority": 75,
+      "dependsOn": [
+        "E8-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E9-008",
+      "epic": "E9",
+      "title": "Copyright takedown and counter-notice flow",
+      "description": "Add a documented copyright/DMCA-style takedown process, form and admin workflow for reported content.",
+      "acceptance": [
+        "Published policy and contact exist (counsel-reviewed)",
+        "Report intake captures required fields and evidence",
+        "Admin can remove content and notify uploader per policy",
+        "Counter-notice and repeat-infringer steps are documented"
+      ],
+      "priority": 40,
+      "dependsOn": [
+        "E9-002",
+        "E13-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E9-009",
+      "epic": "E9",
+      "title": "Re-authentication for sensitive actions",
+      "description": "Require fresh authentication before export, deletion, unlink, email change or secret changes.",
+      "acceptance": [
+        "Sensitive actions require a recent OTP/passkey re-auth",
+        "Re-auth cannot be bypassed by stale sessions",
+        "Failures are rate limited and audited",
+        "UX explains why and offers recovery"
+      ],
+      "priority": 35,
+      "dependsOn": [
+        "E1-003"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E9-010",
+      "epic": "E9",
+      "title": "E2EE private vault ADR",
+      "description": "Write an ADR for a future end-to-end-encrypted private vault, covering search, backup, multi-device and moderation trade-offs.",
+      "acceptance": [
+        "ADR compares E2EE designs and their costs",
+        "No E2EE claims appear in the product until implemented and reviewed",
+        "Recommendation and prerequisites are recorded",
+        "Security and privacy docs link to the ADR"
+      ],
+      "priority": 45,
+      "dependsOn": [
+        "E1-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E9-011",
+      "epic": "E9",
+      "title": "CSP and security headers",
+      "description": "Add a strict Content-Security-Policy, HSTS, frame-ancestors, referrer and permissions policies, and eliminate wildcard CORS.",
+      "acceptance": [
+        "CSP works with Next.js/YouTube embed and is enforced in production mode",
+        "Security headers pass an external scan with no critical issues",
+        "CORS origins are explicitly allowlisted",
+        "Violations are reported without leaking content"
+      ],
+      "priority": 35,
+      "dependsOn": [
+        "E0-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E9-012",
+      "epic": "E9",
+      "title": "Safety resources and discreet help screen",
+      "description": "Provide a safety resources screen with regional crisis/abuse links and a discreet way to leave the app quickly.",
+      "acceptance": [
+        "Resources are available from settings and the safety page",
+        "Screen can be exited discreetly and does not expose browsing history",
+        "Content is reviewed by a human before launch",
+        "Links resolve and are accessible"
+      ],
+      "priority": 40,
+      "dependsOn": [
+        "E9-003"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E12-008",
+      "epic": "E12",
+      "title": "OWASP MASVS-L1 style security review",
+      "description": "Run an OWASP MASVS-L1-style checklist across web and native and fix or document every applicable finding.",
+      "acceptance": [
+        "Checklist results are committed with evidence",
+        "Critical/high findings are fixed or explicitly accepted by a human",
+        "Secrets, storage, transport and platform permissions are covered",
+        "Review is repeated before launch"
+      ],
+      "priority": 90,
+      "dependsOn": [
+        "E8-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E12-009",
+      "epic": "E12",
+      "title": "Resilience tests for bad networks and clocks",
+      "description": "Test losing network mid-upload, reconnecting mid-room and clock skew, and fix the resulting UX.",
+      "acceptance": [
+        "Interrupted uploads resume without corruption or duplicates",
+        "Room reconnects and resyncs to the correct position",
+        "Clock skew does not break countdowns or questions",
+        "Results are recorded in VERIFICATION"
+      ],
+      "priority": 90,
+      "dependsOn": [
+        "E5-002",
+        "E6-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E12-010",
+      "epic": "E12",
+      "title": "Mobile performance and bundle budgets",
+      "description": "Measure and enforce cold start <2.5 s on a mid-range Android device and bounded JS/bundle sizes with list virtualisation.",
+      "acceptance": [
+        "Cold start is measured on a mid-range physical device",
+        "Web first-route JS is ≤250 KB gzipped",
+        "Lists are virtualised and images lazy-load",
+        "Budgets are checked before release"
+      ],
+      "priority": 90,
+      "dependsOn": [
+        "E8-001"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E13-011",
+      "epic": "E13",
+      "title": "DPIA for sensitive couple data",
+      "description": "Complete a data protection impact assessment covering intimate content, cross-border transfers, AI, moderation and deletion.",
+      "acceptance": [
+        "DPIA follows the Kenyan/other applicable framework with counsel",
+        "Risks and mitigations are recorded and linked to stories",
+        "Transfer safeguards and processor DPAs are attached",
+        "A human signs off before launch"
+      ],
+      "priority": 90,
+      "dependsOn": [
+        "E13-009"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    }
+  ]
+}
