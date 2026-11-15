@@ -96,7 +96,7 @@ const db = { DATABASE_URL: env.DATABASE_URL };
 step("Creating tables");
 run("corepack", ["pnpm", "db:migrate"], db);
 
-step("Adding Hassan, Whitney and your worlds");
+step("Adding the demo couple and your worlds");
 // Seed with the passcodes you already have, so none are generated and discarded.
 const codes = Object.fromEntries(
   [...(existsSync("PASSCODES.local.md") ? readFileSync("PASSCODES.local.md", "utf8") : "").matchAll(/^\| (\w+) \| [^|]+ \| `([^`]+)` \|$/gm)].map((m) => [`SEED_${m[1].toUpperCase()}_PASSCODE`, m[2]]),

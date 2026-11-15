@@ -37,5 +37,13 @@ export function WorldEmblem({ theme }: { theme: string }) {
       </svg>
     );
   }
-  return null;
+  return (
+    <svg viewBox="0 0 200 200" className="size-40 sm:size-48" aria-hidden>
+      <circle cx="100" cy="100" r="76" fill="none" stroke="var(--accent)" strokeOpacity=".25" />
+      <circle cx="100" cy="100" r="54" fill="none" stroke="var(--accent-2)" strokeOpacity=".4" strokeDasharray="2 7" />
+      <path d="M100 138c-23-16-38-30-38-47 0-13 10-23 22-23 7 0 13 3 16 8 3-5 9-8 16-8 12 0 22 10 22 23 0 17-15 31-38 47z" fill="var(--accent-soft)" stroke="var(--accent)" strokeOpacity=".65" strokeWidth="2" />
+      <circle cx="166" cy="78" r="5" fill="var(--accent-2)" />
+      <circle cx="42" cy="120" r="4" fill="var(--accent)" fillOpacity=".65" />
+    </svg>
+  );
 }

@@ -20,10 +20,6 @@ import { TOPICS, type TopicKey } from "@/lib/trends/topics";
 import { TrendCardView } from "@/components/feed/trend-card";
 import { day, nowMs } from "@/lib/ui/time";
 
-const WORLD_LINE: Record<string, string[]> = {
-  hassan: ["Computer Science", "Software", "Technology", "Nature", "Philosophy"],
-  whitney: ["Biotechnology", "Birds", "Knitting", "Nature", "Environment"],
-};
 const KIND: Record<string, string> = { memory: "A memory", milestone: "A milestone", adventure: "An adventure", plan: "A plan", discovery: "A discovery" };
 const ordinal = (n: number) => `${n}${["th", "st", "nd", "rd"][n % 100 > 10 && n % 100 < 14 ? 0 : n % 10 < 4 ? n % 10 : 0]}`;
 const firstOf = (p?: { displayName: string }) => p?.displayName.split(" ")[0] ?? "";
@@ -79,7 +75,7 @@ function Milestone({ label, value, unit, detail, progress, world, href }: { labe
 
 function WorldCard({ person, topics }: { person: PublicPerson; topics: TopicKey[] }) {
   const first = firstOf(person);
-  const line = WORLD_LINE[person.theme] ?? topics.map((t) => TOPICS[t].label);
+  const line = topics.map((t) => TOPICS[t].label);
   return (
     <Link href={`/world/${person.slug}`} data-world={person.theme} className="tile lift group relative block overflow-hidden p-7 sm:p-10">
       <div className={`absolute inset-0 opacity-60 bg-${person.theme}`} aria-hidden />

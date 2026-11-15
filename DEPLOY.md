@@ -59,7 +59,7 @@ Nothing to configure: push keys are derived from `DATABASE_URL` (or `SESSION_SEC
    pnpm ingest --force
    ```
 
-   `PASSCODES.local.md` (git-ignored) holds each person's passcode. Leave out `--reuse` to issue fresh ones. Give Whitney hers privately; either of you can change your own passcode later in Settings → Passcode.
+   `PASSCODES.local.md` (git-ignored) holds each person's passcode. Leave out `--reuse` to issue fresh ones. Give your partner theirs privately; either of you can change your own passcode later in Settings → Passcode.
 
 Neon's free compute scales to zero when idle, so the first visit after a quiet spell takes a second or two longer. Unlike Render's free Postgres, your data is not deleted.
 

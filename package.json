@@ -13,6 +13,7 @@
     "typecheck": "corepack pnpm typegen && turbo run typecheck",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "setup": "corepack pnpm install && corepack pnpm typegen && corepack pnpm seed",
     "check": "corepack pnpm typecheck && corepack pnpm lint && corepack pnpm test && corepack pnpm build",
     "db:generate": "corepack pnpm --filter @letsvibe/web db:generate",
     "db:migrate": "corepack pnpm --filter @letsvibe/web db:migrate",

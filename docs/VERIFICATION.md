@@ -96,6 +96,7 @@ Current tests cover: trends engine, visibility/clock/verse logic, push key deriv
 | E0-002 | 2026-11-15 | Monorepo move; gates in `.loop/progress.md` iteration 003; commit `2d46139` |
 | E0-003 | — | _pending (gitleaks H1)_ |
 | E0-004 | 2026-11-15 | Next 16.4.6; prod audit clean; dev-only 2 moderate; gates in `.loop/progress.md` iteration 004 |
+| E0-007 | 2026-11-15 | Fresh-workspace `pnpm run setup`; generic Alex/Sam seed idempotent; gates in `.loop/progress.md` iteration 005 |
 | E1-001 | — | _pending_ |
 | E1-002 | — | _pending_ |
 | E1-003 | — | _pending_ |

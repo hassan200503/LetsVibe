@@ -2,15 +2,17 @@
 
 A private shared world for two: messages, calls, synchronised listening and watching, memories, and live discoveries from the real world.
 
+Requires Node.js 24+ and pnpm 12.21.0 (`corepack enable pnpm` once, or use any Node version manager). No database setup is needed.
+
 ```
                   LET'SVIBE
                       │
         ┌─────────────┼─────────────┐
-     HASSAN        OUR STORY      WHITNEY
-   software        memories      biotechnology
-   technology      plans         birds
-   philosophy      milestones    knitting
-   nature          discoveries   nature · environment
+     YOU           OUR STORY      PARTNER
+   software        memories      nature
+   technology      plans         writing
+   philosophy      milestones    making
+   nature          discoveries   environment
         └─────────────┼─────────────┘
                SHARED DISCOVERY
             LIVE REAL-WORLD TRENDS
@@ -26,7 +28,7 @@ A private shared world for two: messages, calls, synchronised listening and watc
 | Together room: listen and watch in sync, with the chat beside you; it keeps playing (as a mini-player) through Messages, calls and the rest of the site | `/together` |
 | Our Story: memories, milestones, adventures, plans, saved discoveries | `/story` |
 | Each person's world: profile, dashboard, journal, radar, skills, Knowledge Vault | `/world/[slug]` |
-| Hassan only: Things I'm Building, Questions I'm Thinking About | `/world/hassan/projects`, `/world/hassan/thinking` |
+| Per-person projects and thinking journal | `/world/[slug]/projects`, `/world/[slug]/thinking` |
 | For You (interleaves every followed topic; favourite topics get double space) | `/discover` |
 | Topic feeds with category filters: software, technology, philosophy, nature, biotech, birds, knitting, environment | `/discover/[topic]` |
 | Something We Both Might Like: items touching both a technology and a life-science thread | `/discover/together` |
@@ -38,9 +40,9 @@ A private shared world for two: messages, calls, synchronised listening and watc
 | Opt-in public profile (public skills and projects only) | `/p/[slug]` |
 | Source health | `/discover/sources` |
 
-### Names
+### Demo data
 
-Her name is **Whitney**, and that is what every profile, route and heading uses. "Sumaiya" is a pet name Hassan gave her. It lives only in her optional `nickname` field, which she can edit or clear, and it never appears on public pages.
+`pnpm run setup` creates a generic demo couple, **Alex** and **Sam**, with a few interests, skills and projects. Change names and profiles in Settings; delete `apps/web/.data/` to reseed from scratch.
 
 ### Privacy
 
@@ -84,13 +86,12 @@ Source registry (sources.ts) → adapter (RSS/Atom, iNaturalist) → normalise
 ## Run it locally
 
 ```bash
-pnpm install
-pnpm seed              # creates Hassan, Whitney, interests, Hassan's verified skills & projects
-pnpm ingest --force
+pnpm run setup             # install, generate types, seed Alex and Sam
+pnpm ingest --force    # optional: fetch the first live discoveries
 pnpm dev
 ```
 
-No database setup is needed: without `DATABASE_URL`, an embedded Postgres (PGlite) lives in `apps/web/.data/`. It allows one process at a time, so stop `pnpm dev` before running `seed`, `ingest` or `retag`. The passcodes the seed generated are in `apps/web/.env.local`.
+No database setup is needed: without `DATABASE_URL`, an embedded Postgres (PGlite) lives in `apps/web/.data/`. It allows one process at a time, so stop `pnpm dev` before running `seed`, `ingest` or `retag`. The generated demo passcodes are in `apps/web/.env.local` (git-ignored); `pnpm passcodes` writes a handover file.
 
 ```bash
 pnpm test          # brand, engine, visibility, journey clock, verse rotation and chat formatting tests
@@ -101,7 +102,3 @@ pnpm lint
 ## Deploy for free (no card)
 
 See [`DEPLOY.md`](DEPLOY.md).
-
-## Where Hassan's profile facts come from
-
-His skills (with his own 1–5 self-ratings and the evidence behind each), projects and introduction come from his public portfolio (hassan200503.github.io) and public GitHub repositories. Nothing was invented, and no contact details are included. Whitney's profile starts almost empty on purpose, for her to write.

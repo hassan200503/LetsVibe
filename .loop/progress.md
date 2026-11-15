@@ -51,3 +51,15 @@
 - Gates: `pnpm install --frozen-lockfile` pass (lockfile updated); `pnpm typegen` pass; `pnpm typecheck` pass (domain + web); `pnpm lint` pass; `pnpm test` pass (5 files / 44 tests); `pnpm build` pass (Next 16.4.6, 33 pages).
 - Learnings: pnpm 12 moved project settings (including overrides) to `pnpm-workspace.yaml`; the package.json field is silently ignored. A network DNS failure interrupted the first Next download; the retry reused the store and completed.
 - Next: `E0-007` (generic demo seed + one-command developer path). `E0-003` remains blocked on the missing gitleaks binary (H1).
+
+## Iteration 005 - 2026-11-15 - E0-007 one-command developer experience and docs
+
+- Replaced the personal seed with a fictional demo couple, Alex and Sam (both theme `us`), with generic interests, skills, projects and radar data. No real names, contact details or personal facts remain in the seed path.
+- Added root `setup` script: `pnpm run setup` installs, runs typegen and seeds the demo. `pnpm run` is required because pnpm has a built-in `pnpm setup` command; README, AGENTS and RUNBOOK use the explicit form.
+- Documented Node 24+/pnpm 12.21.0 prerequisites and kept one-command local setup database-free (PGlite in `apps/web/.data/`).
+- Updated `.env.example` to `SEED_ALEX_PASSCODE`/`SEED_SAM_PASSCODE`, `go-live` wording and DEPLOY copy. Seed-generated passcodes stay in git-ignored `.env.local`.
+- Removed the hardcoded Hassan/Whitney home-world line and added a generic `us` emblem fallback; per-theme legacy worlds remain until E0-010/E1-013.
+- Fresh-workspace simulation (copy without `node_modules`, `.git`, `.data` or `.env.local`): `pnpm run setup` installed 558 packages, typegen passed, generated passcodes and created Alex/Sam. Running seed again printed only `Done.`; DB counts: 2 people, 1 relationship, 2 members, 8 interests, 2 preferences, 5 skills, 2 projects, 8 radar lanes, 4 radar items.
+- Gates on the source tree: `pnpm check` PASS: typegen; typecheck 2 packages; lint clean; 5 files / 44 tests; Next 16.4.6 build 33 pages. No new warnings reported.
+- Learnings: `pnpm setup` is a built-in pnpm command, so a package script named `setup` must be invoked as `pnpm run setup`; `pnpm run setup` also bootstraps root dependencies on a fresh checkout. Windows was exercised locally; macOS/Linux use the same commands but were not executed in this environment.
+- Next: `E0-008` (CI gates and PR template). `E0-003` remains blocked on gitleaks (H1).

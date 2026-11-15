@@ -14,7 +14,10 @@ A private shared world for couples: messages, calls, rooms, memories, gallery, d
 
 ## Commands (run from repo root)
 
+Requires Node.js 24+ and pnpm 12.21.0. If `pnpm` is missing, run `corepack enable pnpm` once.
+
 ```powershell
+pnpm run setup                 # fresh clone: install, typegen and seed Alex + Sam
 pnpm install               # install the workspace
 pnpm typegen               # REQUIRED on a fresh checkout before typecheck
 pnpm dev                   # web dev server; zero-setup PGlite in apps/web/.data/
@@ -60,6 +63,7 @@ A change is done only when typegen, typecheck, lint, test and build pass. In the
 - Next 16.4.6 is patched for the critical advisories. `pnpm audit --prod` is clean; only two moderate dev-tool findings remain (esbuild via drizzle-kit, minimatch via ESLint).
 - Legacy `photos` stores base64 in Postgres; new media must use Storage. Legacy polling in chat/room/calls writes on each tick — do not copy that pattern.
 - Tests: `pnpm test` covers only brand, trends/visibility/clock/verses/push/research parsing today; add tests with every rewrite.
+- `pnpm run setup` seeds fictional demo people (Alex and Sam). There is no personal seed data; never add real people or private details to it.
 
 ## Loop contract
 

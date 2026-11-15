@@ -129,9 +129,9 @@
       "dependsOn": [
         "E0-002"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "Generic Alex/Sam seed; pnpm run setup verified in a fresh workspace on Windows; gates passed; macOS/Linux commands documented but not executed. See progress iteration 005."
     },
     {
       "id": "E0-008",

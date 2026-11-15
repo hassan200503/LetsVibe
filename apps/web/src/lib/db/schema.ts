@@ -20,8 +20,8 @@ import { sql } from "drizzle-orm";
  * Data model for "Let'sVibe".
  *
  * People are not hard-coded: every personal area hangs off `people.id`, and a
- * relationship joins any number of people. Hassan and Whitney are simply the
- * two rows the seed creates.
+ * relationship joins any number of people. Alex and Sam are simply the demo
+ * rows the seed creates.
  */
 
 export type Visibility = "private" | "shared" | "public";
@@ -35,7 +35,7 @@ const visibility = () => text("visibility").$type<Visibility>().notNull().defaul
 
 export const people = pgTable("people", {
   id: id(),
-  /** URL slug, e.g. "hassan". Never a nickname. */
+  /** URL slug, e.g. "alex". Never a nickname. */
   slug: text("slug").notNull().unique(),
   displayName: text("display_name").notNull(),
   /** Optional, private-to-the-couple nickname. Never shown on public pages. */
@@ -45,7 +45,7 @@ export const people = pgTable("people", {
   focus: text("focus"),
   intro: text("intro"),
   motto: text("motto"),
-  /** Visual identity key: "hassan" | "whitney" | any future theme. */
+  /** Visual identity key, e.g. "us" or a future theme. */
   theme: text("theme").notNull(),
   /** Label used for the person's learning journal, e.g. "Engineering Journey". */
   journalTitle: text("journal_title").notNull().default("Learning Journey"),

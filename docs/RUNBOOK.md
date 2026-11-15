@@ -17,8 +17,7 @@ Operational guide for the target architecture. Commands for today's single-coupl
 ## Local development
 
 ```powershell
-pnpm install
-pnpm typegen
+pnpm run setup             # fresh clone: install, typegen and seed Alex + Sam
 pnpm dev               # http://localhost:3000
 pnpm test
 pnpm lint
