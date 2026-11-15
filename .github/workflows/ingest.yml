@@ -20,14 +20,17 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.21.0
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - run: npm run db:migrate
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:migrate
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      - run: npm run ingest
+      - run: pnpm ingest
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

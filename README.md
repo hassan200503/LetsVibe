@@ -44,7 +44,7 @@ Her name is **Whitney**, and that is what every profile, route and heading uses.
 
 ### Privacy
 
-Everything personal has a visibility: 🔒 **private** (owner only), 💞 **shared** (the two of you), or 🌍 **public** (only on an enabled public profile). Vault and thinking-journal entries default to private. The rule is implemented once, in `visibleTo()` (`src/lib/context.ts`), and every read goes through it.
+Everything personal has a visibility: 🔒 **private** (owner only), 💞 **shared** (the two of you), or 🌍 **public** (only on an enabled public profile). Vault and thinking-journal entries default to private. The rule is implemented once, in `visibleTo()` (`apps/web/src/lib/context.ts`), and every read goes through it.
 
 ## Messages and calls
 
@@ -57,12 +57,12 @@ Everything personal has a visibility: 🔒 **private** (owner only), 💞 **shar
 
 - **Ask anything** at `/research` in one of three modes: *Research studies* (finds papers in [OpenAlex](https://openalex.org), a free index of 250M+ scholarly works, and has Gemini synthesise them with numbered citations that open each study), *Learn it* (a step-by-step lesson ending in a self-check) and *Explain simply*. Answers stream in as they're written, with three follow-up questions to go further.
 - **Threads** keep the conversation, so follow-ups have context. Share a thread and it appears in your partner's Research too; they can read it and ask follow-ups. **Quiz me** writes five multiple-choice questions on what a thread covered. **Save to learning** keeps an answer in Things We Are Learning.
-- **Gemini** (`src/lib/research/gemini.ts`) tries each model in `GEMINI_MODELS` until one answers, first with Google Search grounding, then without; a model that says "busy" waits at the back of the queue for a minute. When grounding is used, Google's search suggestions are shown with the answer, as Google requires.
-- **Keys** come from `GEMINI_API_KEY`, or from Settings → AI research, where the key is checked with Google and stored sealed (AES-256-GCM) in the `kv` table (`src/lib/settings.ts`). The call relay in Settings → Call relay is stored the same way. Neither ever reaches the browser.
+- **Gemini** (`apps/web/src/lib/research/gemini.ts`) tries each model in `GEMINI_MODELS` until one answers, first with Google Search grounding, then without; a model that says "busy" waits at the back of the queue for a minute. When grounding is used, Google's search suggestions are shown with the answer, as Google requires.
+- **Keys** come from `GEMINI_API_KEY`, or from Settings → AI research, where the key is checked with Google and stored sealed (AES-256-GCM) in the `kv` table (`apps/web/src/lib/settings.ts`). The call relay in Settings → Call relay is stored the same way. Neither ever reaches the browser.
 
 ## Listening together
 
-- **One player for the whole site.** The room's player lives in the root layout (`src/components/together/room-provider.tsx`), so opening Messages, taking a call or visiting any page never stops the music: outside the room it becomes a mini-player (play/pause for both, back to the room, stop on this device). During a call the music drops to 20% volume.
+- **One player for the whole site.** The room's player lives in the root layout (`apps/web/src/components/together/room-provider.tsx`), so opening Messages, taking a call or visiting any page never stops the music: outside the room it becomes a mini-player (play/pause for both, back to the room, stop on this device). During a call the music drops to 20% volume.
 - **Staying in step.** The server keeps `{playing, position, updatedAt}`; play/pause/seek carry the moment they happened, so request travel time doesn't put anyone behind. Each phone estimates the server clock from its fastest recent round trips, never lets an older reply undo a newer state, and closes gaps by playing up to 5–10% faster or slower. It jumps only for large gaps, never while buffering, only into audio already downloaded (unless far behind), and backs off on slow connections. "Ended" names the state version it judged, so a stale report can't stop a track that was just restarted.
 
 ## The Live Trends Engine
@@ -79,23 +79,23 @@ Source registry (sources.ts) → adapter (RSS/Atom, iNaturalist) → normalise
 - **Failure handling.** Sources are claimed atomically, so overlapping runs never double-fetch. Failures back off exponentially (capped at a day) and honour `Retry-After`. The UI shows *"Some discoveries are temporarily unavailable. Your saved content is still here."* with cached content still in place.
 - **Attribution and licensing.** We store a title, a ≤280-character excerpt, metadata and a link, never the full article. Images appear only where reuse is clearly allowed: NASA (public domain) and iNaturalist photos under CC licences, each with its credit and licence shown. Every other card uses the topic's own artwork.
 - **Quality.** Sources are tiered (official organisations → universities → research institutions → journals → …), and a filter drops coupon, deal and gift-guide posts.
-- **Adding a source:** append one line to `src/lib/trends/sources.ts`. **Changing categories:** edit `src/lib/trends/topics.ts`, then run `npm run retag` to re-apply the rules to stored items.
+- **Adding a source:** append one line to `apps/web/src/lib/trends/sources.ts`. **Changing categories:** edit `apps/web/src/lib/trends/topics.ts`, then run `pnpm retag` to re-apply the rules to stored items.
 
 ## Run it locally
 
 ```bash
-npm install
-npm run seed            # creates Hassan, Whitney, interests, Hassan's verified skills & projects
-npm run ingest -- --force
-npm run dev
+pnpm install
+pnpm seed              # creates Hassan, Whitney, interests, Hassan's verified skills & projects
+pnpm ingest --force
+pnpm dev
 ```
 
-No database setup is needed: without `DATABASE_URL`, an embedded Postgres (PGlite) lives in `.data/`. It allows one process at a time, so stop `npm run dev` before running `seed`, `ingest` or `retag`. The passcodes the seed generated are in `.env.local`.
+No database setup is needed: without `DATABASE_URL`, an embedded Postgres (PGlite) lives in `apps/web/.data/`. It allows one process at a time, so stop `pnpm dev` before running `seed`, `ingest` or `retag`. The passcodes the seed generated are in `apps/web/.env.local`.
 
 ```bash
-npm test          # engine, visibility, journey clock, verse rotation and chat formatting tests
-npm run typecheck
-npm run lint
+pnpm test          # brand, engine, visibility, journey clock, verse rotation and chat formatting tests
+pnpm typecheck
+pnpm lint
 ```
 
 ## Deploy for free (no card)

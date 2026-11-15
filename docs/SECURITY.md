@@ -81,13 +81,13 @@ Actors: two members of a couple; anonymous internet; abusive authenticated users
 ## Secrets management
 
 - Separate credentials per environment; production never on developer/loop machines.
-- `.env.example` documents names only. `.env*`, `.data/`, keys, passcodes are gitignored.
+- `.env.example` documents names only. `.env*`, `apps/web/.data/`, keys, passcodes are gitignored.
 - Rotation owners and dates in the inventory (E9-006); rehearse rotation of session/auth/TURN/AI keys.
 - No secrets in client bundles; `NEXT_PUBLIC_*` is treated as public.
 
 ## Dependency and build security
 
-- CI: `npm ci`/pnpm frozen lockfile, typegen, typecheck, lint, tests, build; gitleaks full history; dependency audit; Semgrep/CodeQL (E0-003).
+- CI: pnpm frozen lockfile, typegen, typecheck, lint, tests, build; gitleaks full history; dependency audit; Semgrep/CodeQL (E0-003).
 - Current known critical: Next 16.3.6 advisory; patch to ≥16.4.6 (E0-004). Highs in blob/sharp/zod/undici/vite are triaged there.
 - GitHub Actions pinned; least-privilege tokens; no secrets in PR workflows from forks.
 

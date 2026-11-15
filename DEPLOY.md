@@ -5,9 +5,9 @@ Hosting: **Neon** (Postgres), **Vercel Hobby** (the website — free, no card, p
 ## Quickest path: Vercel
 
 1. Sign in at vercel.com with GitHub.
-2. **Add New → Project →** import `hassan200503/our-universe` (allow Vercel access to that repository).
+2. **Add New → Project →** import `hassan200503/our-universe` (allow Vercel access to that repository). Set **Root Directory** to `apps/web`; Vercel installs the pnpm workspace from the repo root and builds the web app.
 3. Add one environment variable, `DATABASE_URL` (the Neon pooled string). Session cookies are signed with a key derived from it, so nothing else is required.
-4. Deploy. Every push to `main` redeploys automatically, and each build applies any new database migrations first (`npm run vercel-build`), so new features never run ahead of their tables.
+4. Deploy. Every push to `main` redeploys automatically, and each build applies any new database migrations first (`pnpm vercel-build`), so new features never run ahead of their tables.
 
 ### Calls on mobile data (recommended, free, about 5 minutes)
 
@@ -53,10 +53,10 @@ Nothing to configure: push keys are derived from `DATABASE_URL` (or `SESSION_SEC
 
    ```bash
    export DATABASE_URL="postgres://…"
-   npm run db:migrate
-   npm run seed
-   npm run passcodes -- --reuse   # applies the passcodes already in PASSCODES.local.md
-   npm run ingest -- --force
+   pnpm db:migrate
+   pnpm seed
+   pnpm passcodes --reuse   # applies the passcodes already in PASSCODES.local.md
+   pnpm ingest --force
    ```
 
    `PASSCODES.local.md` (git-ignored) holds each person's passcode. Leave out `--reuse` to issue fresh ones. Give Whitney hers privately; either of you can change your own passcode later in Settings → Passcode.
@@ -66,7 +66,7 @@ Neon's free compute scales to zero when idle, so the first visit after a quiet s
 ## 2. Website: Netlify
 
 1. Push this repository to a **private** GitHub repo.
-2. In Netlify, choose **Add new site → Import from Git** and select the repo. Netlify detects Next.js automatically.
+2. In Netlify, choose **Add new site → Import from Git** and select the repo. Set **Base directory** to `apps/web` so Netlify finds `apps/web/netlify.toml`; Netlify detects Next.js automatically.
 3. Under **Site configuration → Environment variables**, add:
    - `DATABASE_URL`: the Neon pooled string
    - `SESSION_SECRET`: 32+ random characters (`node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`)
@@ -75,7 +75,7 @@ Neon's free compute scales to zero when idle, so the first visit after a quiet s
 
 ## 3. Live trends: GitHub Actions
 
-`.github/workflows/ingest.yml` runs every 2 hours. It checks out the code and runs `npm run ingest` directly against Neon, so no web-function timeout applies.
+`.github/workflows/ingest.yml` runs every 2 hours. It checks out the code and runs `pnpm ingest` directly against Neon, so no web-function timeout applies.
 
 1. In GitHub, go to **Settings → Secrets and variables → Actions** and add `DATABASE_URL`.
 2. Open **Actions → Ingest trends → Run workflow** once to confirm it works.

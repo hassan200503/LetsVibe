@@ -15,24 +15,27 @@ A private shared world for couples: messages, calls, rooms, memories, gallery, d
 ## Commands (run from repo root)
 
 ```powershell
-npm ci                     # install (use pnpm only after E0-002 lands)
-npx next typegen           # REQUIRED on a fresh checkout before typecheck
-npm run dev                # local dev; zero-setup PGlite in .data/
-npm run typecheck          # tsc --noEmit
-npm run lint               # eslint
-npm test                   # vitest
-npm run build              # production build
-npm run seed               # seed local demo data
+pnpm install               # install the workspace
+pnpm typegen               # REQUIRED on a fresh checkout before typecheck
+pnpm dev                   # web dev server; zero-setup PGlite in apps/web/.data/
+pnpm typecheck             # typegen + tsc --noEmit across packages
+pnpm lint                  # eslint
+pnpm test                  # vitest
+pnpm build                 # production build
+pnpm seed                  # seed local demo data
 ```
 
 A change is done only when typegen, typecheck, lint, test and build pass. In the loop, record real output; never claim a gate you did not run. CI is `.github/workflows/ci.yml`.
 
 ## Layout
 
-- `src/app` — App Router pages and `api/*` route handlers.
-- `src/components` — UI (client components under feature folders).
-- `src/lib` — domain/service layer: `db/` (Drizzle schema), `actions/` (server actions), `auth/`, `chat/`, `calls/`, `together/`, `media/`, `trends/`, `research/`, `journey/`.
-- `src/lib/db/schema.ts` — all 32 tables and indexes; migrations in `drizzle/`.
+- `apps/web/src/app` — App Router pages and `api/*` route handlers.
+- `apps/web/src/components` — UI (client components under feature folders).
+- `apps/web/src/lib` — domain/service layer: `db/` (Drizzle schema), `actions/` (server actions), `auth/`, `chat/`, `calls/`, `together/`, `media/`, `trends/`, `research/`, `journey/`.
+- `packages/domain` — framework-free product/domain code shared by web and future mobile; currently the brand constants.
+- `packages/config` — shared TypeScript base config.
+- `apps/web/src/lib/db/schema.ts` — all 32 tables and indexes; migrations in `apps/web/drizzle/`.
+- `apps/web/public` — PWA manifest assets and the push service worker.
 - `docs/` — product/architecture/security/privacy/compliance/runbook/verification, ADRs.
 - `.loop/` — loop bookkeeping: `audit.md`, `prd.json`, `progress.md`, `HUMAN_TASKS.md`; `STATUS` and `logs/` are git-excluded.
 
@@ -48,14 +51,15 @@ A change is done only when typegen, typecheck, lint, test and build pass. In the
 
 ## Known gotchas
 
-- `npm run typecheck` fails on a clean checkout until `npx next typegen` runs (`PageProps`, `LayoutProps`, `RouteContext`). CI already does this.
-- Local DB is PGlite in `.data/`; it allows one process at a time. Stop `npm run dev` before running scripts that open the DB.
-- Next may warn that `package-lock.json` is outside the git repo (`C:\Users\kkc36`); set `turbopack.root` (E0-007) rather than ignoring it.
-- Windows PowerShell: chain with `;` not `&&`; quote paths with spaces; use `&` for executables.
-- `vitest.config.mts` uses `__dirname`; Vite's native config loader will need `import.meta.dirname`.
+- `pnpm typecheck` fails on a clean checkout until `pnpm typegen` runs (`PageProps`, `LayoutProps`, `RouteContext`). The root script runs typegen first; CI does too.
+- Local DB is PGlite in `apps/web/.data/`; it allows one process at a time. Stop `pnpm dev` before running scripts that open the DB.
+- pnpm is strict: add every runtime import to the owning package's `dependencies`, not to the repo root. Workspace packages export TypeScript source and are transpiled by Next (`transpilePackages`).
+- If `pnpm` is not on PATH, use `corepack pnpm`; Turborepo still needs a `pnpm` binary on PATH. On Windows without admin rights, create shims in a user directory with `corepack enable --install-directory "$env:LOCALAPPDATA\corepack"` and add that directory to PATH.
+- Windows PowerShell: chain with `;` not `&&`; quote paths with spaces; use `&` for executables. Prefer Node/UTF-8 for bulk text edits.
+- `vitest.config.mts` resolves the `@` alias from its own directory with `import.meta.dirname`.
 - The current Next 16.3.6 has a critical advisory; `npm audit` is expected to be noisy until E0-004.
 - Legacy `photos` stores base64 in Postgres; new media must use Storage. Legacy polling in chat/room/calls writes on each tick — do not copy that pattern.
-- Tests: `npm test` covers only trends/visibility/clock/verses/push/research parsing today; add tests with every rewrite.
+- Tests: `pnpm test` covers only brand, trends/visibility/clock/verses/push/research parsing today; add tests with every rewrite.
 
 ## Loop contract
 

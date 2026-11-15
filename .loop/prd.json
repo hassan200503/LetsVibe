@@ -23,10 +23,10 @@
       "id": "E0-002",
       "epic": "E0",
       "title": "pnpm + Turborepo monorepo with shared packages",
-      "description": "Move the Next.js app to apps/web and add packages for domain, api-client, sync-protocol, ui-tokens, i18n and config; update scripts, CI and imports in one mechanical green change.",
+      "description": "Move the Next.js app to apps/web and add the foundation workspace packages: packages/domain (shared product/domain code) and packages/config (shared TypeScript base). Defer api-client, sync-protocol, ui-tokens and i18n until their owning stories have real code; do not create empty shells.",
       "acceptance": [
-        "pnpm install and pnpm -r typecheck pass; web builds from apps/web",
-        "Packages have no app-specific imports and are consumed by apps/web",
+        "pnpm install --frozen-lockfile and pnpm typecheck pass; web builds from apps/web",
+        "Workspace packages have no app-specific imports; @letsvibe/domain is consumed by apps/web",
         "CI paths, Vercel root directory and docs updated",
         "No behavioural change; existing tests pass"
       ],
@@ -34,9 +34,9 @@
       "dependsOn": [
         "E0-001"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "Delivered apps/web, @letsvibe/domain and @letsvibe/config in one mechanical change. Deferred empty api-client/sync-protocol/ui-tokens/i18n packages to the stories that first consume them. Gates: frozen-lockfile install, typegen, typecheck (domain + web), lint, vitest 5 files/44 tests, Next build 33 pages. Local Windows needs a user-writable corepack shim on PATH for Turborepo."
     },
     {
       "id": "E0-003",

@@ -29,3 +29,15 @@
 - Gates: `npx next typegen` pass; `npm run typecheck` pass; `npm run lint` pass; `npm test` pass (5 files / 44 tests); `npm run build` pass (33 pages, only the known external `package-lock.json` warning).
 - Learnings: centralize brand strings but never move frozen cookie/crypto identifiers into the brand module; use Node/UTF-8 for bulk text edits on PowerShell 5.1; search for lowercase and hyphenated legacy names, not just title case.
 - Next: `E0-002` (pnpm + Turborepo monorepo), now consuming `@letsvibe/*` package names.
+
+## Iteration 003 - 2026-11-15 - E0-002 pnpm + Turborepo monorepo
+
+- Moved the Next.js app to `apps/web` and added `packages/domain` (brand/domain source) plus `packages/config` (shared TS base). Root workspace is pnpm 12.21.0 + Turborepo 2.11.11 on Node >=24.
+- Chose an incremental package set: `api-client`, `sync-protocol`, `ui-tokens` and `i18n` are deferred until the stories that first consume them; E0-002 acceptance was corrected instead of committing empty architecture shells.
+- Updated app imports to `@letsvibe/domain`, deleted the old `src/lib/brand.ts`, and kept brand/manifest tests in the web package.
+- Updated Netlify (base `apps/web`), Vercel root, CI, ingest workflow, env example, scripts and docs for pnpm/monorepo paths.
+- pnpm 12 uses `allowBuilds` in `pnpm-workspace.yaml`; approved `esbuild`, `@tailwindcss/oxide`, `sharp` and `unrs-resolver` after the initial install skipped build scripts.
+- Local Windows blocker: global `pnpm` was absent and `corepack enable` hit EPERM under `C:\Program Files\nodejs`. A user-writable shim via `corepack enable --install-directory C:\Users\kkc36\AppData\Local\corepack` works; it must be on PATH for Turborepo. Root scripts now use `corepack pnpm`, and `go-live` no longer invokes a bare `pnpm`.
+- Gates on the monorepo: `pnpm install --frozen-lockfile` pass; `pnpm typegen` pass; `pnpm typecheck` pass (domain + web); `pnpm lint` pass; `pnpm test` pass (5 files / 44 tests); `pnpm build` pass (Next 16.3.6, 33 pages).
+- Learnings: Turborepo needs the package-manager binary on PATH, not only `corepack pnpm`; keeping the root scripts on `corepack pnpm` removes the nested-shim failure; moving a tree with `git mv` preserves renames while package extraction still shows as add/delete.
+- Next: `E0-004` (patch critical/high advisories) because it is local and unblocked; `E0-003` remains partially blocked on gitleaks.

@@ -6,7 +6,7 @@ Operational guide for the target architecture. Commands for today's single-coupl
 
 | Env | Web | Mobile | Data | Access |
 | --- | --- | --- | --- | --- |
-| Local | `npm run dev` (apps/web) | Expo dev client | PGlite `.data/` or Supabase local | Developer |
+| Local | `pnpm dev` (`apps/web`) | Expo dev client | PGlite `apps/web/.data/` or Supabase local | Developer |
 | Staging | Vercel staging domain | EAS preview channel | Supabase staging project | Team + loop (staging creds only) |
 | Production | Vercel Pro custom domain | TestFlight/Play internal → staged rollout | Supabase production project | Human owner only |
 
@@ -17,18 +17,18 @@ Operational guide for the target architecture. Commands for today's single-coupl
 ## Local development
 
 ```powershell
-npm ci
-npx next typegen
-npm run dev            # http://localhost:3000
-npm test
-npm run lint
-npm run build
+pnpm install
+pnpm typegen
+pnpm dev               # http://localhost:3000
+pnpm test
+pnpm lint
+pnpm build
 ```
 
 - PGlite permits one process at a time: stop the dev server before seed/migrate scripts, or use Supabase local after E0-007.
-- Reset local data by deleting `.data/` (never do this in staging/production).
-- If typecheck complains about `PageProps`/`RouteContext`, run `npx next typegen` first.
-- Turbopack warning about `C:\Users\kkc36\package-lock.json`: set `turbopack.root` (E0-007).
+- Reset local data by deleting `apps/web/.data/` (never do this in staging/production).
+- If typecheck complains about `PageProps`/`RouteContext`, run `pnpm typegen` first.
+- Vercel/Netlify must use `apps/web` as the project root/base directory; pnpm installs the workspace from the repo root.
 
 ## Web deploy
 
@@ -69,8 +69,8 @@ npx eas submit --platform android    # human only
 
 | Symptom | Likely cause | Action |
 | --- | --- | --- |
-| `typecheck` fails on fresh clone | Missing Next generated types | `npx next typegen`, then rerun |
-| PGlite "already open"/lock | Another process holds `.data/` | Stop dev server/scripts |
+| `typecheck` fails on fresh clone | Missing Next generated types | `pnpm typegen`, then rerun |
+| PGlite "already open"/lock | Another process holds `apps/web/.data/` | Stop dev server/scripts |
 | Login loop | Cookie/domain mismatch or stale session | Clear cookies; check Supabase redirect URLs and middleware |
 | OTP email missing | Sender domain/DKIM or provider outage | Check email provider logs; verify DNS; rate-limit resend |
 | Realtime disconnected | Network/token/plan limit | Client reconnects; check Supabase connection count vs plan |
