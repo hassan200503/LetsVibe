@@ -37,7 +37,7 @@ async function main() {
   writeFileSync(
     FILE,
     [
-      "# Our Universe — passcodes",
+      "# Let'sVibe — passcodes",
       "",
       "Keep this file private. It is git-ignored and never leaves this computer.",
       "Each person signs in by choosing their name, then typing their passcode. Change it any time in Settings → Passcode.",

@@ -2,6 +2,7 @@ import "server-only";
 import { and, asc, desc, eq, or } from "drizzle-orm";
 import { z } from "zod";
 import type { Ctx } from "@/lib/context";
+import { BRAND } from "@/lib/brand";
 import { getDb, withSchema } from "@/lib/db/client";
 import { researchMessages, researchThreads, sharedLearning, type ResearchSource } from "@/lib/db/schema";
 import { personTopics } from "@/lib/trends/query";
@@ -125,7 +126,7 @@ async function systemFor(ctx: Ctx, mode: ResearchMode): Promise<string> {
   const topics = (await personTopics(ctx.me.id).catch(() => [])).map((t) => TOPICS[t]?.label).filter(Boolean);
   const first = ctx.me.displayName.split(" ")[0];
   return [
-    `You are part of "Our Universe", a private site shared by ${ctx.members.map((m) => m.displayName.split(" ")[0]).join(" and ")}. You are helping ${first}.${topics.length ? ` Their interests include ${topics.join(", ")}: draw an example from one only when it fits the question naturally; most answers shouldn't mention them.` : ""}`,
+    `You are part of "${BRAND.name}", a private site shared by ${ctx.members.map((m) => m.displayName.split(" ")[0]).join(" and ")}. You are helping ${first}.${topics.length ? ` Their interests include ${topics.join(", ")}: draw an example from one only when it fits the question naturally; most answers shouldn't mention them.` : ""}`,
     GUIDES[mode],
     "Write in warm, precise British English. Cite only the numbered studies you are given; if none are given, use no [n] citations. Never add a references or sources list: the page shows the sources itself.",
     `For context only (don't mention it unless the question is about time): today is ${new Date().toISOString().slice(0, 10)}.`,
@@ -359,7 +360,7 @@ export async function saveToLearning(ctx: Ctx, id: string, messageId: number): P
       title: t.title,
       topic: t.mode === "learn" ? "Lesson" : t.mode === "explain" ? "Explained" : "Research",
       notes: plain.slice(0, 1200),
-      source: top ? (top.kind === "study" ? `${top.title}${top.year ? ` (${top.year})` : ""}` : top.domain) : "Our Universe research",
+      source: top ? (top.kind === "study" ? `${top.title}${top.year ? ` (${top.year})` : ""}` : top.domain) : `${BRAND.name} research`,
       url: top?.uri ?? null,
       occurredOn: new Date().toISOString().slice(0, 10),
     });

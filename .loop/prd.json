@@ -2822,6 +2822,25 @@
       "status": "todo",
       "attempts": 0,
       "notes": ""
+    },
+    {
+      "id": "E0-011",
+      "epic": "E0",
+      "title": "Rebrand to Let'sVibe with compatibility",
+      "description": "Apply the approved brand rename from Our Universe to Let'sVibe (technical slug letsvibe) across metadata, visible UI, documentation, package identity and scripts while preserving session/encryption compatibility and historical evidence.",
+      "acceptance": [
+        "Brand source of truth exists and metadata/manifest/UI use it",
+        "No user-facing Our Universe remains outside historical notes and the unchanged GitHub remote",
+        "Technical identifiers use letsvibe; cookies/crypto keys stay stable for compatibility and are documented",
+        "Gates pass and ADR-002 records naming rules, legal/handle risks and rollout"
+      ],
+      "priority": 10,
+      "dependsOn": [
+        "E0-001"
+      ],
+      "status": "done",
+      "attempts": 1,
+      "notes": "Rebranded visible UI, metadata, package identity, scripts and docs to Let'sVibe/letsvibe. Compatibility identifiers frozen per ADR-002: ou_session, ou_verses, ou_vows, ou:* storage/events, ou-q:, and our-universe/* crypto labels. GitHub remote unchanged. Gates: next typegen, typecheck, lint, 5 files/44 tests, build (33 pages) all pass."
     }
   ]
 }

@@ -17,7 +17,7 @@ import {
 import { sql } from "drizzle-orm";
 
 /**
- * Data model for "Our Universe".
+ * Data model for "Let'sVibe".
  *
  * People are not hard-coded: every personal area hangs off `people.id`, and a
  * relationship joins any number of people. Hassan and Whitney are simply the

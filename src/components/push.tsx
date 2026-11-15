@@ -2,11 +2,12 @@
 
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { BRAND } from "@/lib/brand";
 import { IconBell, IconPlus, IconX } from "./icons";
 
 /**
- * Alerts on this device: calls ring and messages arrive even when Our
- * Universe is closed or nobody is signed in here, like a phone's messenger.
+ * Alerts on this device: calls ring and messages arrive even when the site is
+ * closed or nobody is signed in here, like a phone's messenger.
  *
  *   unsupported — the browser can't do Web Push at all
  *   install     — an iPhone/iPad in Safari: push works once the site is on the Home Screen
@@ -144,10 +145,10 @@ export function PushPrompt({ partnerName }: { partnerName: string }) {
         <span className="font-semibold">Never miss {partnerName}.</span>{" "}
         {state === "install" ? (
           <span className="text-muted">
-            Tap <ShareGlyph /> then “Add to Home Screen”, and open Our Universe from there to get calls and messages even when it&apos;s closed.
+            Tap <ShareGlyph /> then “Add to Home Screen”, and open {BRAND.name} from there to get calls and messages even when it&apos;s closed.
           </span>
         ) : (
-          <span className="text-muted">Let calls ring and messages pop up on this device, even when Our Universe is closed.</span>
+          <span className="text-muted">Let calls ring and messages pop up on this device, even when {BRAND.name} is closed.</span>
         )}
       </p>
       {state === "off" && (
@@ -218,7 +219,7 @@ export function ReachPrompt({ partnerName }: { partnerName: string }) {
               <h2 id="reach-title" className="font-lux mt-5 text-[2rem] leading-tight">
                 You&apos;re within reach.
               </h2>
-              <p className="mt-2 text-white/70">{partnerName}&apos;s calls will ring here, and messages will pop up, even when Our Universe is closed.</p>
+              <p className="mt-2 text-white/70">{partnerName}&apos;s calls will ring here, and messages will pop up, even when {BRAND.name} is closed.</p>
               <button type="button" className="btn-gold mt-6 w-full justify-center" onClick={close}>
                 Lovely
               </button>
@@ -228,7 +229,7 @@ export function ReachPrompt({ partnerName }: { partnerName: string }) {
               <h2 id="reach-title" className="font-lux mt-5 text-[2rem] leading-tight">
                 Keep {partnerName} one tap away
               </h2>
-              <p className="mt-2 text-white/70">On iPhone, calls and messages reach you when the site is closed once Our Universe is on your Home Screen:</p>
+              <p className="mt-2 text-white/70">On iPhone, calls and messages reach you when the site is closed once {BRAND.name} is on your Home Screen:</p>
               <ol className="mt-5 space-y-3 text-sm text-white/85">
                 <li className="flex items-center gap-3">
                   <span className="grid size-7 shrink-0 place-items-center rounded-full bg-white/10 text-xs">1</span>
@@ -256,7 +257,7 @@ export function ReachPrompt({ partnerName }: { partnerName: string }) {
               <h2 id="reach-title" className="font-lux mt-5 text-[2rem] leading-tight">
                 Stay within reach
               </h2>
-              <p className="mt-2 text-white/70">Let {partnerName}&apos;s calls ring and messages pop up on this device, even when Our Universe is closed or you&apos;re signed out, just like a phone.</p>
+              <p className="mt-2 text-white/70">Let {partnerName}&apos;s calls ring and messages pop up on this device, even when {BRAND.name} is closed or you&apos;re signed out, just like a phone.</p>
               <button
                 type="button"
                 className="btn-gold mt-6 w-full justify-center"
@@ -284,10 +285,10 @@ export function AlertsSetting() {
   const { state, enable, disable } = usePush();
   const text: Record<State, string> = {
     unsupported: "This browser can't receive alerts. Chrome, Edge, Firefox and Safari can.",
-    install: "On iPhone and iPad, add Our Universe to your Home Screen first (Share → Add to Home Screen), open it from there, then turn alerts on here.",
+    install: `On iPhone and iPad, add ${BRAND.name} to your Home Screen first (Share → Add to Home Screen), open it from there, then turn alerts on here.`,
     denied: "Alerts are blocked for this site. Allow notifications in your browser's site settings, then come back here.",
-    off: "Off on this device. Calls only ring while Our Universe is open.",
-    on: "On. Calls ring and messages pop up on this device even when Our Universe is closed or you're signed out.",
+    off: `Off on this device. Calls only ring while ${BRAND.name} is open.`,
+    on: `On. Calls ring and messages pop up on this device even when ${BRAND.name} is closed or you're signed out.`,
     working: "Checking…",
   };
   return (

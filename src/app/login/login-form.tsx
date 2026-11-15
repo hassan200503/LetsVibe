@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { login } from "@/lib/actions/auth";
+import { BRAND } from "@/lib/brand";
 import { IconArrowRight } from "@/components/icons";
 
 type P = { slug: string; displayName: string; theme: string };
@@ -62,7 +63,7 @@ export function LoginForm({ people, next }: { people: P[]; next: string }) {
             </p>
           )}
           <button className="btn-gold mt-5 w-full justify-center" disabled={pending}>
-            {pending ? "Opening our universe…" : "Enter"}
+            {pending ? `Opening ${BRAND.name}…` : "Enter"}
             {!pending && <IconArrowRight size={17} />}
           </button>
         </form>

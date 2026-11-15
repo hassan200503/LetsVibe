@@ -8,6 +8,7 @@ import { CallProvider } from "@/components/call/call-provider";
 import { RoomProvider } from "@/components/together/room-provider";
 import { ReachPrompt, ServiceWorker } from "@/components/push";
 import { getCtx } from "@/lib/context";
+import { BRAND } from "@/lib/brand";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -16,10 +17,10 @@ const cormorant = Cormorant_Garamond({ variable: "--font-cormorant", subsets: ["
 const jetbrains = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "Our Universe", template: "%s · Our Universe" },
-  description: "Hassan's world, Whitney's world, and the journey we're walking together.",
+  title: { default: BRAND.name, template: `%s · ${BRAND.name}` },
+  description: BRAND.description,
   robots: { index: false, follow: false },
-  appleWebApp: { capable: true, title: "Our Universe", statusBarStyle: "black-translucent" },
+  appleWebApp: { capable: true, title: BRAND.name, statusBarStyle: "black-translucent" },
   icons: { apple: "/apple-touch-icon.png" },
 };
 

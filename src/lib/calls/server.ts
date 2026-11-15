@@ -3,6 +3,7 @@ import { and, eq, gt, inArray, isNull, lt, ne, or, sql } from "drizzle-orm";
 import { after } from "next/server";
 import { z } from "zod";
 import { ctxFor, type Ctx } from "@/lib/context";
+import { BRAND } from "@/lib/brand";
 import { sign, verifySignature } from "@/lib/auth/session";
 import { getDb, withSchema } from "@/lib/db/client";
 import { callSignals, calls } from "@/lib/db/schema";
@@ -49,7 +50,7 @@ const declineToken = (row: Pick<Row, "id" | "calleeId">) => sign(`call-decline:$
 function ringByPush(ctx: Ctx, row: Row) {
   after(async () => {
     const { pushTo } = await import("@/lib/push/server");
-    const first = ctx.members.find((m) => m.id === row.callerId)?.displayName.split(" ")[0] ?? "Our Universe";
+    const first = ctx.members.find((m) => m.id === row.callerId)?.displayName.split(" ")[0] ?? BRAND.name;
     const video = row.kind === "video";
     await pushTo(
       [row.calleeId],
@@ -81,7 +82,7 @@ async function finish(ctx: Ctx, id: string, from: string[], status: string, by: 
   await logCall(ctx, { id: row.id, callerId: row.callerId, kind: row.kind, outcome, durationSec: answered ? seconds(row.answeredAt, now) : null });
   // A call that never connected may still be ringing on a phone: turn it into a missed-call notice.
   if (!answered) {
-    const caller = ctx.members.find((m) => m.id === row.callerId)?.displayName.split(" ")[0] ?? "Our Universe";
+    const caller = ctx.members.find((m) => m.id === row.callerId)?.displayName.split(" ")[0] ?? BRAND.name;
     after(async () => {
       const { pushTo } = await import("@/lib/push/server");
       await pushTo([row.calleeId], { type: "call-end", callId: row.id, reason: status === "declined" ? "declined" : "missed", title: caller, kind: row.kind === "video" ? "video" : "audio" }, { ttl: 3600, urgency: "high" }).catch(() => 0);
@@ -200,7 +201,7 @@ export function applyCall(ctx: Ctx, a: CallAction): Promise<CallResult> {
         after(async () => {
           // Stop the ringing on my other devices.
           const { pushTo } = await import("@/lib/push/server");
-          const caller = ctx.members.find((m) => m.id === row.callerId)?.displayName.split(" ")[0] ?? "Our Universe";
+          const caller = ctx.members.find((m) => m.id === row.callerId)?.displayName.split(" ")[0] ?? BRAND.name;
           await pushTo([ctx.me.id], { type: "call-end", callId: row.id, reason: "answered", title: caller, kind: row.kind === "video" ? "video" : "audio" }, { ttl: 60, urgency: "high" }).catch(() => 0);
         });
         break;

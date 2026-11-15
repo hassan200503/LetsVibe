@@ -8,9 +8,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-# Our Universe — agent guide
+# Let'sVibe — agent guide
 
-A private universe for couples: messages, calls, rooms, memories, gallery, daily questions, learning and research. Becoming multi-tenant (thousands of couples) on web + iOS/Android. Read `MASTER_SPEC.md`, `PROMPT.md`, `docs/PRODUCT.md`, `docs/ARCHITECTURE.md`, `.loop/audit.md` and `.loop/prd.json` before starting.
+A private shared world for couples: messages, calls, rooms, memories, gallery, daily questions, learning and research. Becoming multi-tenant (thousands of couples) on web + iOS/Android. Read `MASTER_SPEC.md`, `PROMPT.md`, `docs/PRODUCT.md`, `docs/ARCHITECTURE.md`, `.loop/audit.md` and `.loop/prd.json` before starting.
 
 ## Commands (run from repo root)
 

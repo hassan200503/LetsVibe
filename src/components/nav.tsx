@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getCtx } from "@/lib/context";
+import { BRAND } from "@/lib/brand";
 import { Avatar } from "./avatar";
 import { BottomNav } from "./bottom-nav";
 import { IconSearch, Monogram } from "./icons";
@@ -21,9 +22,9 @@ export async function Nav() {
     <>
       <HeaderShell>
         <div className="mx-auto flex h-[3.75rem] max-w-6xl items-center gap-5 px-4">
-          <Link href="/" className="group flex shrink-0 items-center gap-2.5" aria-label="Our Universe, home">
+          <Link href="/" className="group flex shrink-0 items-center gap-2.5" aria-label={`${BRAND.name}, home`}>
             <Monogram size={28} className="transition-transform duration-700 group-hover:rotate-[24deg]" />
-            <span className="font-lux text-[1.4rem] font-medium leading-none tracking-tight">Our Universe</span>
+            <span className="font-lux text-[1.4rem] font-medium leading-none tracking-tight">{BRAND.name}</span>
           </Link>
           <div className="hidden min-w-0 flex-1 sm:flex">
             <NavLinks links={links} />

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { requireCtx, type PublicPerson } from "@/lib/context";
+import { BRAND } from "@/lib/brand";
 import { birthdayInfo, daysUntil, onThisDay, story, together } from "@/lib/data";
 import { galleryPage, recentMedia } from "@/lib/media/queries";
 import { todaysQuestion } from "@/lib/together/daily";
@@ -190,8 +191,8 @@ export default async function Home() {
           <div className="relative z-[3] mx-auto max-w-6xl px-5 sm:px-10">
             <div className="flex items-center justify-between gap-4 pt-7 sm:pt-9">
               <p className="eyebrow-lux fade-late whitespace-nowrap" style={{ "--d": "0ms" } as React.CSSProperties}>
-                <span className="max-sm:hidden">Our Universe{t ? " · " : ""}</span>
-                {t ? `Chapter ${roman(chapter)}` : <span className="sm:hidden">Our Universe</span>}
+                <span className="max-sm:hidden">{BRAND.name}{t ? " · " : ""}</span>
+                {t ? `Chapter ${roman(chapter)}` : <span className="sm:hidden">{BRAND.name}</span>}
               </p>
               {t && (
                 <p className="fade-late whitespace-nowrap text-[0.64rem] uppercase tracking-[0.22em] text-white/55 sm:text-[0.7rem] sm:tracking-[0.28em]" style={{ "--d": "100ms" } as React.CSSProperties}>
@@ -240,7 +241,7 @@ export default async function Home() {
                 </div>
               ) : (
                 <Link href="/settings#us" className="group flex items-center justify-center gap-2 text-sm text-white/70 hover:text-white">
-                  Tell Our Universe the day your journey began, and it will count every moment since <IconArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
+                  Tell us the day your journey began, and we&apos;ll count every moment since <IconArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
                 </Link>
               )}
             </div>

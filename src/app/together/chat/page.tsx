@@ -1,4 +1,5 @@
 import { requireCtx } from "@/lib/context";
+import { BRAND } from "@/lib/brand";
 import { ChatView } from "@/components/chat/chat-view";
 import { TogetherTabs } from "@/components/together/tabs";
 
@@ -6,7 +7,7 @@ export const metadata = { title: "Messages" };
 
 export default async function ChatPage() {
   const ctx = await requireCtx();
-  if (!ctx.partners[0]) return <p className="mx-auto max-w-md p-10 text-center text-muted">Messages open once your partner has joined Our Universe.</p>;
+  if (!ctx.partners[0]) return <p className="mx-auto max-w-md p-10 text-center text-muted">Messages open once your partner joins you on {BRAND.name}.</p>;
   return (
     <div className="sm:px-4">
       <div className="hidden justify-center pt-5 sm:flex">

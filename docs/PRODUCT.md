@@ -10,7 +10,7 @@ The product starts as a handcrafted experience for one couple and grows into a t
 
 Couples scatter their shared life across chat apps, photo libraries, streaming services, note apps, and calls. The result is fragmented context, lost memories, and "we should watch this together" that never happens. Existing social apps are built for performance and reach; they create pressure, not privacy. Existing couple apps are shallow trackers or scrapbooks.
 
-Our Universe is for couples who want a private, beautiful shared space with real utility: live calls, synchronised rooms, a memory that accumulates, and small rituals that bring them back to each other.
+Let'sVibe is for couples who want a private, beautiful shared space with real utility: live calls, synchronised rooms, a memory that accumulates, and small rituals that bring them back to each other.
 
 ## Who it is for
 
@@ -100,7 +100,7 @@ These are targets, not measured facts. Baseline after beta; report honestly.
 
 ## Open product questions
 
-1. Product name, domain and visual identity beyond the current "Our Universe" theme.
+1. Domain, handles and visual identity rollout for the Let'sVibe brand (name decided in ADR-002; trademark clearance pending).
 2. Launch countries and languages after English.
 3. Free-tier limits and premium pricing.
 4. Whether Discover/research is core for launch or a later differentiator.

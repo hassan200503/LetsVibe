@@ -17,3 +17,15 @@
 - Blockers recorded in `HUMAN_TASKS.md` (format per MASTER_SPEC §11, each with `Answer:`): pnpm/gitleaks, paid accounts/email domain, legal review, store accounts, migration claim.
 - Learnings: the loop schema is camelCase with numeric priorities; phase 0 must seed HUMAN_TASKS from §11; a fresh checkout needs `next typegen`; the audit's dependency/CVE claims must stay limited to observed output; Realtime default Pro capacity is insufficient at target scale.
 - Commit: `chore(loop): bootstrap audit, plan and backlog` (this iteration). Suggested next story: `E0-002` (pnpm + Turborepo monorepo). If pnpm is unavailable, mark it blocked per gate rules and take `E0-003`/`E0-004`. Gate: keep the web app green during the move.
+
+## Iteration 002 — 2026-11-15 — E0-011 Rebrand to Let'sVibe
+
+- Human directive: rename the product to **Let'sVibe** while continuing the foundation phase. ADR-002 records the name, private-for-two positioning, legal/handle risks and rollout.
+- Added `src/lib/brand.ts` as the public identity source of truth (`BRAND.name`, slug, tagline, description, default space name) and `src/lib/brand.test.ts`, including manifest consistency.
+- Updated visible UI and metadata: root metadata, app manifest, navigation wordmark, login, home, search, chat, push prompts, presence, call permission copy and service-worker notification fallbacks.
+- Updated package identity to `letsvibe` (`package.json` + lockfile), Agent guide, README, DEPLOY, product/spec/prompt docs, seed/relationship defaults, passcode and go-live scripts, and `.claude/launch.json`.
+- Frozen for compatibility (documented in ADR-002): `ou_session`, `ou_verses`, `ou_vows`, `ou:*` storage/events, `ou-q:` question seed, `our-universe/session-v1`, `our-universe/settings-seal-v1`, `our-universe/vapid-v1/*`, and the OpenAlex/VAPID `our-universe@users.noreply.github.com` contact until a real domain exists.
+- Kept the GitHub remote `hassan200503/our-universe` and historical audit/verification references. Existing couples keep their stored space name; only new seeds use "Our World". Installed PWAs may show the old label until refreshed.
+- Gates: `npx next typegen` pass; `npm run typecheck` pass; `npm run lint` pass; `npm test` pass (5 files / 44 tests); `npm run build` pass (33 pages, only the known external `package-lock.json` warning).
+- Learnings: centralize brand strings but never move frozen cookie/crypto identifiers into the brand module; use Node/UTF-8 for bulk text edits on PowerShell 5.1; search for lowercase and hyphenated legacy names, not just title case.
+- Next: `E0-002` (pnpm + Turborepo monorepo), now consuming `@letsvibe/*` package names.

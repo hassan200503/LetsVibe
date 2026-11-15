@@ -1,10 +1,10 @@
-# LOOP PROMPT — Our Universe → multi-couple production app
+# LOOP PROMPT — Let'sVibe (formerly Our Universe) → multi-couple production app
 
 You are ONE iteration of an autonomous engineering loop. You start with no memory: everything about earlier work lives in files in this repository. Do exactly one unit of work, verify it with real commands, record it, commit it, and exit. Never stop to ask the human a question: if you need a decision or a credential, write it to `.loop/HUMAN_TASKS.md` and work on something else.
 
 ## Mission
 
-Evolve this repository ("Our Universe", a couples' experience) into a production-grade, multi-tenant product — web app plus iOS and Android apps — used privately by thousands of couples at the same time. Each couple gets their own private space; couples can explore, watch together, listen together, talk and call, keep memories, and do everything the current repo does and more. Product, researched constraints, architecture, backlog seed and the release checklist are in `MASTER_SPEC.md`. Where it says VERIFY, verify from the official source (web fetch/docs) and record URL + date; if you cannot, label the claim UNVERIFIED in the docs.
+Evolve this repository (now branded "Let'sVibe"; the GitHub remote is still `our-universe`) into a production-grade, multi-tenant product — web app plus iOS and Android apps — used privately by thousands of couples at the same time. Each couple gets their own private space; couples can explore, watch together, listen together, talk and call, keep memories, and do everything the current repo does and more. Product, researched constraints, architecture, backlog seed and the release checklist are in `MASTER_SPEC.md`. Where it says VERIFY, verify from the official source (web fetch/docs) and record URL + date; if you cannot, label the claim UNVERIFIED in the docs.
 
 ## 1. Orient (every iteration, in this order)
 

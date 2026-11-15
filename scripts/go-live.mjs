@@ -78,7 +78,7 @@ const env = readEnvFile();
 
 step("Neon connection string");
 if (!env.DATABASE_URL) {
-  console.log("In the Neon console, open project our-universe → Connect → turn on \"Connection pooling\" → copy the string.");
+  console.log("In the Neon console, open your project → Connect → turn on \"Connection pooling\" → copy the string.");
   const url = await askHidden("Paste it here (hidden): ");
   if (!/^postgres(ql)?:\/\/.+@.+\/.+/.test(url)) {
     console.error("That doesn't look like a Postgres connection string (postgresql://user:password@host/db).");
@@ -123,7 +123,7 @@ if (status.status !== 0 || /Not logged in/i.test(status.stdout ?? "")) run("npx"
 
 step("Netlify site");
 if (!existsSync(".netlify/state.json")) {
-  const name = `our-universe-${randomBytes(3).toString("hex")}`;
+  const name = `letsvibe-${randomBytes(3).toString("hex")}`;
   console.log(`Creating ${name}.netlify.app — if asked, pick your own team.`);
   run("npx", [...netlify, "sites:create", "--name", name]);
 }
@@ -143,7 +143,7 @@ try {
 } catch {
   url = deploy.stdout.match(/https:\/\/[a-z0-9-]+\.netlify\.app/)?.[0] ?? null;
 }
-if (url) writeFileSync("DEPLOYED.local.md", `# Our Universe is live\n\n${url}\n`);
+if (url) writeFileSync("DEPLOYED.local.md", `# Let'sVibe is live\n\n${url}\n`);
 
-console.log(`\n\x1b[35m❤ Our Universe is live: ${url ?? "(see the Netlify output above)"}\x1b[0m`);
+console.log(`\n\x1b[35m❤ Let'sVibe is live: ${url ?? "(see the Netlify output above)"}\x1b[0m`);
 console.log("Sign in with the passcodes in PASSCODES.local.md.");

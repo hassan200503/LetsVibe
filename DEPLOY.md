@@ -1,4 +1,4 @@
-# Deploying Our Universe for free (no credit card)
+# Deploying Let'sVibe for free (no credit card)
 
 Hosting: **Neon** (Postgres), **Vercel Hobby** (the website — free, no card, personal non-commercial use) and **GitHub Actions** (the scheduled trend refresh). Netlify works too (netlify.toml is included), but the Netlify team used for RentManager had run out of free credits in September 2026, which pauses production deploys.
 

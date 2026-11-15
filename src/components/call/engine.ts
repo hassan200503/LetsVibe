@@ -1,6 +1,7 @@
 "use client";
 
 import type { CallSignal, CallSync, CallView } from "@/lib/calls/types";
+import { BRAND } from "@/lib/brand";
 import { connectTone, hangupTone, ringback, ringtone } from "./tones";
 import { buzz } from "@/lib/ui/buzz";
 
@@ -102,7 +103,7 @@ async function api(body: unknown): Promise<{ ok: boolean; error?: string; call?:
 function mediaError(e: unknown, video: boolean): string {
   const name = (e as { name?: string })?.name;
   if (name === "NotAllowedError" || name === "SecurityError")
-    return `Our Universe needs permission to use your ${video ? "camera and microphone" : "microphone"}. Allow it in your browser's site settings, then try again.`;
+    return `${BRAND.name} needs permission to use your ${video ? "camera and microphone" : "microphone"}. Allow it in your browser's site settings, then try again.`;
   if (name === "NotFoundError" || name === "OverconstrainedError") return video ? "No camera was found on this device." : "No microphone was found on this device.";
   if (name === "NotReadableError") return `Another app is using your ${video ? "camera or microphone" : "microphone"}. Close it and try again.`;
   if (typeof navigator !== "undefined" && !navigator.mediaDevices) return "Calls need a secure (https) connection.";

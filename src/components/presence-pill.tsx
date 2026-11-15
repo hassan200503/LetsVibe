@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { sendNudge } from "@/lib/actions/together";
+import { BRAND } from "@/lib/brand";
 import { ago } from "@/lib/ui/time";
 import { Avatar } from "./avatar";
 import { useCall } from "./call/call-provider";
@@ -10,7 +11,7 @@ import { IconHeadphones, IconMessage, IconPhone, IconVideo } from "./icons";
 import { usePartners } from "./me-context";
 import { usePulse } from "./pulse";
 
-const PLACE: Record<string, string> = { room: "in the Together room", gallery: "looking at the gallery", chat: "in your messages", site: "on Our Universe" };
+const PLACE: Record<string, string> = { room: "in the Together room", gallery: "looking at the gallery", chat: "in your messages", site: `on ${BRAND.name}` };
 
 /** My partner's face with a live online/offline dot, and one-tap ways to reach them. */
 export function PresencePill() {

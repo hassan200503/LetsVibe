@@ -14,6 +14,7 @@
 import { appendFileSync, existsSync, readFileSync } from "node:fs";
 import bcrypt from "bcryptjs";
 import { passphrase } from "../src/lib/auth/passphrase";
+import { BRAND } from "../src/lib/brand";
 import { eq } from "drizzle-orm";
 import { getDb } from "../src/lib/db/client";
 import { interests, people, preferences, projects, radarItems, radarLanes, relationshipMembers, relationships, skills } from "../src/lib/db/schema";
@@ -74,7 +75,7 @@ const HASSAN_INTRO = [
 
 async function main() {
   const db = await getDb();
-  console.log("Seeding Our Universe…");
+  console.log(`Seeding ${BRAND.name}…`);
 
   const existing = await db.select().from(people);
   const bySlug = new Map(existing.map((p) => [p.slug, p]));
@@ -109,7 +110,7 @@ async function main() {
     displayName: "Whitney",
     nickname: "Sumaiya",
     focus: "Biotechnology",
-    intro: "Biotechnology, birds, knitting, nature and the environment — this is Whitney's corner of our universe, and it grows with everything she learns.",
+    intro: "Biotechnology, birds, knitting, nature and the environment — this is Whitney's corner of our shared world, and it grows with everything she learns.",
     motto: "Curious about how life works — from genes to birdsong.",
     theme: "whitney",
     journalTitle: "Biotechnology Journey",
@@ -119,7 +120,7 @@ async function main() {
 
   let [rel] = await db.select().from(relationships).limit(1);
   if (!rel) {
-    [rel] = await db.insert(relationships).values({ name: "Our Universe" }).returning();
+    [rel] = await db.insert(relationships).values({ name: BRAND.defaultSpaceName }).returning();
     await db.insert(relationshipMembers).values([
       { relationshipId: rel.id, personId: hassan.id },
       { relationshipId: rel.id, personId: whitney.id },
@@ -204,8 +205,8 @@ async function main() {
       },
       {
         personId: hassan.id,
-        name: "Our Universe",
-        description: "This website: Hassan's world, Whitney's world, and the story we're writing together — with live discoveries from the real world.",
+        name: BRAND.name,
+        description: "This website: a private shared world for two, with live discoveries from the real world.",
         problem: "Somewhere to keep our story that grows richer the more we use it.",
         stack: ["Next.js", "TypeScript", "PostgreSQL", "Drizzle", "TanStack Query"],
         architecture: "Source adapters → normalise → deduplicate → categorise → Postgres → keyset-paginated API → infinite feeds.",

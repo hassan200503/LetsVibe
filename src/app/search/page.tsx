@@ -19,7 +19,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
   }
   return (
     <>
-      <PageHeader world="us" eyebrow="Search" title="Find anything in our universe">
+      <PageHeader world="us" eyebrow="Search" title="Find anything in your world">
         Memories, plans, journals, projects, skills, vault notes, philosophy, and every discovery the feeds have brought in.
       </PageHeader>
       <Container world="us">

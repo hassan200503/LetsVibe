@@ -1,9 +1,9 @@
-# Our Universe
+# Let'sVibe
 
-Hassan's world, Whitney's world, and the story they're writing together, plus live discoveries from the real world.
+A private shared world for two: messages, calls, synchronised listening and watching, memories, and live discoveries from the real world.
 
 ```
-                 OUR UNIVERSE
+                  LET'SVIBE
                       │
         ┌─────────────┼─────────────┐
      HASSAN        OUR STORY      WHITNEY

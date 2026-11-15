@@ -4,13 +4,14 @@ import { asc } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { people } from "@/lib/db/schema";
 import { getCtx } from "@/lib/context";
+import { BRAND } from "@/lib/brand";
 import { pick, parseVerse, VERSE_COOKIE, VERSES } from "@/lib/journey/verses";
 import { Orbit, Starfield } from "@/components/home/sky";
 import { RememberLines } from "@/components/home/remember";
 import { Monogram } from "@/components/icons";
 import { LoginForm } from "./login-form";
 
-export const metadata = { title: "Our Universe" };
+export const metadata = { title: BRAND.name };
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   if (await getCtx()) redirect("/");
@@ -37,7 +38,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           <div>
             <div className="fade-late flex items-center gap-3" style={{ "--d": "0ms" } as React.CSSProperties}>
               <Monogram size={34} />
-              <span className="eyebrow-lux">Our Universe</span>
+              <span className="eyebrow-lux">{BRAND.name}</span>
             </div>
             <h1 className="verse font-lux mt-10 text-balance text-[2.6rem] leading-[1.04] tracking-[-0.012em] text-[#f7efe1] sm:text-[3.8rem] lg:text-[4.4rem]">
               {parseVerse(verse.text).map((part, p) =>
