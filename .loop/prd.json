@@ -2723,9 +2723,9 @@
       "dependsOn": [
         "E0-002"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "in_progress",
+      "attempts": 1,
+      "notes": "Production-mode response verified locally: per-request nonce CSP with strict-dynamic, HSTS, frame-ancestors/none, nosniff, referrer, permissions, COOP/CORP and Reporting-Endpoints. YouTube iframe/API hosts and Next requirements are allowlisted; no ACAO header is emitted, so browser CORS remains same-origin default-deny. /api/csp-report accepts CSP/Reporting API payloads, caps body size and logs only the effective directive plus masked origin (never document-uri/referrer/query). Tests: 7 new unit/route tests; full gate 9 files / 58 tests, 35 routes. Remaining: run an external header scan against a deployed HTTPS URL (E0-006/H30) and exercise the YouTube embed in a real browser under enforced CSP."
     },
     {
       "id": "E9-012",

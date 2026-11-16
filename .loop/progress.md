@@ -93,3 +93,13 @@
 - Evidence: 7 new PGlite tests cover the two-member cap, one-active-couple rule, single-use invite, duplicate token hash, profile/consent uniqueness, and migration of a pre-0006 relationship with two people plus a memory that survives rename and cascades on couple deletion. Full `pnpm check`: 7 files / 51 tests, 34-page build. Seed followed by reset succeeded.
 - Risk: `relationship_id` remains on content tables; no RLS or Supabase Auth yet. The rename has not been rehearsed against a staging copy (E0-006/H3), so the production migration remains unverified.
 - Next: E0-009 design tokens or E1-002 RLS foundation. E1-002 needs Supabase staging and RLS test access; if blocked, take a local unblocked story.
+
+## Iteration 009 - 2026-11-16 - CSP and security headers (E9-011, in progress)
+
+- Added `src/lib/security/headers.ts`: production security headers (nosniff, frame denial, referrer/permissions policy, COOP/CORP, production-only HSTS), a per-request nonce CSP that permits Next.js, YouTube iframes/API and same-origin APIs, and a sanitizer for CSP/Reporting API payloads.
+- Wired `next.config.ts` to serve the static headers on every route. `proxy.ts` now covers authenticated and public page routes, passes a fresh nonce to Next, sets the response CSP and `Reporting-Endpoints`, and keeps optimistic auth redirects; `/api`, static assets and service-worker files stay out of the matcher.
+- Added `/api/csp-report`: accepts `application/csp-report` and `application/reports+json`, rejects other types/invalid/oversized bodies, and logs only the effective directive plus masked blocked origin. It never logs `document-uri`, referrer, query strings or page content.
+- CORS remains same-origin default-deny: no `Access-Control-Allow-Origin` header and no wildcard exist; `docs/SECURITY.md` records that future cross-origin endpoints need an explicit allowlist and test.
+- Evidence: 7 new tests (headers/CSP builder + report route); full `pnpm check` PASS with 9 files / 58 tests and 35-route production build. Production-mode local server check: `/welcome` 200 with matching HTML/CSP nonce, HSTS `max-age=63072000`, `X-Frame-Options: DENY`, referrer/permissions/Reporting-Endpoints present; `/` 307 to `/login`; report POST returned 204 and logged `{"directive":"script-src-elem","blocked":"https://evil.example"}` with no secret. No `Access-Control-*` header observed.
+- Remaining: run an external header scan against a deployed HTTPS URL (needs E0-006/staging) and exercise the YouTube embed in a real browser under enforced CSP. E9-011 stays in progress until those checks exist.
+- Next: E0-009 design tokens (local, unblocked) or E1-002 RLS foundation if Supabase staging access appears.

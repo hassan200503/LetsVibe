@@ -34,6 +34,7 @@ Actors: two members of a couple; anonymous internet; abusive authenticated users
 | Calls | Short-lived per-call TURN credentials, no recording, no global relay secret | E4-003, E4-008 |
 | AI | Server-side keys, quotas, prompt-injection fencing, output moderation, no content logging | E7-003, E7-004 |
 | Abuse | Report/block, moderation queue, per-IP/user limits, anomaly alerts | E9-001, E9-002, E9-005 |
+| Browser hardening | Per-request nonce CSP, HSTS, frame denial, referrer/permissions policy, sanitized violation reports; no wildcard CORS | E9-011 |
 | Dependencies | gitleaks + audit + SAST in CI; patch critical advisories promptly | E0-003, E0-004 |
 
 ## Threat model
@@ -92,6 +93,14 @@ Actors: two members of a couple; anonymous internet; abusive authenticated users
 - `pnpm audit` still reports two moderate dev-only findings: `esbuild <=0.24.2` through `drizzle-kit`'s legacy `@esbuild-kit` chain, and `minimatch <11.0.1` through ESLint tooling. Neither is shipped at runtime; revisit when those tools update. No critical or high findings remain.
 - GitHub Actions pinned; least-privilege tokens; no secrets in PR workflows from forks.
 
+## Browser security headers
+
+- Page responses receive a fresh nonce CSP generated in `apps/web/src/proxy.ts`; Next.js reads the nonce from the request and the HTML script tags match it. `script-src` uses `'strict-dynamic'` plus the nonce, so dynamically loaded YouTube API scripts are allowed without `'unsafe-inline'`. Styles still allow `'unsafe-inline'` because the UI uses JSX style attributes.
+- Static headers come from `apps/web/next.config.ts`: `nosniff`, `DENY`, strict referrer policy, restrictive permissions policy, COOP `same-origin-allow-popups` and CORP `same-origin`; HSTS (`max-age=63072000`) is emitted only when `NODE_ENV=production`.
+- All browser API calls are same-origin. The app emits no `Access-Control-Allow-Origin` header and no wildcard; any future cross-origin endpoint must add an explicit origin allowlist and a test rather than broadening this default.
+- CSP reports go to `/api/csp-report` for both `report-uri` and the Reporting API. The endpoint requires a CSP/reports content type, caps bodies at 8 KiB, and logs only the effective directive and a masked blocked origin. It never logs the full document URL, referrer, query string, or page content.
+- Local production-mode evidence is recorded in `docs/VERIFICATION.md`; an external header scan and real-browser YouTube exercise still require a deployed HTTPS URL.
+
 ## Verification and testing
 
 - pgTAP/Storage tests create two couples and prove deny on select/insert/update/delete and path traversal (E2-003).
@@ -100,6 +109,7 @@ Actors: two members of a couple; anonymous internet; abusive authenticated users
 - Load tests at target concurrency (E3-008, E5-008, E11-001).
 - Manual pre-launch: report/block, deletion, CSAM quarantine, secret scan, restore drill.
 - Keep evidence in `docs/VERIFICATION.md`; no gate is claimed without output.
+- E9-011 local check: production-mode response has a matching nonce in HTML and CSP, HSTS/security headers, no ACAO header, and the report endpoint returns 204 while logging only the masked origin.
 
 ## Incident response
 
@@ -107,6 +117,6 @@ See `docs/RUNBOOK.md` for steps. Severity levels: SEV1 cross-tenant exposure/act
 
 ## Known gaps (today)
 
-- No RLS; custom auth without recovery/MFA/revocation; in-memory login throttle; global AI/TURN secrets; no moderation/report/block; no CSAM scanning; no CSP/security headers verified; no observability; Vercel Hobby non-commercial.
+- No RLS; custom auth without recovery/MFA/revocation; in-memory login throttle; global AI/TURN secrets; no moderation/report/block; no CSAM scanning; CSP/security headers implemented but not yet externally scanned; no observability; Vercel Hobby non-commercial.
 
 All are mapped to stories; none may remain open at public launch.

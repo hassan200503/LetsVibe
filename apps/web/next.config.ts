@@ -1,5 +1,6 @@
 import path from "node:path";
 import type { NextConfig } from "next";
+import { securityHeaders } from "./src/lib/security/headers";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
@@ -14,6 +15,15 @@ const nextConfig: NextConfig = {
   // (see withSchema in src/lib/db/client.ts), so every function carries them.
   outputFileTracingIncludes: {
     "/**": ["./drizzle/*.sql", "./drizzle/meta/_journal.json"],
+  },
+  async headers() {
+    const headers = securityHeaders(process.env.NODE_ENV === "production");
+    return [
+      {
+        source: "/(.*)",
+        headers: Object.entries(headers).map(([key, value]) => ({ key, value })),
+      },
+    ];
   },
 };
 

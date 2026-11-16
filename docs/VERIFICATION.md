@@ -97,10 +97,11 @@ Current tests cover: trends engine, visibility/clock/verse logic, push key deriv
 | E0-003 | — | _pending (gitleaks H1)_ |
 | E0-004 | 2026-11-15 | Next 16.4.6; prod audit clean; dev-only 2 moderate; gates in `.loop/progress.md` iteration 004 |
 | E0-007 | 2026-11-15 | Fresh-workspace `pnpm run setup`; generic Alex/Sam seed idempotent; gates in `.loop/progress.md` iteration 005 |
-| E1-001 | — | _pending_ |
+| E1-001 | 2026-11-16 | `0006_identity.sql` rename/backfill plus `identity.test.ts` and `identity-migration.test.ts`; `pnpm check` 7 files / 51 tests, 34 pages; `db:generate` clean; seed/reset pass; staging rehearsal pending E0-006 |
 | E1-002 | — | _pending_ |
 | E1-003 | — | _pending_ |
 | E0-008 | 2026-11-16 | CI gate + PR template; YAML parse, frozen install, `pnpm check` (44 tests, 34 pages) and prod audit recorded in `.loop/progress.md` iteration 007; branch protection H30 and GitHub median runtime still pending |
 | E1-013 | 2026-11-16 | Neutral theme/identity refactor; name search clean; onboarding/invite Playwright run; `pnpm check` in `.loop/progress.md` iteration 006 |
+| E9-011 | 2026-11-16 | Production-mode local header check: nonce CSP, HSTS, DENY, nosniff, referrer, permissions, Reporting-Endpoints; CSP report endpoint 204 with sanitised log; no ACAO header; 7 new tests, full gate 9 files / 58 tests / 35 routes. External scan and browser YouTube exercise pending deploy. |
 
 Append one row per completed story; never delete past rows.

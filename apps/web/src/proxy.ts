@@ -1,25 +1,28 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { CSP_REPORT_PATH, contentSecurityPolicy, newNonce } from "@/lib/security/headers";
 
-/**
- * Optimistic gate: sends visitors without a session cookie to /login. The
- * cookie's signature is verified server-side on every page and action
- * (src/lib/context.ts), so this is only a fast path, never the authority.
- */
 export function proxy(request: NextRequest) {
-  if (!request.cookies.has("ou_session")) {
+  const path = request.nextUrl.pathname;
+  const publicPage = path === "/login" || path === "/welcome" || path.startsWith("/join/") || path.startsWith("/p/");
+
+  if (!publicPage && !request.cookies.has("ou_session")) {
     const url = new URL("/login", request.url);
-    // Keep the whole destination (e.g. a call notification's ?call=…) so sign-in lands exactly there.
-    if (request.nextUrl.pathname !== "/") url.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);
+    if (path !== "/") url.searchParams.set("next", path + request.nextUrl.search);
     return NextResponse.redirect(url);
   }
-  return NextResponse.next();
+
+  const nonce = newNonce();
+  const csp = contentSecurityPolicy(nonce);
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", csp);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set("Content-Security-Policy", csp);
+  response.headers.set("Reporting-Endpoints", `csp-endpoint="${CSP_REPORT_PATH}"`);
+  return response;
 }
 
 export const config = {
-  // Public: sign-in, first-run onboarding, partner invitations, public profiles, the cron
-  // endpoint (secret-protected), static assets, the service worker and app manifest (browsers
-  // fetch these without following redirects), and the call API, which checks every request
-  // itself (a signed "Decline" from a notification must reach it from a signed-out device).
-  // /welcome and /join/[token] enforce their own access rules server-side.
-  matcher: ["/((?!login|welcome|join/|p/|api/cron|api/call|_next/static|_next/image|favicon.ico|icon|apple-icon|apple-touch-icon.png|robots.txt|sw.js|manifest.webmanifest).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|icon|apple-icon|apple-touch-icon.png|robots.txt|sw.js|manifest.webmanifest).*)"],
 };
