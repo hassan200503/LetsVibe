@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { THEME_KEYS } from "@letsvibe/domain";
 import { getDb } from "@/lib/db/client";
-import { interests, knowledgeEntries, learningRecords, people, preferences, projects, radarItems, radarLanes, relationships, skills } from "@/lib/db/schema";
+import { couples, interests, knowledgeEntries, learningRecords, people, preferences, projects, radarItems, radarLanes, skills } from "@/lib/db/schema";
 import { requireCtx } from "@/lib/context";
 import { isTopicKey } from "@/lib/trends/topics";
 import { type ActionState, firstError, formObject, isoDate, list, optText, optUrl, reqText, today, visibilityField } from "./util";
@@ -329,7 +329,7 @@ export async function saveRelationship(_: ActionState, fd: FormData): Promise<Ac
   const { ctx, db } = await me();
   const parsed = z.object({ name: reqText(80), startedOn: isoDate.optional(), nextMeetOn: isoDate.optional() }).safeParse(formObject(fd));
   if (!parsed.success) return { error: firstError(parsed.error) };
-  await db.update(relationships).set({ name: parsed.data.name, startedOn: parsed.data.startedOn ?? null, nextMeetOn: parsed.data.nextMeetOn ?? null }).where(eq(relationships.id, ctx.relationship.id));
+  await db.update(couples).set({ name: parsed.data.name, startedOn: parsed.data.startedOn ?? null, nextMeetOn: parsed.data.nextMeetOn ?? null }).where(eq(couples.id, ctx.relationship.id));
   revalidatePath("/", "layout");
   return { ok: true, message: "Saved ❤️" };
 }

@@ -13,15 +13,17 @@ import {
   uniqueIndex,
   index,
   real,
+  smallint,
+  check,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 /**
  * Data model for "Let'sVibe".
  *
- * People are not hard-coded: every personal area hangs off `people.id`, and a
- * relationship joins any number of people. Alex and Sam are simply the demo
- * rows the seed creates.
+ * People are not hard-coded: every personal area hangs off `people.id`. A
+ * couple has at most two active members (slots 1 and 2), and `relationship_id`
+ * remains on legacy content tables until E2-001 renames it to `couple_id`.
  */
 
 export type Visibility = "private" | "shared" | "public";
@@ -62,7 +64,7 @@ export const people = pgTable("people", {
   createdAt: createdAt(),
 });
 
-export const relationships = pgTable("relationships", {
+export const couples = pgTable("couples", {
   id: id(),
   name: text("name").notNull(),
   startedOn: date("started_on"),
@@ -71,13 +73,75 @@ export const relationships = pgTable("relationships", {
   createdAt: createdAt(),
 });
 
-export const relationshipMembers = pgTable(
-  "relationship_members",
+export const coupleMembers = pgTable(
+  "couple_members",
   {
-    relationshipId: uuid("relationship_id").notNull().references(() => relationships.id, { onDelete: "cascade" }),
+    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     personId: uuid("person_id").notNull().references(() => people.id, { onDelete: "cascade" }),
+    /** Active member capacity is two: slots are 1 and 2. */
+    slot: smallint("slot").notNull(),
+    status: text("status").notNull().default("active"),
+    joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [primaryKey({ columns: [t.relationshipId, t.personId] })],
+  (t) => [
+    primaryKey({ columns: [t.relationshipId, t.personId] }),
+    check("couple_members_slot_check", sql`${t.slot} in (1, 2)`),
+    check("couple_members_status_check", sql`${t.status} in ('active', 'left')`),
+    uniqueIndex("couple_members_active_slot").on(t.relationshipId, t.slot).where(sql`${t.status} = 'active'`),
+    uniqueIndex("couple_members_active_person").on(t.personId).where(sql`${t.status} = 'active'`),
+    index("couple_members_person").on(t.personId),
+  ],
+);
+
+export const invitations = pgTable(
+  "invitations",
+  {
+    id: id(),
+    coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
+    /** SHA-256 of the bearer token. The raw link is never stored. */
+    tokenHash: text("token_hash").notNull(),
+    createdBy: uuid("created_by").notNull().references(() => people.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    acceptedBy: uuid("accepted_by").references(() => people.id, { onDelete: "set null" }),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex("invitations_token_hash").on(t.tokenHash),
+    index("invitations_couple_created").on(t.coupleId, t.createdAt),
+    index("invitations_pending").on(t.coupleId, t.expiresAt),
+    check("invitations_acceptance_pair", sql`(${t.acceptedAt} is null) = (${t.acceptedBy} is null)`),
+    check("invitations_expiry_after_creation", sql`${t.expiresAt} > ${t.createdAt}`),
+  ],
+);
+
+export const profiles = pgTable("profiles", {
+  personId: uuid("person_id").primaryKey().references(() => people.id, { onDelete: "cascade" }),
+  /** IANA zone used for the daily question, digest and reminders. */
+  timezone: text("timezone").notNull().default("UTC"),
+  locale: text("locale").notNull().default("en"),
+  onboardingCompletedAt: timestamp("onboarding_completed_at", { withTimezone: true }),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+});
+
+export const consents = pgTable(
+  "consents",
+  {
+    id: id(),
+    personId: uuid("person_id").notNull().references(() => people.id, { onDelete: "cascade" }),
+    /** e.g. terms, privacy, age, marketing. */
+    kind: text("kind").notNull(),
+    version: text("version").notNull(),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }).notNull().defaultNow(),
+    withdrawnAt: timestamp("withdrawn_at", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex("consents_person_kind_version").on(t.personId, t.kind, t.version),
+    index("consents_person_accepted").on(t.personId, t.acceptedAt),
+  ],
 );
 
 // ─── Interests, skills, preferences ───────────────────────────────────────
@@ -212,7 +276,7 @@ export const memories = pgTable(
   "memories",
   {
     id: id(),
-    relationshipId: uuid("relationship_id").notNull().references(() => relationships.id, { onDelete: "cascade" }),
+    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     addedBy: uuid("added_by").notNull().references(() => people.id),
     kind: text("kind").notNull().default("memory"),
     title: text("title").notNull(),
@@ -230,7 +294,7 @@ export const memories = pgTable(
 
 export const sharedLearning = pgTable("shared_learning", {
   id: id(),
-  relationshipId: uuid("relationship_id").notNull().references(() => relationships.id, { onDelete: "cascade" }),
+  relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
   addedBy: uuid("added_by").notNull().references(() => people.id),
   title: text("title").notNull(),
   topic: text("topic"),
@@ -336,7 +400,7 @@ export const photos = pgTable(
   "photos",
   {
     id: id(),
-    relationshipId: uuid("relationship_id").notNull().references(() => relationships.id, { onDelete: "cascade" }),
+    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     uploadedBy: uuid("uploaded_by").notNull().references(() => people.id),
     mime: text("mime").notNull(),
     bytes: text("bytes").notNull(), // base64: portable across PGlite and node-postgres
@@ -358,7 +422,7 @@ export const media = pgTable(
   "media",
   {
     id: id(),
-    relationshipId: uuid("relationship_id").notNull().references(() => relationships.id, { onDelete: "cascade" }),
+    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     addedBy: uuid("added_by").notNull().references(() => people.id),
     /** photo | video | song */
     kind: text("kind").notNull(),
@@ -420,7 +484,7 @@ export const presence = pgTable("presence", {
  * people pressing a button at the same moment.
  */
 export const roomState = pgTable("room_state", {
-  relationshipId: uuid("relationship_id").primaryKey().references(() => relationships.id, { onDelete: "cascade" }),
+  relationshipId: uuid("relationship_id").primaryKey().references(() => couples.id, { onDelete: "cascade" }),
   version: integer("version").notNull().default(0),
   mediaId: uuid("media_id").references(() => media.id, { onDelete: "set null" }),
   /** For discovery videos (knitting tutorials, bird videos) that aren't in the gallery. */
@@ -439,7 +503,7 @@ export const roomEvents = pgTable(
   "room_events",
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
-    relationshipId: uuid("relationship_id").notNull().references(() => relationships.id, { onDelete: "cascade" }),
+    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     personId: uuid("person_id").notNull().references(() => people.id, { onDelete: "cascade" }),
     /** chat | react | nudge | system */
     kind: text("kind").notNull(),
@@ -453,7 +517,7 @@ export const roomEvents = pgTable(
 export const dailyAnswers = pgTable(
   "daily_answers",
   {
-    relationshipId: uuid("relationship_id").notNull().references(() => relationships.id, { onDelete: "cascade" }),
+    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     day: date("day").notNull(),
     personId: uuid("person_id").notNull().references(() => people.id, { onDelete: "cascade" }),
     answer: text("answer").notNull(),
@@ -474,7 +538,7 @@ export const messages = pgTable(
   "messages",
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
-    relationshipId: uuid("relationship_id").notNull().references(() => relationships.id, { onDelete: "cascade" }),
+    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     senderId: uuid("sender_id").notNull().references(() => people.id, { onDelete: "cascade" }),
     /** Generated by the sending device, so a retried send is stored once. */
     clientId: text("client_id"),
@@ -509,7 +573,7 @@ export type MessageMeta = {
 /** Per person: how far they've read and received, and whether they're typing. */
 export const chatState = pgTable("chat_state", {
   personId: uuid("person_id").primaryKey().references(() => people.id, { onDelete: "cascade" }),
-  relationshipId: uuid("relationship_id").notNull().references(() => relationships.id, { onDelete: "cascade" }),
+  relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
   lastReadId: bigint("last_read_id", { mode: "number" }).notNull().default(0),
   lastDeliveredId: bigint("last_delivered_id", { mode: "number" }).notNull().default(0),
   typingUntil: timestamp("typing_until", { withTimezone: true }),
@@ -529,7 +593,7 @@ export const calls = pgTable(
   "calls",
   {
     id: id(),
-    relationshipId: uuid("relationship_id").notNull().references(() => relationships.id, { onDelete: "cascade" }),
+    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     callerId: uuid("caller_id").notNull().references(() => people.id, { onDelete: "cascade" }),
     calleeId: uuid("callee_id").notNull().references(() => people.id, { onDelete: "cascade" }),
     /** audio | video */
@@ -597,7 +661,7 @@ export const researchThreads = pgTable(
   "research_threads",
   {
     id: id(),
-    relationshipId: uuid("relationship_id").notNull().references(() => relationships.id, { onDelete: "cascade" }),
+    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     ownerId: uuid("owner_id").notNull().references(() => people.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     /** research | learn | explain */

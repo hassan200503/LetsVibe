@@ -83,3 +83,13 @@
 - Added H30: a repo admin must protect `main` and require `CI / check`; branch protection cannot be enforced from repository code. E0-008 stays in progress until that is done and the GitHub median runtime is measured.
 - Evidence: workflow YAML parses; `pnpm install --frozen-lockfile` pass; `pnpm check` PASS (typegen, typecheck 2 packages, lint clean, 5 files / 44 tests, Next 16.4.6 build 34 pages); `pnpm audit --prod --audit-level=high` reports no known vulnerabilities.
 - Next: E1-001 identity schema (couples, couple_members, invitations, profiles, consents), preserving existing data through a rename/backfill migration and adding schema constraint tests.
+
+## Iteration 008 - 2026-11-16 - Identity schema and legacy backfill (E1-001)
+
+- Renamed `relationships` -> `couples` and `relationship_members` -> `couple_members` in migration `0006_identity.sql`; renamed dependent FK constraints so the Drizzle snapshot stays stable, and verified `db:generate` reports no pending schema changes.
+- Added `slot` (1/2), `status` (active/left) and `joined_at` to `couple_members`: partial unique indexes enforce at most two active members per couple and at most one active couple per person. Existing rows backfill slots 1-2.
+- Added `invitations` (hashed token, expiry, revoke/accept fields, single-use conditional update, unique token), `profiles` (timezone/locale/onboarding state, one per person) and `consents` (kind/version, one acceptance per version). Existing people get Nairobi profiles to preserve current date behaviour.
+- Onboarding now inserts the host in slot 1 and partner in slot 2 inside a transaction, writes the profile and returns the used-invite error on a concurrent slot conflict. Context resolves active membership only. Seed writes slots and profiles.
+- Evidence: 7 new PGlite tests cover the two-member cap, one-active-couple rule, single-use invite, duplicate token hash, profile/consent uniqueness, and migration of a pre-0006 relationship with two people plus a memory that survives rename and cascades on couple deletion. Full `pnpm check`: 7 files / 51 tests, 34-page build. Seed followed by reset succeeded.
+- Risk: `relationship_id` remains on content tables; no RLS or Supabase Auth yet. The rename has not been rehearsed against a staging copy (E0-006/H3), so the production migration remains unverified.
+- Next: E0-009 design tokens or E1-002 RLS foundation. E1-002 needs Supabase staging and RLS test access; if blocked, take a local unblocked story.

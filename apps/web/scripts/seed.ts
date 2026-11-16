@@ -12,7 +12,7 @@ import { passphrase } from "../src/lib/auth/passphrase";
 import { BRAND } from "@letsvibe/domain";
 import { eq } from "drizzle-orm";
 import { getDb } from "../src/lib/db/client";
-import { interests, people, preferences, projects, radarItems, radarLanes, relationshipMembers, relationships, skills } from "../src/lib/db/schema";
+import { coupleMembers, couples, interests, people, preferences, profiles, projects, radarItems, radarLanes, skills } from "../src/lib/db/schema";
 
 type DemoSlug = "alex" | "sam";
 const DEMO_SLUGS = new Set<DemoSlug>(["alex", "sam"]);
@@ -78,16 +78,23 @@ async function main() {
     features: [],
   });
 
-  let [rel] = await db.select().from(relationships).limit(1);
+  let [rel] = await db.select().from(couples).limit(1);
   if (!rel) {
-    [rel] = await db.insert(relationships).values({ name: BRAND.defaultSpaceName }).returning();
-    console.log("  created relationship");
+    [rel] = await db.insert(couples).values({ name: BRAND.defaultSpaceName }).returning();
+    console.log("  created couple");
   }
   await db
-    .insert(relationshipMembers)
+    .insert(coupleMembers)
     .values([
-      { relationshipId: rel.id, personId: alex.id },
-      { relationshipId: rel.id, personId: sam.id },
+      { relationshipId: rel.id, personId: alex.id, slot: 1 },
+      { relationshipId: rel.id, personId: sam.id, slot: 2 },
+    ])
+    .onConflictDoNothing();
+  await db
+    .insert(profiles)
+    .values([
+      { personId: alex.id, onboardingCompletedAt: new Date() },
+      { personId: sam.id, onboardingCompletedAt: new Date() },
     ])
     .onConflictDoNothing();
 

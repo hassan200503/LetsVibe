@@ -1,6 +1,6 @@
 # Architecture
 
-Status: target architecture accepted for planning (ADR-001); implementation begins at E0-002/E1. Nothing here describes production changes already made.
+Status: target architecture accepted (ADR-001). E1-001 has implemented the first identity-schema slice; everything else in this document remains planned, not production state.
 
 ## Today (single-couple)
 
@@ -84,7 +84,7 @@ Rules:
 
 New: `couples`, `couple_members`, `invitations`, `profiles`, `consents`, `entitlements`, `usage_ledger`, `reports`, `moderation_actions`, `audit_log`, `export_jobs`, `deletion_requests`.
 
-Existing 32 tables stay conceptually the same; `relationships` becomes `couples`, `relationship_members` becomes `couple_members`, and `relationship_id` is replaced by `couple_id` after an expand/backfill/contract migration (E2-001, E11-007). `people` becomes a profile linked to `auth.users`; slug is no longer a login.
+E1-001 has applied the expand step: migration `0006_identity` renames `relationships`/`relationship_members` to `couples`/`couple_members`, backfills slots 1–2, and adds `invitations`, `profiles` and `consents`. Existing content still uses `relationship_id`; it becomes `couple_id` in E2-001/E11-007. `people` becomes a profile linked to `auth.users`; slug is no longer a login. The local adapter keeps `relationship_id` queries compiling until that contract step.
 
 ## Authentication and sessions
 

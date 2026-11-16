@@ -43,6 +43,13 @@
       "when": 1790676492438,
       "tag": "0005_research",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794833098432,
+      "tag": "0006_identity",
+      "breakpoints": true
     }
   ]
 }

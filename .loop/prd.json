@@ -167,9 +167,9 @@
       "dependsOn": [
         "E0-002"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "Migration 0006 renames relationships/relationship_members to couples/couple_members, backfills slots 1-2 and profiles, and adds invitations/profiles/consents with indexes and checks. Existing relationship_id columns and ctx.relationship remain as the compatibility adapter until E2-001. Tests: 7 new PGlite tests, including a pre-0006 legacy backfill with preserved memory/FK cascade; full gate 7 files / 51 tests, 34-page build. Production/staging migration rehearsal still blocked on E0-006."
     },
     {
       "id": "E1-002",

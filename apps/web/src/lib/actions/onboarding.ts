@@ -1,14 +1,14 @@
 "use server";
 
 import bcrypt from "bcryptjs";
-import { count, eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { THEME_KEYS, type ThemeKey } from "@letsvibe/domain";
 import { createSession } from "@/lib/auth/session";
 import { readInvite } from "@/lib/auth/invite";
 import { getDb } from "@/lib/db/client";
-import { interests, people, preferences, relationshipMembers, relationships } from "@/lib/db/schema";
+import { coupleMembers, couples, interests, people, preferences, profiles } from "@/lib/db/schema";
 import { getCtx } from "@/lib/context";
 import { isTopicKey, type TopicKey } from "@/lib/trends/topics";
 import { ActionState, formObject, isoDate, reqText } from "./util";
@@ -49,27 +49,33 @@ async function uniqueSlug(db: Db, name: string): Promise<string> {
   return `${base}-${Date.now().toString(36)}`;
 }
 
-async function addPerson(fd: FormData, relationshipId: string, theme: ThemeKey, displayName: string, passcode: string) {
+async function addPerson(fd: FormData, coupleId: string, slot: 1 | 2, theme: ThemeKey, displayName: string, passcode: string) {
   const db = await getDb();
   const slug = await uniqueSlug(db, displayName);
-  const [person] = await db
-    .insert(people)
-    .values({
-      slug,
-      displayName,
-      theme,
-      passwordHash: await bcrypt.hash(passcode, 12),
-      journalTitle: "Learning Journal",
-      radarTitle: "Curiosity Radar",
-      features: [],
-    })
-    .returning();
-  await db.insert(relationshipMembers).values({ relationshipId, personId: person.id });
-
+  const passwordHash = await bcrypt.hash(passcode, 12);
   const topics = chosenTopics(fd);
-  await db.insert(interests).values(topics.map((topic, position) => ({ personId: person.id, topic, position })));
-  await db.insert(preferences).values({ personId: person.id });
-  return person;
+
+  return db.transaction(async (tx) => {
+    const [person] = await tx
+      .insert(people)
+      .values({
+        slug,
+        displayName,
+        theme,
+        passwordHash,
+        journalTitle: "Learning Journal",
+        radarTitle: "Curiosity Radar",
+        features: [],
+      })
+      .returning();
+    await tx.insert(coupleMembers).values({ relationshipId: coupleId, personId: person.id, slot });
+    if (topics.length) {
+      await tx.insert(interests).values(topics.map((topic, position) => ({ personId: person.id, topic, position })));
+    }
+    await tx.insert(preferences).values({ personId: person.id });
+    await tx.insert(profiles).values({ personId: person.id, onboardingCompletedAt: new Date() });
+    return person;
+  });
 }
 
 export async function startWorld(_: ActionState, fd: FormData): Promise<ActionState> {
@@ -88,11 +94,11 @@ export async function startWorld(_: ActionState, fd: FormData): Promise<ActionSt
   if (parsedPerson.data.passcode !== parsedPerson.data.confirm) return { error: "The passcodes do not match" };
   if (!chosenTopics(fd).length) return { error: "Pick at least one interest" };
 
-  const [relationship] = await db
-    .insert(relationships)
+  const [couple] = await db
+    .insert(couples)
     .values({ name: parsedWorld.data.relationshipName, startedOn: parsedWorld.data.startedOn ?? null })
     .returning();
-  const person = await addPerson(fd, relationship.id, parsedPerson.data.theme, parsedPerson.data.displayName, parsedPerson.data.passcode);
+  const person = await addPerson(fd, couple.id, 1, parsedPerson.data.theme, parsedPerson.data.displayName, parsedPerson.data.passcode);
 
   await createSession({ personId: person.id, slug: person.slug });
   revalidatePath("/", "layout");
@@ -110,12 +116,22 @@ export async function joinWorld(_: ActionState, fd: FormData): Promise<ActionSta
   if (!chosenTopics(fd).length) return { error: "Pick at least one interest" };
 
   const db = await getDb();
-  const [relationship] = await db.select().from(relationships).where(eq(relationships.id, invite.relationshipId)).limit(1);
-  if (!relationship) return { error: "This world no longer exists." };
-  const [{ n }] = await db.select({ n: count() }).from(relationshipMembers).where(eq(relationshipMembers.relationshipId, relationship.id));
+  const [couple] = await db.select().from(couples).where(eq(couples.id, invite.relationshipId)).limit(1);
+  if (!couple) return { error: "This world no longer exists." };
+  const [{ n }] = await db
+    .select({ n: count() })
+    .from(coupleMembers)
+    .where(and(eq(coupleMembers.relationshipId, couple.id), eq(coupleMembers.status, "active")));
   if (Number(n) >= 2) return { error: "This invitation has already been used." };
 
-  const person = await addPerson(fd, relationship.id, parsedPerson.data.theme, parsedPerson.data.displayName, parsedPerson.data.passcode);
+  let person;
+  try {
+    person = await addPerson(fd, couple.id, Number(n) === 0 ? 1 : 2, parsedPerson.data.theme, parsedPerson.data.displayName, parsedPerson.data.passcode);
+  } catch (e) {
+    const code = (e as { code?: string }).code ?? (e as { cause?: { code?: string } }).cause?.code;
+    if (code === "23505") return { error: "This invitation has already been used." };
+    throw e;
+  }
   await createSession({ personId: person.id, slug: person.slug });
   revalidatePath("/", "layout");
   redirect("/");

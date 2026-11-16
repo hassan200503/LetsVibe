@@ -3,7 +3,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { and, eq, ne } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
-import { people, relationshipMembers, relationships, type Person } from "@/lib/db/schema";
+import { coupleMembers, couples, people, type Person } from "@/lib/db/schema";
 import { readSession } from "@/lib/auth/session";
 import { viewUrl } from "@/lib/media/storage";
 
@@ -18,7 +18,7 @@ async function strip(p: Person): Promise<PublicPerson> {
 
 export type Ctx = {
   me: PublicPerson;
-  relationship: typeof relationships.$inferSelect;
+  relationship: typeof couples.$inferSelect;
   /** Everyone else in the relationship (one person today, but not assumed). */
   partners: PublicPerson[];
   members: PublicPerson[];
@@ -30,17 +30,17 @@ export async function ctxFor(personId: string): Promise<Ctx | null> {
   const [me] = await db.select().from(people).where(eq(people.id, personId));
   if (!me) return null;
   const [link] = await db
-    .select({ r: relationships })
-    .from(relationshipMembers)
-    .innerJoin(relationships, eq(relationships.id, relationshipMembers.relationshipId))
-    .where(eq(relationshipMembers.personId, me.id))
+    .select({ r: couples })
+    .from(coupleMembers)
+    .innerJoin(couples, eq(couples.id, coupleMembers.relationshipId))
+    .where(and(eq(coupleMembers.personId, me.id), eq(coupleMembers.status, "active")))
     .limit(1);
   if (!link) return null;
   const others = await db
     .select({ p: people })
-    .from(relationshipMembers)
-    .innerJoin(people, eq(people.id, relationshipMembers.personId))
-    .where(and(eq(relationshipMembers.relationshipId, link.r.id), ne(people.id, me.id)));
+    .from(coupleMembers)
+    .innerJoin(people, eq(people.id, coupleMembers.personId))
+    .where(and(eq(coupleMembers.relationshipId, link.r.id), eq(coupleMembers.status, "active"), ne(people.id, me.id)));
   const [meP, ...partners] = await Promise.all([strip(me), ...others.map((o) => strip(o.p))]);
   return { me: meP, relationship: link.r, partners, members: [meP, ...partners] };
 }

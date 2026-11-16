@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { count, eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import { BRAND, THEME_OPTIONS, coerceTheme } from "@letsvibe/domain";
 import { getCtx } from "@/lib/context";
 import { getDb } from "@/lib/db/client";
-import { people, relationshipMembers, relationships } from "@/lib/db/schema";
+import { coupleMembers, couples, people } from "@/lib/db/schema";
 import { readInvite } from "@/lib/auth/invite";
 import { joinWorld } from "@/lib/actions/onboarding";
 import { TOPICS, TOPIC_KEYS } from "@/lib/trends/topics";
@@ -24,17 +24,18 @@ async function lookup(token: string): Promise<Invite | null> {
   const invite = readInvite(token);
   if (!invite) return null;
   const db = await getDb();
-  const [relationship] = await db.select().from(relationships).where(eq(relationships.id, invite.relationshipId)).limit(1);
-  if (!relationship) return null;
-  const [{ n }] = await db.select({ n: count() }).from(relationshipMembers).where(eq(relationshipMembers.relationshipId, relationship.id));
+  const [couple] = await db.select().from(couples).where(eq(couples.id, invite.relationshipId)).limit(1);
+  if (!couple) return null;
+  const active = and(eq(coupleMembers.relationshipId, couple.id), eq(coupleMembers.status, "active"));
+  const [{ n }] = await db.select({ n: count() }).from(coupleMembers).where(active);
   const [host] = await db
     .select({ displayName: people.displayName, theme: people.theme })
-    .from(relationshipMembers)
-    .innerJoin(people, eq(people.id, relationshipMembers.personId))
-    .where(eq(relationshipMembers.relationshipId, relationship.id))
+    .from(coupleMembers)
+    .innerJoin(people, eq(people.id, coupleMembers.personId))
+    .where(active)
     .limit(1);
   if (!host) return null;
-  return { relationshipName: relationship.name, hostName: host.displayName, hostTheme: coerceTheme(host.theme), full: Number(n) >= 2 };
+  return { relationshipName: couple.name, hostName: host.displayName, hostTheme: coerceTheme(host.theme), full: Number(n) >= 2 };
 }
 
 export default async function JoinPage({ params }: PageProps<"/join/[token]">) {
