@@ -14,6 +14,7 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "setup": "corepack pnpm install && corepack pnpm typegen && corepack pnpm seed",
+    "reset": "node apps/web/scripts/reset.mjs",
     "check": "corepack pnpm typecheck && corepack pnpm lint && corepack pnpm test && corepack pnpm build",
     "db:generate": "corepack pnpm --filter @letsvibe/web db:generate",
     "db:migrate": "corepack pnpm --filter @letsvibe/web db:migrate",

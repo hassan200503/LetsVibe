@@ -4,9 +4,9 @@ Legend: **Yes** = shipped today; **Partial** = exists with a single-couple or in
 
 | # | Feature | Target module | Web today | Web v1 target | iOS/Android v1 | Stories | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Sign up / sign in / sign out | apps/web, apps/mobile, packages/api-client | Partial (slug + passcode, seeded accounts) | Yes: email OTP/magic link, Apple, Google, sign out everywhere | Yes + secure session | E1-003, E1-004, E1-007 | No recovery or signup today; claim flow for founding couple. |
-| 2 | Invite / link partner | apps/web, apps/mobile, packages/domain | No | Yes: single-use invite link/code, 2-member cap, expiry/revoke, both must consent | Yes deep link | E1-005 | Invitations are the only way into a couple. |
-| 3 | Onboarding & personalisation | apps/web, apps/mobile, packages/domain | Partial (seed data, Hassan/Whitney hardcoded) | Yes: names, world names, start date, time zone, topics, notifications; resumable | Yes | E1-006, E1-013, E1-014 | Replaces seed-only setup. |
+| 1 | Sign up / sign in / sign out | apps/web, apps/mobile, packages/api-client | Partial (slug + passcode, seeded accounts) | Yes: email OTP/magic link, Apple, Google, sign out everywhere | Yes + secure session | E1-003, E1-004, E1-007 | No recovery or self-signup today. |
+| 2 | Invite / link partner | apps/web, apps/mobile, packages/domain | Partial (signed 24-hour link; 2-member cap) | Yes: single-use invite link/code, 2-member cap, expiry/revoke, both must consent | Yes deep link | E1-005 | Invitations are the only way into a couple. |
+| 3 | Onboarding & personalisation | apps/web, apps/mobile, packages/domain | Partial (first-run names, world, start date, topics and colour) | Yes: names, world names, start date, time zone, topics, notifications; resumable | Yes | E1-006, E1-013, E1-014 | Replaces seed-only setup. |
 | 4 | Home / journey clock / verses | apps/web, apps/mobile | Yes | Yes, per couple (start date, names, memories) | Yes | E8-002, E1-013 | Keep visual identity. |
 | 5 | Question of the day | packages/domain | Yes | Yes, per-couple time zone, reveal only after both answer, archive | Yes | E1-014 | Today hardcoded Nairobi. |
 | 6 | Chat text (send/edit/delete) | packages/sync-protocol, apps/web, apps/mobile | Yes | Yes over realtime, idempotent, offline queue on mobile | Yes | E3-002, E3-004, E3-009 | Polling 1.5 s today. |
@@ -24,7 +24,7 @@ Legend: **Yes** = shipped today; **Partial** = exists with a single-couple or in
 | 18 | Gallery photos/videos/songs | apps/web, apps/mobile, Supabase Storage | Yes (Vercel Blob/legacy base64) | Yes: Supabase Storage, resumable, thumbnails, signed URLs, per-couple quota | Yes + camera/photo picker | E6-001, E6-002, E6-005, E8-005 | Legacy `photos` table retired. |
 | 19 | Gallery comments / reactions / new badge | packages/sync-protocol | Yes | Yes over realtime, pagination | Yes | E6-005 | |
 | 20 | Our Story (memories, milestones, plans) | apps/web, apps/mobile | Yes | Yes, per couple, export/delete | Yes | E1-008, E8-002 | |
-| 21 | Personal worlds (profile, journal, radar, skills, projects, vault) | apps/web, apps/mobile | Partial (Hassan-specific content) | Yes: optional per person, generic vocabulary | Yes | E1-013, E8-007 | Public profile opt-in only. |
+| 21 | Personal worlds (profile, journal, radar, skills, projects, vault) | apps/web, apps/mobile | Partial (per-person worlds; onboarding content still minimal) | Yes: optional per person, generic vocabulary | Yes | E1-013, E8-007 | Public profile opt-in only. |
 | 22 | Discover feed + topics + source health | packages/domain, apps/web | Partial (global, 8 fixed topics/39 sources) | Yes: per-couple topic/source config, global ingest, saved items | Yes | E7-001, E7-002, E7-006 | |
 | 23 | Weekly digest / search | packages/domain, apps/web | Yes (global) | Yes, couple-scoped, per-couple time zone | Yes | E7-006, E7-007 | Search must never cross couples. |
 | 24 | Things We Are Learning | apps/web, apps/mobile | Yes | Yes, export/delete | Yes | E1-008 | |
@@ -41,7 +41,7 @@ Legend: **Yes** = shipped today; **Partial** = exists with a single-couple or in
 | 35 | Accessibility | apps/web, apps/mobile, packages/ui-tokens | Partial (semantics, labels, reduced motion in places) | WCAG 2.2 AA on critical flows; keyboard; contrast | VoiceOver/TalkBack, dynamic type, reduced motion | E10-001, E10-002, E8-008 | |
 | 36 | Internationalisation | packages/i18n | No (English only) | English v1; locale/time-zone formatting correct; strings externalised | Same | E10-003, E1-014 | sw/fr post-launch. |
 | 37 | Offline / poor-network resilience | apps/mobile, packages/api-client | Partial (optimistic chat, ICE restart) | Web: queued sends, error states; Mobile: offline cache/queue, resync | Yes | E3-009, E5-002, E8-003 | Must test on 3G. |
-| 38 | Per-couple theming & identity | packages/ui-tokens | Partial (two hardcoded worlds) | Yes: world names/colours from settings; no names in global metadata | Yes | E1-013, E10-004 | Removes Hassan/Whitney from shared UI. |
+| 38 | Per-couple theming & identity | packages/ui-tokens | Partial (neutral palettes and per-person colour choice) | Yes: world names/colours from settings; no names in global metadata | Yes | E1-013, E10-004 | Removes founding-couple identity from shared UI. |
 
 ## Explicitly out of scope for v1
 

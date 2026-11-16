@@ -12,7 +12,7 @@ export default async function WorldLayout({ children, params }: LayoutProps<"/wo
   if (!person) notFound();
   const own = person.id === ctx.me.id;
   const first = person.displayName.split(" ")[0];
-  const motto = person.motto ?? worldFor(person.theme).tagline;
+  const motto = person.motto ?? worldFor().tagline;
   const tabs = [
     { href: "", label: "Dashboard" },
     { href: "/journal", label: person.journalTitle },
@@ -36,11 +36,10 @@ export default async function WorldLayout({ children, params }: LayoutProps<"/wo
                   🎂 Birthday: {new Date(`${person.birthday}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" })}
                 </p>
               )}
-              <p className={`mt-4 text-lg ${person.theme === "hassan" ? "font-mono text-base" : ""}`}>
+              <p className="mt-4 text-lg">
                 {[person.course, person.headline ?? person.focus].filter(Boolean).join(" · ")}
               </p>
-              <p className={`mt-3 text-sm text-muted ${person.theme === "hassan" ? "font-mono" : "font-display italic"}`}>
-                {person.theme === "hassan" ? <span className="text-accent-2">$ </span> : null}
+              <p className="mt-3 text-sm text-muted font-display italic">
                 {motto}
               </p>
             </div>

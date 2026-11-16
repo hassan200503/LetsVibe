@@ -45,7 +45,7 @@ export const people = pgTable("people", {
   focus: text("focus"),
   intro: text("intro"),
   motto: text("motto"),
-  /** Visual identity key, e.g. "us" or a future theme. */
+  /** Visual identity key: one of THEME_KEYS in @letsvibe/domain. */
   theme: text("theme").notNull(),
   /** Label used for the person's learning journal, e.g. "Engineering Journey". */
   journalTitle: text("journal_title").notNull().default("Learning Journey"),

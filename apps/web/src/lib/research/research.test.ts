@@ -92,10 +92,10 @@ describe("studies", () => {
 
 describe("suggestions", () => {
   it("offers every mode, stays stable for a day and changes with the seed", () => {
-    const a = suggestionsFor(["birds", "biotech"], "whitney|2026-09-29");
+    const a = suggestionsFor(["birds", "biotech"], "sam|2026-09-29");
     expect(a).toHaveLength(6);
     expect(new Set(a.map((s) => s.mode))).toEqual(new Set(["research", "learn", "explain"]));
-    expect(suggestionsFor(["birds", "biotech"], "whitney|2026-09-29")).toEqual(a);
+    expect(suggestionsFor(["birds", "biotech"], "sam|2026-09-29")).toEqual(a);
     expect(new Set(a.map((s) => s.q)).size).toBe(6);
   });
 });

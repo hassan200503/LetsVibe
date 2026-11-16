@@ -85,7 +85,7 @@ function WorldCard({ person, topics }: { person: PublicPerson; topics: TopicKey[
           <p className="eyebrow-lux">{first}&apos;s world</p>
         </div>
         <h3 className="font-lux mt-7 text-[2.3rem] font-medium leading-[1.05] tracking-tight sm:text-[2.8rem]">{person.focus ?? person.headline ?? first}</h3>
-        <p className={`mt-4 flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted ${person.theme === "hassan" ? "font-mono text-[0.8rem]" : ""}`}>
+        <p className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted">
           {line.map((t, i) => (
             <span key={t} className="flex items-center gap-3">
               {i > 0 && <span className="size-1 rounded-full bg-accent/50" aria-hidden />}
@@ -153,7 +153,7 @@ export default async function Home() {
     .sort((x, y) => x.b.days - y.b.days);
   const birthdayToday = birthdays.find((x) => x.b.days === 0);
   const [a, b] = members;
-  const names = `${firstOf(a)} & ${firstOf(b)}`;
+  const names = b ? `${firstOf(a)} & ${firstOf(b)}` : firstOf(a);
 
   // A moment from the journey, different on every visit (today's anniversary of a memory comes first).
   const lived = memories.filter((r) => r.m.kind !== "plan");
@@ -215,6 +215,11 @@ export default async function Home() {
                     <Link href="/together/chat" className="btn-glass">
                       <IconMessage size={17} /> Message {firstOf(partner)}
                       {unread.unread > 0 && <span className="grid min-w-5 place-items-center rounded-full bg-emerald-500 px-1.5 text-[0.65rem] font-bold leading-5 text-white">{unread.unread}</span>}
+                    </Link>
+                  )}
+                  {!partner && (
+                    <Link href="/settings#invite" className="btn-glass">
+                      <IconHeart size={17} /> Invite your partner
                     </Link>
                   )}
                   <Link href="/story" className="group ml-1 inline-flex items-center gap-1.5 px-2 py-2 text-sm text-white/70 transition hover:text-white">

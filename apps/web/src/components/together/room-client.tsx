@@ -58,7 +58,7 @@ export function RoomClient({ initial }: { initial: RoomPayload }) {
     staleTime: 60_000,
   });
 
-  // What just happened in the room ("Whitney started playing …"); messages live in the chat.
+  // What just happened in the room ("Sam started playing …"); messages live in the chat.
   const activity = events.filter((e) => e.kind === "system").slice(-3).reverse();
   const unread = pulse.data?.chat?.unread ?? 0;
 

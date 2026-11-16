@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getCtx } from "@/lib/context";
 import { galleryPage } from "@/lib/media/queries";
 
-/** GET /api/gallery?kind=photo|video|song&by=whitney&cursor=… */
+/** GET /api/gallery?kind=photo|video|song&by=<slug>&cursor=… */
 export async function GET(req: NextRequest) {
   const ctx = await getCtx();
   if (!ctx) return NextResponse.json({ error: "Sign in first" }, { status: 401 });

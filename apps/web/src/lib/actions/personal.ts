@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { and, eq, max } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { THEME_KEYS } from "@letsvibe/domain";
 import { getDb } from "@/lib/db/client";
 import { interests, knowledgeEntries, learningRecords, people, preferences, projects, radarItems, radarLanes, relationships, skills } from "@/lib/db/schema";
 import { requireCtx } from "@/lib/context";
@@ -226,6 +227,7 @@ export async function deleteSkill(id: string) {
 
 const profile = z.object({
   displayName: reqText(80),
+  theme: z.enum(THEME_KEYS),
   nickname: optText(40),
   headline: optText(120),
   course: optText(120),
@@ -245,6 +247,7 @@ export async function saveProfile(_: ActionState, fd: FormData): Promise<ActionS
     .update(people)
     .set({
       displayName: d.displayName,
+      theme: d.theme,
       nickname: d.nickname ?? null,
       headline: d.headline ?? null,
       course: d.course ?? null,

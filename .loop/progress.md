@@ -63,3 +63,15 @@
 - Gates on the source tree: `pnpm check` PASS: typegen; typecheck 2 packages; lint clean; 5 files / 44 tests; Next 16.4.6 build 33 pages. No new warnings reported.
 - Learnings: `pnpm setup` is a built-in pnpm command, so a package script named `setup` must be invoked as `pnpm run setup`; `pnpm run setup` also bootstraps root dependencies on a fresh checkout. Windows was exercised locally; macOS/Linux use the same commands but were not executed in this environment.
 - Next: `E0-008` (CI gates and PR template). `E0-003` remains blocked on gitleaks (H1).
+
+## Iteration 006 - 2026-11-16 - Fresh-start onboarding and neutral identity (E1-013 done; E1-005/E1-006 slice)
+
+- Human directive: remove every founding-couple reference, let a new person create the world and invite a partner, collect each person's interests, and make discoveries follow those interests. Kept the private-for-two architecture; a public social-network pivot still needs its own ADR.
+- Removed legacy names from the shipped source, copy, docs and links. Added neutral theme keys `us`, `indigo` and `sage` with per-person colour selection in Settings, and reduced world vocabulary to one generic, per-person configuration. The current tree has no case-insensitive Hassan/Whitney/Sumaiya matches outside git history/build/data; history was not rewritten.
+- Added first-run `/welcome`: the first person names the shared world, sets the start date, picks a colour and at least one interest, and creates a passcode. Added `/join/[token]`: a signed 24-hour invitation that shows who is inviting, lets the partner choose their own name, colour and interests, and closes once the pair is full.
+- Added a private invite section in Settings and a home CTA while the pair is incomplete. Added `pnpm reset` (refuses when DATABASE_URL is set) to clear local PGlite data and generated seed passcodes so the next visit starts at `/welcome`.
+- Allowed `/welcome` and `/join/` through the optimistic auth proxy; both enforce their own server-side access rules. Login now sends an empty database to `/welcome`.
+- End-to-end verification with Playwright and a real empty PGlite database: `/` -> `/login` -> `/welcome`; Riley created `Test World` (indigo; software, technology); the invite appeared; Morgan joined in a fresh browser context (sage; philosophy, nature); DB had 2 people, 1 relationship, 2 members and 4 interests; Morgan's home showed the pair and each person's topics; Settings hid the used invite and exposed colour selection.
+- Gates: `git diff --check` pass; `node --check` pass for go-live/reset; `pnpm check` PASS (typegen, typecheck 2 packages, lint clean, 5 files / 44 tests, Next 16.4.6 build 34 pages). Local test data was reset after verification.
+- Remaining: E1-005 still needs rate limiting, audit/revoke and E1-003 multi-tenant auth; E1-006 still needs timezone/notification defaults, resumable progress and native parity. A Facebook/Instagram-scale public network remains out of scope without product approval.
+- Next: E0-008 (CI gates and PR template). E0-003 remains blocked on gitleaks (H1).

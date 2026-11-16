@@ -19,7 +19,15 @@ import { randomBytes } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import readline from "node:readline";
 
-const REPO = "hassan200503/our-universe";
+function remoteRepo() {
+  if (process.env.GITHUB_REPOSITORY) return process.env.GITHUB_REPOSITORY;
+  const r = spawnSync("git", ["remote", "get-url", "origin"], { encoding: "utf8" });
+  const url = r.status === 0 ? r.stdout.trim() : "";
+  const match = url.match(/github\.com[:/]([^/]+)\/([^/]+?)(?:\.git)?$/);
+  if (!match) throw new Error("Add a GitHub remote named origin first: git remote add origin git@github.com:<owner>/<repo>.git");
+  return `${match[1]}/${match[2]}`;
+}
+const REPO = remoteRepo();
 const ENV_FILE = ".env.production.local";
 
 function step(title) {

@@ -17,7 +17,7 @@ const KIND = z.enum(["photo", "video", "song", "avatar"]);
 export async function prepareUpload(kind: string, mime: string, size: number): Promise<Prepared> {
   const ctx = await requireCtx();
   const mode = storageMode();
-  if (mode === "none") return { ok: false, error: "Photo & video storage isn't switched on yet. Hassan can connect it in Vercel → Storage → Blob." };
+  if (mode === "none") return { ok: false, error: "Photo & video storage isn't switched on yet. Connect it in Vercel → Storage → Blob." };
   const k = KIND.safeParse(kind);
   if (!k.success) return { ok: false, error: "Unknown kind" };
   if (!ALLOWED_TYPES.includes(mime)) return { ok: false, error: `${mime || "This file type"} isn't supported. Use a photo, MP4/MOV/WebM video, or MP3/M4A/WAV audio.` };

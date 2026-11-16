@@ -1,6 +1,6 @@
 /** Each world's signature mark, drawn in its own accent colours. */
 export function WorldEmblem({ theme }: { theme: string }) {
-  if (theme === "hassan") {
+  if (theme === "indigo") {
     return (
       <svg viewBox="0 0 200 200" className="size-40 sm:size-48" aria-hidden>
         <circle cx="100" cy="100" r="78" fill="none" stroke="var(--accent)" strokeOpacity=".25" />
@@ -15,7 +15,7 @@ export function WorldEmblem({ theme }: { theme: string }) {
       </svg>
     );
   }
-  if (theme === "whitney") {
+  if (theme === "sage") {
     // A DNA helix growing a leaf, with a small bird: biotech, nature, birds.
     const rungs = Array.from({ length: 9 }, (_, i) => {
       const y = 24 + i * 18;

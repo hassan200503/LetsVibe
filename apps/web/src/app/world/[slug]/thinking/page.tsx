@@ -10,7 +10,7 @@ export default async function ThinkingPage({ params, searchParams }: PageProps<"
   const { ctx, person, own, first } = await worldPerson(params);
   if (!person.features.includes("thinking")) notFound();
   const sp = await searchParams;
-  const cfg = worldFor(person.theme);
+  const cfg = worldFor();
   return (
     <>
       <KnowledgePage

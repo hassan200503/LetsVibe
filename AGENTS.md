@@ -18,6 +18,7 @@ Requires Node.js 24+ and pnpm 12.21.0. If `pnpm` is missing, run `corepack enabl
 
 ```powershell
 pnpm run setup                 # fresh clone: install, typegen and seed Alex + Sam
+pnpm reset                 # clear local data; begin at /welcome
 pnpm install               # install the workspace
 pnpm typegen               # REQUIRED on a fresh checkout before typecheck
 pnpm dev                   # web dev server; zero-setup PGlite in apps/web/.data/

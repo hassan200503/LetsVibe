@@ -1,4 +1,4 @@
-/** The five-point self-assessment scale used on Hassan's portfolio. */
+/** The five-point self-assessment scale used on a profile. */
 export const SCALE = [
   "",
   "Studied it and understand the shape of the problem; not shipped.",

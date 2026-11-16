@@ -63,11 +63,11 @@ describe("low-quality filter", () => {
 });
 
 describe("visibility", () => {
-  const ctx = { me: { id: "hassan" } } as unknown as Ctx;
+  const ctx = { me: { id: "me" } } as unknown as Ctx;
   it("lets owners see everything", () => {
-    expect(visibleTo(ctx, "hassan")).toEqual(["private", "shared", "public"]);
+    expect(visibleTo(ctx, "me")).toEqual(["private", "shared", "public"]);
   });
   it("never shows a partner private entries", () => {
-    expect(visibleTo(ctx, "whitney")).not.toContain("private");
+    expect(visibleTo(ctx, "partner")).not.toContain("private");
   });
 });

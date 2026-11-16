@@ -27,13 +27,13 @@ This ADR records the name, the reasoning, the risks, and rules that keep the ren
 4. **Positioning stays private-for-two.** Let'sVibe is not a public feed, follower graph or ad product. If the owner later wants a public social network, that is a separate product/ADR with new privacy, moderation, safety and cost architecture; it must not be slipped in under this rename.
 5. **Naming hierarchy:** brand Let'sVibe; each couple's space is user-nameable (default "Our World"); "universe" remains a visual metaphor, not the company name.
 6. **Visual direction:** keep the existing typography and night-sky palette; set the wordmark in the existing serif with the descriptor nearby. No new logo system until a design pass; avoid stock "vibe" neon clichés.
-7. **Repository.** The GitHub remote remains `hassan200503/our-universe` until a human renames it. Local product metadata and docs use Let'sVibe; history and audit evidence keep the former name with a note.
+7. **Repository.** The GitHub remote keeps its existing personal owner and repository name until a human renames it. Local product metadata and docs use Let'sVibe; history and audit evidence keep the former name with a note.
 
 ## Why not keep "Our Universe"
 
 - The owner explicitly chose a new name; keeping it would create drift between brand and docs.
 - "Our Universe" is intimate and distinctive but hard to own as a company name, and it says nothing about live media/calls, which are differentiators.
-- It also encodes the founding couple's story, which must become per-couple data anyway (E1-013).
+- It also encodes one couple's story, which must become per-couple data anyway (E1-013).
 
 ## Why Let'sVibe, and what it costs
 

@@ -17,7 +17,7 @@ describe("push keys", () => {
     const browser = createECDH("prime256v1");
     browser.generateKeys();
     const sub = { endpoint: "https://fcm.googleapis.com/fcm/send/abc", keys: { p256dh: browser.getPublicKey().toString("base64url"), auth: randomBytes(16).toString("base64url") } };
-    const req = webpush.generateRequestDetails(sub, JSON.stringify({ type: "message", title: "Whitney", body: "hi", url: "/together/chat", tag: "chat" }), {
+    const req = webpush.generateRequestDetails(sub, JSON.stringify({ type: "message", title: "Sam", body: "hi", url: "/together/chat", tag: "chat" }), {
       vapidDetails: { subject: "mailto:our-universe@users.noreply.github.com", publicKey, privateKey },
       TTL: 60,
       urgency: "high",

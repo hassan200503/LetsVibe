@@ -84,7 +84,7 @@ Scale: 1 (poor) to 5 (excellent), weighted by MASTER_SPEC §5 criteria. "Now" me
 **Negative / risks**
 
 - Supabase Realtime at 1,500 concurrent users requires **Pro with the spend cap lifted** (10,000 connections) or Team; budget alerts and load tests are mandatory. Default Pro (500) is insufficient. Cost is an assumption until measured.
-- Supabase Auth migration means the founding couple cannot keep the slug/passcode flow; they will go through a one-time account claim/reset. Password hashes are bcrypt, but there is no email on `people`, so a claim flow is required.
+- Supabase Auth migration means existing users cannot keep the slug/passcode flow; they will go through a one-time account claim/reset. Password hashes are bcrypt, but there is no email on `people`, so a claim flow is required.
 - Two app codebases (Next.js web, Expo mobile) still mean two UI implementations; only logic/types are shared. This is the price of keeping the existing web experience.
 - Vercel Pro is required (Hobby is non-commercial). EAS has its own build/submit costs.
 - RLS has a learning curve; every new table must ship with policies and tests or the gate fails.

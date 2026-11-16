@@ -15,7 +15,10 @@ import { logout } from "@/lib/actions/auth";
 import { AiKeySetting, RelaySetting } from "@/components/settings/secrets";
 import { describeSecret, SECRET_GEMINI, SECRET_RELAY } from "@/lib/settings";
 import { relaySource } from "@/lib/calls/ice";
+import { inviteToken } from "@/lib/auth/invite";
+import { InvitePartner } from "@/components/invite-partner";
 import { Container, PageHeader } from "@/components/ui/page-header";
+import { THEME_OPTIONS, coerceTheme } from "@letsvibe/domain";
 
 export const metadata = { title: "Settings" };
 
@@ -41,6 +44,14 @@ export default async function SettingsPage() {
         </form>
       </PageHeader>
       <Container world={me.theme}>
+        {ctx.partners.length === 0 && (
+          <section id="invite" className="card mb-8 p-5">
+            <p className="eyebrow">One more step</p>
+            <h2 className="font-display mt-1 text-xl font-semibold">Invite your partner</h2>
+            <p className="mt-2 text-sm text-muted">Send them this private link. They&apos;ll choose their own name, colour and interests.</p>
+            <InvitePartner path={`/join/${inviteToken(ctx.relationship.id)}`} />
+          </section>
+        )}
         <div className="grid gap-8 lg:grid-cols-2">
           <section className="card p-5">
             <h2 className="font-display text-xl font-semibold">Profile</h2>
@@ -71,6 +82,21 @@ export default async function SettingsPage() {
               <Field label="Motto" name="motto">
                 <input id="motto" name="motto" defaultValue={me.motto ?? ""} className="field" />
               </Field>
+              <fieldset>
+                <legend className="text-sm font-semibold">Your colour</legend>
+                <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                  {THEME_OPTIONS.map((t) => (
+                    <label key={t.value} data-world={t.value} className="flex cursor-pointer items-center gap-2 rounded-lg border border-line p-2 text-sm has-checked:border-accent has-checked:bg-accent-soft">
+                      <input type="radio" name="theme" value={t.value} defaultChecked={coerceTheme(me.theme) === t.value} />
+                      <span className="size-5 rounded-full border border-line bg-gradient-to-br from-accent to-accent-2" aria-hidden />
+                      <span>
+                        <span className="block font-semibold">{t.label}</span>
+                        <span className="block text-xs text-muted">{t.description}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
               <Field label="Birthday 🎂" name="birthday" hint="(your partner gets a countdown and a celebration on the day)">
                 <input id="birthday" name="birthday" type="date" defaultValue={me.birthday ?? ""} className="field" />
               </Field>

@@ -1,11 +1,11 @@
 # Verification and claims ledger
 
-Last updated: 2026-11-15. Rule: a claim is VERIFIED only if it was read from an official primary source or produced by a command whose output is recorded here. Everything else is UNVERIFIED and must not be stated as fact in copy, store listings or docs.
+Last updated: 2026-11-16. Rule: a claim is VERIFIED only if it was read from an official primary source or produced by a command whose output is recorded here. Everything else is UNVERIFIED and must not be stated as fact in copy, store listings or docs.
 
 ## Environment of record
 
 - Windows (PowerShell 5.1), git 2.53.0, Node v24.16.0, npm 11.13.0, pnpm 12.21.0 via a corepack user shim (`%LOCALAPPDATA%\corepack`, not on the default PATH).
-- Repo `hassan200503/our-universe`, branch `autonomous/couples-v2`, based on `main` @ `ebd08c4`.
+- Local checkout of the `our-universe` repository, branch `autonomous/couples-v2`, based on `main` @ `ebd08c4`.
 - No production access, no deployments, no mobile builds and no device tests were performed.
 
 ## External claims
@@ -100,5 +100,6 @@ Current tests cover: trends engine, visibility/clock/verse logic, push key deriv
 | E1-001 | — | _pending_ |
 | E1-002 | — | _pending_ |
 | E1-003 | — | _pending_ |
+| E1-013 | 2026-11-16 | Neutral theme/identity refactor; name search clean; onboarding/invite Playwright run; `pnpm check` in `.loop/progress.md` iteration 006 |
 
 Append one row per completed story; never delete past rows.

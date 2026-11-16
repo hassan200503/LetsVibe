@@ -8,13 +8,13 @@ import { Reactions } from "./reactions";
 import { SmartImage, SoundPlayer, VideoPlayer } from "./media";
 
 const TOPIC_WORLD: Record<string, string> = {
-  software: "hassan",
-  technology: "hassan",
-  philosophy: "hassan",
-  biotech: "whitney",
-  birds: "whitney",
-  knitting: "whitney",
-  environment: "whitney",
+  software: "indigo",
+  technology: "indigo",
+  philosophy: "indigo",
+  biotech: "sage",
+  birds: "sage",
+  knitting: "sage",
+  environment: "sage",
   nature: "us",
 };
 

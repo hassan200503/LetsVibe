@@ -7,7 +7,7 @@ import { IconArrowRight } from "@/components/icons";
 
 type P = { slug: string; displayName: string; theme: string };
 
-const DOT: Record<string, string> = { hassan: "from-[#c9c6ff] to-[#5b55d6]", whitney: "from-[#cfeede] to-[#4f8f6c]" };
+const DOT: Record<string, string> = { us: "from-[#f6e3b8] to-[#b8894a]", indigo: "from-[#c9c6ff] to-[#5b55d6]", sage: "from-[#cfeede] to-[#4f8f6c]" };
 
 export function LoginForm({ people, next }: { people: P[]; next: string }) {
   const [who, setWho] = useState<string | null>(people.length === 1 ? people[0].slug : null);

@@ -24,7 +24,7 @@ function Stat({ n, label }: { n: number; label: string }) {
 export default async function WorldDashboard({ params }: PageProps<"/world/[slug]">) {
   const { ctx, person, own, first } = await worldPerson(params);
   const topics = await personTopics(person.id);
-  const cfg = worldFor(person.theme);
+  const cfg = worldFor();
   const [stats, entries, projects, lanes, today, latest] = await Promise.all([
     personStats(ctx, person.id),
     journal(ctx, person.id, { limit: 20 }),

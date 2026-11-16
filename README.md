@@ -40,9 +40,11 @@ Requires Node.js 24+ and pnpm 12.21.0 (`corepack enable pnpm` once, or use any N
 | Opt-in public profile (public skills and projects only) | `/p/[slug]` |
 | Source health | `/discover/sources` |
 
-### Demo data
+### Start fresh or use demo data
 
-`pnpm run setup` creates a generic demo couple, **Alex** and **Sam**, with a few interests, skills and projects. Change names and profiles in Settings; delete `apps/web/.data/` to reseed from scratch.
+To begin with your own world, run `pnpm reset`, start `pnpm dev`, and open `/welcome`. The first person creates the world, picks interests and gets a private 24-hour invitation link for their partner. No demo accounts are created.
+
+`pnpm run setup` instead creates a generic demo couple, **Alex** and **Sam**, with a few interests, skills and projects. Change names and profiles in Settings; `pnpm reset` clears the local world and seed passcodes.
 
 ### Privacy
 
@@ -87,6 +89,7 @@ Source registry (sources.ts) → adapter (RSS/Atom, iNaturalist) → normalise
 
 ```bash
 pnpm run setup             # install, generate types, seed Alex and Sam
+# or: pnpm reset          # clear local data and begin at /welcome
 pnpm ingest --force    # optional: fetch the first live discoveries
 pnpm dev
 ```

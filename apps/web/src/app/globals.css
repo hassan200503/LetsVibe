@@ -2,8 +2,8 @@
 
 /*
  * Three identities that share one base:
- *   world-hassan  — night indigo & signal teal: engineering, deep thought
- *   world-whitney — sage, lavender & cream: biology, birds, craft
+ *   world-indigo  — cool indigo & signal teal: focus, ideas, craft
+ *   world-sage    — sage, lavender & cream: nature, care, growth
  *   world-us      — red-flower rose & warm gold: memories, love, growing together
  * Pages set `data-world` on a wrapper; components read the --accent tokens.
  *
@@ -35,13 +35,13 @@
   --ease-lux: cubic-bezier(0.22, 0.8, 0.16, 1);
 }
 
-[data-world="hassan"] {
+[data-world="indigo"] {
   --accent: #4338ca;
   --accent-soft: #e8e7fb;
   --accent-2: #0f9488;
   --glow: rgba(67, 56, 202, 0.2);
 }
-[data-world="whitney"] {
+[data-world="sage"] {
   --accent: #4f7a63;
   --accent-soft: #e6efe9;
   --accent-2: #7c6fc0;
@@ -71,12 +71,12 @@
     --accent-soft: #3a1620;
     --accent-2: #e0b25c;
   }
-  [data-world="hassan"] {
+  [data-world="indigo"] {
     --accent: #8b87ff;
     --accent-soft: #23214a;
     --accent-2: #2dd4bf;
   }
-  [data-world="whitney"] {
+  [data-world="sage"] {
     --accent: #8cc3a4;
     --accent-soft: #1d2e25;
     --accent-2: #b4a8f0;
@@ -250,14 +250,14 @@
     color: var(--accent);
   }
 
-  /* Hassan's world gets a faint engineering grid. */
-  .bg-hassan {
+  /* Indigo gets a faint engineering grid. */
+  .bg-indigo {
     background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
     background-size: 28px 28px;
     background-position: -1px -1px;
   }
-  /* Whitney's world gets soft, organic light. */
-  .bg-whitney {
+  /* Sage gets soft, organic light. */
+  .bg-sage {
     background:
       radial-gradient(60% 80% at 10% 10%, color-mix(in oklab, var(--accent) 16%, transparent), transparent 70%),
       radial-gradient(50% 70% at 90% 30%, color-mix(in oklab, var(--accent-2) 16%, transparent), transparent 70%);

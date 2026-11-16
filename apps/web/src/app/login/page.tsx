@@ -18,6 +18,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { next } = await searchParams;
   const db = await getDb();
   const everyone = await db.select({ slug: people.slug, displayName: people.displayName, theme: people.theme }).from(people).orderBy(asc(people.createdAt));
+  if (!everyone.length) redirect("/welcome");
   const names = everyone.map((p) => p.displayName.split(" ")[0]);
   const verse = pick(VERSES, (await cookies()).get(VERSE_COOKIE)?.value);
   let i = 0;

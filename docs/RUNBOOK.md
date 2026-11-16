@@ -18,14 +18,15 @@ Operational guide for the target architecture. Commands for today's single-coupl
 
 ```powershell
 pnpm run setup             # fresh clone: install, typegen and seed Alex + Sam
+pnpm reset              # clear local data and begin at /welcome
 pnpm dev               # http://localhost:3000
 pnpm test
 pnpm lint
 pnpm build
 ```
 
-- PGlite permits one process at a time: stop the dev server before seed/migrate scripts, or use Supabase local after E0-007.
-- Reset local data by deleting `apps/web/.data/` (never do this in staging/production).
+- PGlite permits one process at a time: stop the dev server before seed/migrate/reset scripts, or use Supabase local after E0-007.
+- `pnpm reset` deletes `apps/web/.data/` and generated seed passcodes, then the next visit to `/` lands on first-run onboarding. Never run it in staging or production. It refuses when `DATABASE_URL` is set.
 - If typecheck complains about `PageProps`/`RouteContext`, run `pnpm typegen` first.
 - Vercel/Netlify must use `apps/web` as the project root/base directory; pnpm installs the workspace from the repo root.
 

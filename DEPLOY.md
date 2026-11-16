@@ -5,7 +5,7 @@ Hosting: **Neon** (Postgres), **Vercel Hobby** (the website — free, no card, p
 ## Quickest path: Vercel
 
 1. Sign in at vercel.com with GitHub.
-2. **Add New → Project →** import `hassan200503/our-universe` (allow Vercel access to that repository). Set **Root Directory** to `apps/web`; Vercel installs the pnpm workspace from the repo root and builds the web app.
+2. **Add New → Project →** import your copy of this repository (allow Vercel access to it). Set **Root Directory** to `apps/web`; Vercel installs the pnpm workspace from the repo root and builds the web app.
 3. Add one environment variable, `DATABASE_URL` (the Neon pooled string). Session cookies are signed with a key derived from it, so nothing else is required.
 4. Deploy. Every push to `main` redeploys automatically, and each build applies any new database migrations first (`pnpm vercel-build`), so new features never run ahead of their tables.
 

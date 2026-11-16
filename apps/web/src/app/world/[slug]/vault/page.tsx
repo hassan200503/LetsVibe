@@ -13,7 +13,7 @@ export default async function VaultPage({ params, searchParams }: PageProps<"/wo
       person={person}
       own={own}
       space="vault"
-      kinds={worldFor(person.theme).vaultKinds}
+      kinds={worldFor().vaultKinds}
       title={`${own ? "Your" : `${first}'s`} Knowledge Vault`}
       intro={own ? "Articles, notes, concepts, questions and resources — private unless you choose otherwise. Anything from a feed can land here with “Add to my Knowledge Vault”." : `The parts of ${first}'s vault that are shared with you.`}
       q={typeof sp.q === "string" ? sp.q.slice(0, 100) : undefined}

@@ -7,7 +7,7 @@ import { InfiniteFeed } from "@/components/feed/infinite-feed";
 import { BirdSpotlight } from "@/components/feed/bird-spotlight";
 import { Container, PageHeader } from "@/components/ui/page-header";
 
-const WORLD: Record<string, string> = { software: "hassan", technology: "hassan", philosophy: "hassan", biotech: "whitney", birds: "whitney", knitting: "whitney", environment: "whitney", nature: "us" };
+const WORLD: Record<string, string> = { software: "indigo", technology: "indigo", philosophy: "indigo", biotech: "sage", birds: "sage", knitting: "sage", environment: "sage", nature: "us" };
 
 export async function generateMetadata({ params }: PageProps<"/discover/[topic]">) {
   const { topic } = await params;

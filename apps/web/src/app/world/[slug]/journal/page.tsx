@@ -16,7 +16,7 @@ export default async function JournalPage({ params, searchParams }: PageProps<"/
   const q = typeof sp.q === "string" ? sp.q.slice(0, 100) : undefined;
   const kind = typeof sp.kind === "string" ? sp.kind : undefined;
   const editId = typeof sp.edit === "string" ? sp.edit : undefined;
-  const cfg = worldFor(person.theme);
+  const cfg = worldFor();
   const [entries, projects] = await Promise.all([journal(ctx, person.id, { q, kind }), person.features.includes("projects") ? projectList(ctx, person.id) : Promise.resolve([])]);
   const editing = own && editId ? (await journal(ctx, person.id)).find((e) => e.id === editId) : undefined;
   const base = `/world/${person.slug}/journal`;
@@ -65,7 +65,7 @@ export default async function JournalPage({ params, searchParams }: PageProps<"/
                   )}
                   {e.technology && (
                     <>
-                      <dt className="text-muted">{person.theme === "whitney" ? "Technique / field" : "Technology"}</dt>
+                      <dt className="text-muted">Field / technology</dt>
                       <dd>{e.technology}</dd>
                     </>
                   )}
@@ -156,7 +156,7 @@ export default async function JournalPage({ params, searchParams }: PageProps<"/
                   </select>
                 </Field>
               </div>
-              <Field label={person.theme === "whitney" ? "Technique / field" : "Technology"} name="technology">
+              <Field label="Field / technology" name="technology">
                 <input id="technology" name="technology" defaultValue={editing?.technology ?? ""} className="field" />
               </Field>
               <Field label="Tags" name="tags" hint="(comma separated)">

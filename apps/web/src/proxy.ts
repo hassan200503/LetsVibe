@@ -16,9 +16,10 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Public: sign-in, public profiles, the cron endpoint (secret-protected), static assets,
-  // the service worker and app manifest (browsers fetch these without following redirects),
-  // and the call API, which checks every request itself (a signed "Decline" from a notification
-  // must reach it from a signed-out device).
-  matcher: ["/((?!login|p/|api/cron|api/call|_next/static|_next/image|favicon.ico|icon|apple-icon|apple-touch-icon.png|robots.txt|sw.js|manifest.webmanifest).*)"],
+  // Public: sign-in, first-run onboarding, partner invitations, public profiles, the cron
+  // endpoint (secret-protected), static assets, the service worker and app manifest (browsers
+  // fetch these without following redirects), and the call API, which checks every request
+  // itself (a signed "Decline" from a notification must reach it from a signed-out device).
+  // /welcome and /join/[token] enforce their own access rules server-side.
+  matcher: ["/((?!login|welcome|join/|p/|api/cron|api/call|_next/static|_next/image|favicon.ico|icon|apple-icon|apple-touch-icon.png|robots.txt|sw.js|manifest.webmanifest).*)"],
 };
