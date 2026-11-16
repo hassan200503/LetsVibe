@@ -14,7 +14,9 @@ The loop cannot make legal, billing, store, production-access or irreversible de
   Answer:
 - [ ] **Confirm product identity (H5)** — policies, store listings and data regions depend on it — decide product name, domain, support email, legal entity and launch countries; run a trademark/name check.
   Answer:
-- [ ] **Approve the founding-couple migration (H6)** — the current slug/passcode login cannot remain — confirm the two accounts will claim by verified email without data loss, and name the person who verifies data before the old login is removed.
+- [ ] **Approve the existing pilot-account migration (H6)** — the current slug/passcode login cannot remain — confirm the two accounts will claim by verified email without data loss, and name the person who verifies data before the old login is removed.
+  Answer:
+- [ ] **Require CI and protect main (H30)** — repository settings cannot be enforced from code — in GitHub open Settings ? Rules/Branches, protect `main`, require the `CI / check` status check, require a pull request and dismiss stale approvals; then tick this box.
   Answer:
 
 ## Legal, safety and privacy

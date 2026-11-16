@@ -30,6 +30,14 @@ pnpm build
 - If typecheck complains about `PageProps`/`RouteContext`, run `pnpm typegen` first.
 - Vercel/Netlify must use `apps/web` as the project root/base directory; pnpm installs the workspace from the repo root.
 
+## CI and merge protection
+
+- `.github/workflows/ci.yml` runs typegen, typecheck, lint, unit tests, the production build and `pnpm audit --prod --audit-level=high` on every PR and push to `main`. No step uses `continue-on-error`.
+- The stable required check is **`CI / check`**. A repo admin must require it on `main` together with pull requests and dismiss-stale-approvals (H30); code cannot enforce branch protection.
+- `.github/pull_request_template.md` requires the story id, real gate counts, parity/docs updates, risk/rollback and a security/privacy check.
+- Local equivalent: `pnpm check` plus `pnpm audit --prod --audit-level=high`. CI caches the pnpm store, `apps/web/.next/cache` and `.turbo`; the target median run is under 10 minutes.
+- If a gate cannot run, do not merge: record the exact blocker in `.loop/HUMAN_TASKS.md` and leave the PR open.
+
 ## Web deploy
 
 1. CI green on the story branch; PR reviewed per loop contract.

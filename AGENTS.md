@@ -29,7 +29,7 @@ pnpm build                 # production build
 pnpm seed                  # seed local demo data
 ```
 
-A change is done only when typegen, typecheck, lint, test and build pass. In the loop, record real output; never claim a gate you did not run. CI is `.github/workflows/ci.yml`.
+A change is done only when typegen, typecheck, lint, test, build and the production audit pass. In the loop, record real output; never claim a gate you did not run. CI is `.github/workflows/ci.yml`; the required check is `CI / check`. Use `.github/pull_request_template.md` for evidence, parity, risk and rollback.
 
 ## Layout
 

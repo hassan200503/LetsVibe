@@ -148,9 +148,9 @@
       "dependsOn": [
         "E0-002"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "in_progress",
+      "attempts": 1,
+      "notes": "CI now runs typegen, typecheck, lint, 44 tests, build and a production audit on every PR/push, with pnpm/Next caches, concurrency cancellation, read-only permissions and a 20-minute timeout. Added PR evidence template and documented required check CI / check. Remaining: repo admin must enable branch protection (H30); GitHub median runtime not yet measured."
     },
     {
       "id": "E1-001",

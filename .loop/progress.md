@@ -75,3 +75,11 @@
 - Gates: `git diff --check` pass; `node --check` pass for go-live/reset; `pnpm check` PASS (typegen, typecheck 2 packages, lint clean, 5 files / 44 tests, Next 16.4.6 build 34 pages). Local test data was reset after verification.
 - Remaining: E1-005 still needs rate limiting, audit/revoke and E1-003 multi-tenant auth; E1-006 still needs timezone/notification defaults, resumable progress and native parity. A Facebook/Instagram-scale public network remains out of scope without product approval.
 - Next: E0-008 (CI gates and PR template). E0-003 remains blocked on gitleaks (H1).
+
+## Iteration 007 - 2026-11-16 - CI gates and PR evidence (E0-008)
+
+- Reworked `.github/workflows/ci.yml`: every PR and main push runs typegen, typecheck, lint, unit tests, production build and `pnpm audit --prod --audit-level=high`; no gate uses `continue-on-error`. Added pnpm-store/Next/Turbo caching, PR concurrency cancellation, read-only token permissions, telemetry off and a 20-minute timeout.
+- Added `.github/pull_request_template.md` requiring story id, real gate counts, acceptance evidence, parity/docs updates, risk/rollback and security/privacy checks. Documented the stable required check `CI / check` and the local equivalent in RUNBOOK/AGENTS.
+- Added H30: a repo admin must protect `main` and require `CI / check`; branch protection cannot be enforced from repository code. E0-008 stays in progress until that is done and the GitHub median runtime is measured.
+- Evidence: workflow YAML parses; `pnpm install --frozen-lockfile` pass; `pnpm check` PASS (typegen, typecheck 2 packages, lint clean, 5 files / 44 tests, Next 16.4.6 build 34 pages); `pnpm audit --prod --audit-level=high` reports no known vulnerabilities.
+- Next: E1-001 identity schema (couples, couple_members, invitations, profiles, consents), preserving existing data through a rename/backfill migration and adding schema constraint tests.

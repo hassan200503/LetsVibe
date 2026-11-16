@@ -100,6 +100,7 @@ Current tests cover: trends engine, visibility/clock/verse logic, push key deriv
 | E1-001 | — | _pending_ |
 | E1-002 | — | _pending_ |
 | E1-003 | — | _pending_ |
+| E0-008 | 2026-11-16 | CI gate + PR template; YAML parse, frozen install, `pnpm check` (44 tests, 34 pages) and prod audit recorded in `.loop/progress.md` iteration 007; branch protection H30 and GitHub median runtime still pending |
 | E1-013 | 2026-11-16 | Neutral theme/identity refactor; name search clean; onboarding/invite Playwright run; `pnpm check` in `.loop/progress.md` iteration 006 |
 
 Append one row per completed story; never delete past rows.
