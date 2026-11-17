@@ -113,3 +113,12 @@
 - Added `docs/DESIGN.md` with the north star, Instagram/Facebook/X quality bar, the useful/unique/valuable/loved product standard, token architecture, and the remaining hardcoded-value removal plan owned by E10-004/E10-005. Updated AGENTS and architecture references.
 - Gates: `pnpm check` PASS: typegen; typecheck 4 packages; lint clean; 9 files / 58 tests; `tokens.css up to date`; 35-route Next 16.4.6 build. Temporary servers and baseline worktree removed; local demo data reset.
 - Next: E1-002 RLS foundation if Supabase staging access lands; otherwise take the next local unblocked story.
+
+## Iteration 011 - 2026-11-17 - WCAG 2.2 AA core web audit (E10-001)
+
+- Added repeatable `pnpm a11y`: axe-core 4.14 + playwright-core authenticate against a seeded production server and scan home, chat, calls, gallery and settings with WCAG 2.2 A/AA tags. `A11Y_SCHEME=dark` selects the dark palette; the command exits non-zero on any violation and writes a JSON report.
+- First scan found five issues: low-contrast gold eyebrow labels, a low-contrast sage chip, unlabeled avatar/gallery file inputs, `aria-label` on plain status spans, and a settings link distinguished only by colour. Fixed all of them, plus an ARIA naming issue on the chat loading skeleton.
+- Added `--gold-ink` (`text-gold-ink`) for small gold text while keeping `--gold` for lines, material and large marks; darkened the light sage accent from `#4f7a63` to `#47715a` so chips reach 4.74:1.
+- Keyboard audit: 19-24 visible focus stops per core screen, global 2px focus rings present, and hidden file inputs removed from the tab order because visible buttons trigger them. The label-style photo picker now shows a focus-within ring.
+- Evidence: axe **0 violations in light and dark** on all five screens; `pnpm check` PASS (typegen, 4-package typecheck, lint clean, 9 files / 58 tests, 35 routes, tokens up to date). Known scope/exceptions documented in `docs/DESIGN.md`.
+- Next: E1-012 entitlements and limits model (local, unblocked) unless Supabase staging access appears for E1-002/E1-003.

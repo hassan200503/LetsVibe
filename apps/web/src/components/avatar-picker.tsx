@@ -54,7 +54,7 @@ export function AvatarPicker({ name, url, theme, enabled }: { name: string; url:
                 Remove
               </button>
             )}
-            <input ref={input} type="file" accept="image/*" className="sr-only" onChange={(e) => pick(e.target.files?.[0])} />
+            <input ref={input} type="file" accept="image/*" aria-label="Choose a profile photo" tabIndex={-1} className="sr-only" onChange={(e) => pick(e.target.files?.[0])} />
           </div>
         ) : (
           <p className="mt-1 text-xs text-muted">Available once photo storage is switched on.</p>

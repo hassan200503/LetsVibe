@@ -106,6 +106,8 @@ export function Uploader({ enabled, disabledReason }: { enabled: boolean; disabl
           type="file"
           multiple
           accept="image/*,video/*,audio/*"
+          aria-label="Choose files to upload"
+          tabIndex={-1}
           className="sr-only"
           onChange={(e) => {
             if (e.target.files) add(e.target.files);

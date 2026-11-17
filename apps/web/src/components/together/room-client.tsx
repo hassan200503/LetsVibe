@@ -160,7 +160,7 @@ export function RoomClient({ initial }: { initial: RoomPayload }) {
 
         {/* Messages: on phones, one tap to the full chat */}
         <Link href="/together/chat" className="tile mt-5 flex items-center gap-3 p-4 lg:hidden">
-          <span className="grid size-10 place-items-center rounded-full bg-gold-soft text-gold">
+          <span className="grid size-10 place-items-center rounded-full bg-gold-soft text-gold-ink">
             <IconMessage size={19} />
           </span>
           <span className="min-w-0 flex-1">

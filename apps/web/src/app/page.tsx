@@ -314,7 +314,7 @@ export default async function Home() {
           eyebrow={todayMemory ? "On this day" : "From our journey"}
           title={todayMemory ? `${yearsAgo} year${yearsAgo === 1 ? "" : "s"} ago today` : "Every step, remembered"}
           action={
-            <Link href="/story" className="group inline-flex items-center gap-1.5 text-sm font-semibold text-gold">
+            <Link href="/story" className="group inline-flex items-center gap-1.5 text-sm font-semibold text-gold-ink">
               The whole story <IconArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
             </Link>
           }
@@ -392,7 +392,7 @@ export default async function Home() {
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={m.photoUrl} alt="" className="size-12 shrink-0 rounded-xl object-cover" loading="lazy" />
                       ) : (
-                        <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-gold-soft text-gold" aria-hidden>
+                        <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-gold-soft text-gold-ink" aria-hidden>
                           {m.kind === "plan" ? <IconCompass size={20} /> : m.kind === "discovery" ? <IconSparkle size={19} /> : <IconHeart size={19} />}
                         </span>
                       )}
@@ -445,7 +445,7 @@ export default async function Home() {
             { href: "/digest", Icon: IconHeart, title: "This week in our world", text: "What happened, what we found" },
           ].map(({ Icon, ...l }, i) => (
             <Link key={l.href} href={l.href} className={`group flex gap-4 p-6 transition hover:bg-surface-2/60 ${i > 0 ? "border-t border-line sm:border-t-0 sm:border-l" : ""} ${i === 2 ? "sm:border-l-0 sm:border-t lg:border-l lg:border-t-0" : ""} ${i === 3 ? "sm:border-t lg:border-t-0" : ""}`}>
-              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-gold-soft text-gold">
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-gold-soft text-gold-ink">
                 <Icon size={18} />
               </span>
               <span>

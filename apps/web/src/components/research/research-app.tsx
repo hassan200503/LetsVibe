@@ -324,7 +324,7 @@ export function ResearchApp({
                               from {owner.first}
                             </span>
                           )}
-                          {t.mine && t.shared && <span className="text-gold">shared</span>}
+                          {t.mine && t.shared && <span className="text-gold-ink">shared</span>}
                           {opening === t.id && <span className="ml-auto animate-pulse">opening…</span>}
                         </span>
                       </button>
@@ -464,7 +464,7 @@ export function ResearchApp({
                           }}
                           className="tile lift group flex h-full w-full items-start gap-3 p-4 text-left"
                         >
-                          <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-gold-soft text-gold">
+                          <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-gold-soft text-gold-ink">
                             <IconSparkle size={14} />
                           </span>
                           <span className="min-w-0 flex-1">
@@ -567,7 +567,7 @@ export function ResearchApp({
                       {m.followUps.map((f) => (
                         <li key={f}>
                           <button onClick={() => followUp(f)} disabled={!configured} className="group flex w-full items-center gap-3 py-3 text-left text-[0.92rem] transition hover:text-accent">
-                            <IconPlus size={14} className="shrink-0 text-gold" />
+                            <IconPlus size={14} className="shrink-0 text-gold-ink" />
                             <span className="flex-1">{f}</span>
                             <IconArrowRight size={14} className="shrink-0 opacity-0 transition group-hover:opacity-100" />
                           </button>

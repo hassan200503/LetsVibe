@@ -78,7 +78,7 @@ Current tests cover: trends engine, visibility/clock/verse logic, push key deriv
 - Storage per couple (1 GB average), TURN failure rate (10–20%), AI usage per couple and message rates are assumptions for sizing; validate in E11-001/E11-005.
 - Legal positions for Kenya, CSAM reporting, music licensing and accessibility law require counsel.
 - Store rules change; re-read Apple/Google/YouTube before submission.
-- No performance, battery, accessibility or device-compatibility results exist yet.
+- No performance, battery, native accessibility or device-compatibility results exist yet.
 
 ## How to reproduce and record
 
@@ -104,5 +104,6 @@ Current tests cover: trends engine, visibility/clock/verse logic, push key deriv
 | E1-013 | 2026-11-16 | Neutral theme/identity refactor; name search clean; onboarding/invite Playwright run; `pnpm check` in `.loop/progress.md` iteration 006 |
 | E9-011 | 2026-11-16 | Production-mode local header check: nonce CSP, HSTS, DENY, nosniff, referrer, permissions, Reporting-Endpoints; CSP report endpoint 204 with sanitised log; no ACAO header; 7 new tests, full gate 9 files / 58 tests / 35 routes. External scan and browser YouTube exercise pending deploy. |
 | E0-009 | 2026-11-17 | `@letsvibe/ui-tokens` typed source plus committed generated `tokens.css`, consumed by web CSS, themeColor and manifest; Turbo freshness check passes. Authenticated production computed-style diff vs `8e4496c`: home and chat in light and dark, 0 diffs. Reduced motion: base/fast `.01ms`, `.btn`/`.field` transitions `1e-05s`, ambient shimmer `none`. Hardcoded-value removal plan in `docs/DESIGN.md`. `pnpm check`: typegen, 4-package typecheck, lint clean, 9 files / 58 tests, 35-route build. |
+| E10-001 | 2026-11-17 | `pnpm a11y` runs axe-core 4.14 against a seeded production build. Light and dark: **0 WCAG 2.2 A/AA violations** on `/`, `/together/chat`, `/together`, `/gallery`, `/settings`. Fixed gold small-text contrast via `--gold-ink`, sage accent contrast, unlabeled file inputs, ARIA on presence/status elements, settings link underline, and hidden file inputs in the tab order. Keyboard audit recorded 19-24 visible focus stops per screen. Scope/exceptions and date in `docs/DESIGN.md`; `pnpm check` 9 files / 58 tests / 35 routes, lint clean. |
 
 Append one row per completed story; never delete past rows.

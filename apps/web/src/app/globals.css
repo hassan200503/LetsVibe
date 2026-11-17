@@ -24,6 +24,7 @@
   --color-accent-soft: var(--accent-soft);
   --color-accent-2: var(--accent-2);
   --color-gold: var(--gold);
+  --color-gold-ink: var(--gold-ink);
   --color-gold-2: var(--gold-2);
   --color-gold-soft: var(--gold-soft);
   --color-night: var(--night);
@@ -423,7 +424,7 @@
     letter-spacing: var(--type-eyebrow-lux-tracking);
     text-transform: uppercase;
     font-weight: var(--type-eyebrow-lux-weight);
-    color: var(--gold);
+    color: var(--gold-ink);
   }
   .stage .eyebrow-lux {
     color: #e2c794;
@@ -829,7 +830,7 @@
     vertical-align: 0.18em;
     border-radius: var(--radius-pill);
     background: var(--gold-soft);
-    color: var(--gold);
+    color: var(--gold-ink);
     font-size: var(--type-mono-label-size);
     font-weight: 700;
     line-height: 1;

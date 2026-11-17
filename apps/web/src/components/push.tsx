@@ -138,7 +138,7 @@ export function PushPrompt({ partnerName }: { partnerName: string }) {
   if (hidden || (state !== "off" && state !== "install")) return null;
   return (
     <div className="flex items-center gap-3 border-b border-line bg-gold-soft/70 px-4 py-2.5 text-sm">
-      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-surface text-gold ring-1 ring-line">
+      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-surface text-gold-ink ring-1 ring-line">
         <IconBell size={16} />
       </span>
       <p className="min-w-0 flex-1 leading-snug">

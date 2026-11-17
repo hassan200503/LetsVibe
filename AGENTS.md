@@ -25,6 +25,7 @@ pnpm dev                   # web dev server; zero-setup PGlite in apps/web/.data
 pnpm typecheck             # typegen + tsc --noEmit across packages
 pnpm lint                  # eslint
 pnpm test                  # vitest
+pnpm a11y                  # axe WCAG audit against a seeded app on :3100
 pnpm build                 # production build
 pnpm seed                  # seed local demo data
 ```

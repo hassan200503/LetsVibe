@@ -35,7 +35,7 @@ export function BottomNav() {
                 aria-current={on ? "page" : undefined}
                 className={`relative flex flex-col items-center gap-1 rounded-2xl py-1.5 text-[0.64rem] font-semibold tracking-wide transition-colors ${on ? "text-ink" : "text-muted"}`}
               >
-                <span className={`grid h-7 w-11 place-items-center rounded-full transition-colors ${on ? "bg-gold-soft text-gold" : ""}`}>
+                <span className={`grid h-7 w-11 place-items-center rounded-full transition-colors ${on ? "bg-gold-soft text-gold-ink" : ""}`}>
                   <Icon size={20} strokeWidth={on ? 1.9 : 1.6} />
                 </span>
                 {i.label}

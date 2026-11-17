@@ -1703,9 +1703,9 @@
       "dependsOn": [
         "E0-007"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "Added repeatable pnpm a11y (axe-core 4.14 + playwright-core) against a seeded production build. Light and dark scans of /, /together/chat, /together, /gallery and /settings report 0 WCAG 2.2 A/AA violations. Fixed gold small-text contrast via --gold-ink, sage accent contrast, unlabeled file inputs, ARIA on presence dots and loading status, link underline, and hidden file inputs in tab order. Keyboard tab smoke test: 19-24 visible focus stops per screen. Scope/exceptions with date in docs/DESIGN.md. Gates: pnpm check green."
     },
     {
       "id": "E10-002",

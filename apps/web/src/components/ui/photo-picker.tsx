@@ -82,7 +82,7 @@ export function PhotoPicker({ name = "photoUrl" }: { name?: string }) {
           </button>
         </div>
       ) : (
-        <label className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-line px-4 py-6 text-center text-sm text-muted transition hover:border-accent hover:text-ink">
+        <label className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-line px-4 py-6 text-center text-sm text-muted transition hover:border-accent hover:text-ink focus-within:border-accent focus-within:text-ink focus-within:ring-2 focus-within:ring-accent/30">
           <span className="text-2xl" aria-hidden>
             {state === "working" ? "⏳" : "📷"}
           </span>

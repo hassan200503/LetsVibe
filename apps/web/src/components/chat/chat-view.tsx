@@ -343,7 +343,7 @@ export function ChatView({ variant = "page" }: { variant?: "page" | "panel" }) {
       rows.push(
         <div key="unread" id="unread-divider" className="my-4 flex items-center gap-3">
           <span className="rule-gold flex-1" />
-          <span className="rounded-full border border-gold-2/50 bg-gold-soft px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-gold">Unread messages</span>
+          <span className="rounded-full border border-gold-2/50 bg-gold-soft px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-gold-ink">Unread messages</span>
           <span className="rule-gold flex-1" />
         </div>,
       );
@@ -410,7 +410,7 @@ export function ChatView({ variant = "page" }: { variant?: "page" | "panel" }) {
         <div ref={topSentinel} className="h-px" />
         {chat.loadingOlder && <p className="py-3 text-center text-xs text-muted">Loading earlier messages…</p>}
         {!chat.ready && !chat.error && (
-          <div className="space-y-3 py-6" aria-label="Loading messages">
+          <div className="space-y-3 py-6" role="status" aria-label="Loading messages">
             {[62, 44, 70, 38, 55].map((w, i) => (
               <div key={i} className={`flex ${i % 2 ? "justify-end" : ""}`}>
                 <div className="h-10 animate-pulse rounded-2xl bg-surface-2" style={{ width: `${w}%` }} />
@@ -467,7 +467,7 @@ export function ChatView({ variant = "page" }: { variant?: "page" | "panel" }) {
                 <Quote q={replyTo} names={{ ...names, [me.slug]: "Replying to yourself" }} themeOf={themeOf} onTap={() => jumpTo(replyTo.id)} />
               ) : (
                 <div className="rounded-lg border-l-[3px] border-gold bg-surface-2/80 px-2.5 py-1.5">
-                  <span className="block text-xs font-semibold text-gold">Editing message</span>
+                  <span className="block text-xs font-semibold text-gold-ink">Editing message</span>
                   <span className="line-clamp-1 text-[0.8rem] text-muted">{editing!.body}</span>
                 </div>
               )}

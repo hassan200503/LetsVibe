@@ -58,7 +58,7 @@ export function StudyStrip({ items }: { items: ResearchSource[] }) {
           <li key={s.uri} className="w-64 shrink-0 snap-start">
             <a href={s.uri} target="_blank" rel="noopener noreferrer" className="study-card group flex h-full flex-col rounded-2xl border border-line bg-surface p-3.5 transition hover:border-gold/60">
               <span className="flex items-center gap-2 text-[0.7rem] text-muted">
-                <span className="grid size-5 place-items-center rounded-full bg-gold-soft text-[0.66rem] font-bold text-gold">{s.n}</span>
+                <span className="grid size-5 place-items-center rounded-full bg-gold-soft text-[0.66rem] font-bold text-gold-ink">{s.n}</span>
                 <span className="truncate">{[s.year, s.venue].filter(Boolean).join(" · ")}</span>
               </span>
               <span className="mt-2 line-clamp-3 text-[0.84rem] font-semibold leading-snug group-hover:underline">{s.title}</span>

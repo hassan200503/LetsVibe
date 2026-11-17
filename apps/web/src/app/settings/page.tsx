@@ -164,7 +164,7 @@ export default async function SettingsPage() {
             <section id="ai" className="card scroll-mt-20 p-5">
               <h2 className="font-display text-xl font-semibold">AI research</h2>
               <p className="text-sm text-muted">
-                <Link href="/research" className="text-accent underline-offset-4 hover:underline">Research</Link> uses Google&apos;s Gemini to read real studies with you, teach you anything and quiz you. The key is shared by both of you, stored encrypted, and never shown again.
+                <Link href="/research" className="text-accent underline underline-offset-4">Research</Link> uses Google&apos;s Gemini to read real studies with you, teach you anything and quiz you. The key is shared by both of you, stored encrypted, and never shown again.
               </p>
               <AiKeySetting status={gemini} />
             </section>

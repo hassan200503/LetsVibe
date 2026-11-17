@@ -19,6 +19,7 @@ We do not copy engagement mechanics that make a social app feel cheap: infinite 
 - Layout on a 4px base rhythm, with 8px as the normal spacing step.
 - Minimum 44x44 CSS px for primary touch targets; visible `:focus-visible` outline on every control.
 - WCAG 2.2 AA contrast for text and meaningful non-text UI; never use gold for small body copy on light surfaces.
+- Use `--gold-ink` (or `text-gold-ink`) for small gold text and icons. `--gold` is for material, lines and large marks; at 10-12px it fails 4.5:1 on light surfaces.
 - No layout shift from fonts, images or late badges; image slots reserve their aspect ratio.
 - 360px, 768px, 1024px and 1440px are the review widths; mobile is the primary composition.
 - Dark mode is designed, not inverted: check elevation, hairlines and accent contrast separately.
@@ -78,3 +79,14 @@ E0-009 deliberately kept the rendered values unchanged. The remaining hardcoded 
 5. **Ambient animation timings** (aurora drift, twinkle, delayed word/typing reveals) are documented exceptions until E10-005 covers reduced-motion and contrast verification end to end.
 
 E10-004 owns the per-couple theming migration and E10-005 owns reduced-motion/contrast verification. Any new hardcoded colour, radius or duration is a review finding.
+
+## Accessibility verification
+
+`pnpm a11y` runs axe-core against a seeded production server on `http://localhost:3100`. It authenticates, scans home, chat, calls, gallery and settings in the selected scheme, prints violations and exits non-zero on failure:
+
+```powershell
+pnpm a11y
+$env:A11Y_SCHEME = "dark"; pnpm a11y
+```
+
+Verified 2026-11-17: **0 axe violations** on all five screens in light and dark mode; keyboard tab order has 19-24 visible focus stops per screen with no hidden file-input stops. Known exceptions: the audit covers the five core screens only; login/welcome, research, discover, world sub-pages, native apps, screen-reader passes and 200% zoom remain manual follow-ups under E10-001/E10-002. Embedded YouTube content is third-party.

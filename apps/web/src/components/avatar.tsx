@@ -24,6 +24,7 @@ export function Avatar({
         <img src={url} alt={name} width={size} height={size} decoding="async" className={`size-full rounded-full object-cover ${ring ? "ring-2 ring-accent ring-offset-2 ring-offset-bg" : ""}`} />
       ) : (
         <span
+          role="img"
           aria-label={name}
           className={`grid size-full place-items-center rounded-full bg-accent font-semibold text-accent-ink ${ring ? "ring-2 ring-accent ring-offset-2 ring-offset-bg" : ""}`}
           style={{ fontSize: Math.round(size * 0.42) }}
@@ -33,6 +34,7 @@ export function Avatar({
       )}
       {online !== undefined && online !== null && (
         <span
+          role="img"
           aria-label={online ? "Online" : "Offline"}
           className={`absolute bottom-0 right-0 rounded-full ring-2 ring-bg ${online ? "bg-emerald-500" : "bg-zinc-400 dark:bg-zinc-500"}`}
           style={{ width: dot, height: dot }}

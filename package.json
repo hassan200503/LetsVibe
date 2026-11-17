@@ -13,6 +13,7 @@
     "typecheck": "corepack pnpm typegen && turbo run typecheck",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "a11y": "corepack pnpm --filter @letsvibe/web a11y",
     "setup": "corepack pnpm install && corepack pnpm typegen && corepack pnpm seed",
     "reset": "node apps/web/scripts/reset.mjs",
     "check": "corepack pnpm typecheck && corepack pnpm lint && corepack pnpm test && corepack pnpm build",
