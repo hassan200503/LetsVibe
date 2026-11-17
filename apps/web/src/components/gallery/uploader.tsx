@@ -1,16 +1,21 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { addYouTube } from "@/lib/actions/media";
 import { kindOf, uploadToGallery } from "@/lib/media/client-upload";
+import { UsageMeter } from "@/components/ui/usage";
 
 type Job = { key: string; file: File; pct: number; stage: string; error?: string; done?: boolean; ctrl: AbortController };
+type Storage = { used: number; limit: number };
 
 const CONCURRENCY = 2;
 
-export function Uploader({ enabled, disabledReason }: { enabled: boolean; disabledReason?: string }) {
+export function Uploader({ enabled, disabledReason, storage }: { enabled: boolean; disabledReason?: string; storage?: Storage }) {
   const qc = useQueryClient();
+  const router = useRouter();
+  const full = !!storage && storage.used >= storage.limit;
   const [jobs, setJobs] = useState<Job[]>([]);
   const [caption, setCaption] = useState("");
   const [drag, setDrag] = useState(false);
@@ -42,6 +47,7 @@ export function Uploader({ enabled, disabledReason }: { enabled: boolean; disabl
         .then(() => {
           update(job.key, { done: true, pct: 100, stage: "Shared ❤️" });
           qc.invalidateQueries({ queryKey: ["gallery"] });
+          router.refresh();
         })
         .catch((e) => update(job.key, { error: job.ctrl.signal.aborted ? "Cancelled" : e instanceof Error ? e.message : "Upload failed" }))
         .finally(() => {
@@ -52,6 +58,7 @@ export function Uploader({ enabled, disabledReason }: { enabled: boolean; disabl
   }
 
   function add(files: FileList | File[]) {
+    if (full) return;
     const list = [...files].filter((f) => kindOf(f));
     const skipped = [...files].length - list.length;
     const newJobs = list.map((file) => ({ key: `${file.name}-${file.size}-${Math.random()}`, file, pct: 0, stage: "Waiting", ctrl: new AbortController() }));
@@ -98,8 +105,13 @@ export function Uploader({ enabled, disabledReason }: { enabled: boolean; disabl
           className="field mt-2 max-w-md text-sm"
           aria-label="Caption"
         />
-        <button type="button" className="btn mt-1 px-6 py-3" onClick={() => input.current?.click()}>
-          Choose files
+        {storage && (
+          <div className="mt-1 w-full max-w-md text-left">
+            <UsageMeter label="Shared storage" kind="bytes" used={storage.used} limit={storage.limit} compact />
+          </div>
+        )}
+        <button type="button" className="btn mt-1 px-6 py-3" disabled={full} onClick={() => input.current?.click()}>
+          {full ? "Storage full" : "Choose files"}
         </button>
         <input
           ref={input}
@@ -108,13 +120,18 @@ export function Uploader({ enabled, disabledReason }: { enabled: boolean; disabl
           accept="image/*,video/*,audio/*"
           aria-label="Choose files to upload"
           tabIndex={-1}
+          disabled={full}
           className="sr-only"
           onChange={(e) => {
             if (e.target.files) add(e.target.files);
             e.target.value = "";
           }}
         />
-        <p className="text-[0.7rem] text-muted">Photos are resized for you · videos up to 150 MB · audio up to 30 MB. For long videos, add them to YouTube (unlisted) and paste the link.</p>
+        <p className={`text-[0.7rem] ${full ? "text-red-600 dark:text-red-400" : "text-muted"}`}>
+          {full
+            ? "Your shared storage is full. Delete something in the gallery below to make room."
+            : "Photos are resized for you · videos up to 150 MB · audio up to 30 MB. For long videos, add them to YouTube (unlisted) and paste the link."}
+        </p>
       </div>
 
       <div className="card p-5">

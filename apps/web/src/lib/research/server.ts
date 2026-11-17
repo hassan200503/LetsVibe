@@ -1,10 +1,12 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import { and, asc, desc, eq, or } from "drizzle-orm";
 import { z } from "zod";
 import type { Ctx } from "@/lib/context";
 import { BRAND } from "@letsvibe/domain";
 import { getDb, withSchema } from "@/lib/db/client";
 import { researchMessages, researchThreads, sharedLearning, type ResearchSource } from "@/lib/db/schema";
+import { reserveAi } from "@/lib/entitlements/server";
 import { personTopics } from "@/lib/trends/query";
 import { TOPICS } from "@/lib/trends/topics";
 import { GeminiError, generateJson, openStream, textOf, type Content, type Grounding } from "./gemini";
@@ -206,6 +208,12 @@ export async function* ask(ctx: Ctx, input: z.infer<typeof askSchema>): AsyncGen
     yield { t: "error", message: "That's a lot of questions in a few minutes. Take a breath and try again shortly." };
     return;
   }
+  const quota = await reserveAi(ctx.relationship.id, ctx.me.id, `research:${randomUUID()}`);
+  if (!quota.ok) {
+    yield { t: "error", message: quota.error, retry: false };
+    return;
+  }
+  yield { t: "usage", aiQuestions: quota.used, limit: quota.limit };
   const db = await getDb();
   let t: ThreadRow | null = input.threadId ? await withSchema(() => thread(ctx, input.threadId!)) : null;
   if (input.threadId && !t) {

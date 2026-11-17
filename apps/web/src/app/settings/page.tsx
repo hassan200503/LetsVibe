@@ -19,6 +19,9 @@ import { inviteToken } from "@/lib/auth/invite";
 import { InvitePartner } from "@/components/invite-partner";
 import { Container, PageHeader } from "@/components/ui/page-header";
 import { THEME_OPTIONS, coerceTheme } from "@letsvibe/domain";
+import { UsageMeter } from "@/components/ui/usage";
+import { planUsage } from "@/lib/entitlements/server";
+import { resetLabel } from "@/lib/entitlements/format";
 
 export const metadata = { title: "Settings" };
 
@@ -30,6 +33,7 @@ export default async function SettingsPage() {
   const topics = await personTopics(me.id);
   const followed = SOURCES.filter((s) => topics.includes(s.topic));
   const categories = topics.flatMap((t) => [...TOPICS[t].categories.map((c) => c.name), TOPICS[t].fallbackCategory]);
+  const plan = await planUsage(ctx.relationship.id);
   const [gemini, relay] = await Promise.all([
     process.env.GEMINI_API_KEY ? ({ source: "env" } as const) : describeSecret(SECRET_GEMINI).then((d) => ({ ...d, source: d.set ? ("saved" as const) : ("none" as const) })),
     relaySource() ? ({ source: "env" } as const) : describeSecret(SECRET_RELAY).then((d) => ({ ...d, source: d.set ? ("saved" as const) : ("none" as const) })),
@@ -52,6 +56,36 @@ export default async function SettingsPage() {
             <InvitePartner path={`/join/${inviteToken(ctx.relationship.id)}`} />
           </section>
         )}
+        <section id="plan" className="card mb-8 scroll-mt-20 p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="eyebrow">Your plan</p>
+              <h2 className="font-display mt-1 text-xl font-semibold">{plan.plan === "free" ? "Free, shared by both of you" : "Premium, shared by both of you"}</h2>
+            </div>
+            <span className="chip">{plan.plan === "free" ? "Free" : "Premium"}</span>
+          </div>
+          <p className="mt-2 max-w-2xl text-sm text-muted">
+            Limits belong to the two of you together, are enforced on the server, and never depend on what a browser asks for. Monthly counters reset on {resetLabel(plan.resetsAt)}.
+          </p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <UsageMeter label="Shared storage" kind="bytes" used={plan.usage.storageBytes} limit={plan.limits.storageBytes} hint="Photos, videos, songs and profile pictures." />
+            <UsageMeter
+              label="AI questions"
+              used={plan.usage.aiQuestions}
+              limit={plan.limits.aiQuestionsPerMonth}
+              hint={plan.limits.aiQuestionsPerMonth > 0 ? `Resets ${resetLabel(plan.resetsAt)}.` : "Not part of this plan right now."}
+            />
+            <UsageMeter
+              label="Together rooms"
+              used={plan.usage.rooms}
+              limit={plan.limits.rooms}
+              blocked={plan.limits.rooms < 1 || plan.usage.rooms > plan.limits.rooms}
+              hint={plan.limits.rooms > 0 ? "The shared player both of you steer." : "Ask support if you expected the shared player."}
+            />
+            <UsageMeter label="Data exports" used={plan.usage.exports} limit={plan.limits.exportsPerMonth} hint="A full copy of your world, whenever you ask." />
+          </div>
+          <p className="mt-3 text-xs text-muted">No ads, and no selling your data. Premium plans aren&apos;t for sale yet — if your plans ever change, support can adjust your limits and the change is audited.</p>
+        </section>
         <div className="grid gap-8 lg:grid-cols-2">
           <section className="card p-5">
             <h2 className="font-display text-xl font-semibold">Profile</h2>

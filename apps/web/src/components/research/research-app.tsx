@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { resetLabel } from "@/lib/entitlements/format";
 import { MODES, type Suggestion } from "@/lib/research/suggest";
 import type { ResearchMessage, ResearchMode, ResearchSource, StreamEvent, ThreadSummary, ThreadView } from "@/lib/research/types";
 import { Answer, SearchSuggestions, StudyStrip, WebSources } from "./answer";
@@ -39,6 +40,7 @@ export function ResearchApp({
   suggestions,
   people,
   meFirst,
+  ai,
   autoAsk,
 }: {
   initialThreads: ThreadSummary[];
@@ -47,6 +49,7 @@ export function ResearchApp({
   suggestions: Suggestion[];
   people: Person[];
   meFirst: string;
+  ai: { used: number; limit: number; resetsAt: string; plan: "free" | "premium" };
   autoAsk: { q: string; mode: ResearchMode } | null;
 }) {
   const [threads, setThreads] = useState(initialThreads);
@@ -61,10 +64,15 @@ export function ResearchApp({
   const [saved, setSaved] = useState<Set<number>>(() => new Set());
   const [copied, setCopied] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [aiUsed, setAiUsed] = useState(ai.used);
+  const [aiLimit, setAiLimit] = useState(ai.limit);
   const abortRef = useRef<AbortController | null>(null);
   const questionRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const streaming = !!pending && !pending.error;
+  const aiIncluded = aiLimit > 0;
+  const aiFull = !configured || !aiIncluded || aiUsed >= aiLimit;
+  const aiLeft = Math.max(aiLimit - aiUsed, 0);
   const person = (slug: string) => people.find((p) => p.slug === slug);
 
   const flash = useCallback((text: string) => {
@@ -75,7 +83,7 @@ export function ResearchApp({
   const ask = useCallback(
     async (raw: string, askMode: ResearchMode, threadId: string | null) => {
       const question = raw.trim();
-      if (question.length < 2) return;
+      if (question.length < 2 || !configured || aiFull) return;
       abortRef.current?.abort();
       const ctl = new AbortController();
       abortRef.current = ctl;
@@ -111,6 +119,10 @@ export function ResearchApp({
             break;
           case "delta":
             setPending((p) => (p ? { ...p, text: p.text + ev.text, status: "" } : p));
+            break;
+          case "usage":
+            setAiUsed(ev.aiQuestions);
+            setAiLimit(ev.limit);
             break;
           case "done": {
             finished = true;
@@ -179,23 +191,23 @@ export function ResearchApp({
         if (abortRef.current === ctl) abortRef.current = null;
       }
     },
-    [],
+    [configured, aiFull],
   );
 
   // Arriving from the home page with ?q=…: start straight away (once).
   const autoRef = useRef(false);
   useEffect(() => {
-    if (autoRef.current || !autoAsk || !configured) return;
+    if (autoRef.current || !autoAsk || !configured || aiFull) return;
     autoRef.current = true;
     const t = setTimeout(() => void ask(autoAsk.q, autoAsk.mode, null), 0);
     return () => clearTimeout(t);
-  }, [autoAsk, configured, ask]);
+  }, [autoAsk, configured, aiFull, ask]);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!streaming && configured) void ask(draft, mode, active?.id ?? null);
+    if (!streaming && !aiFull) void ask(draft, mode, active?.id ?? null);
   };
 
   const openThread = async (id: string) => {
@@ -277,7 +289,7 @@ export function ResearchApp({
   };
 
   const followUp = (q: string) => {
-    if (streaming || !configured) return;
+    if (streaming || aiFull) return;
     void ask(q, mode, active?.id ?? null);
   };
 
@@ -395,8 +407,8 @@ export function ResearchApp({
           }}
           rows={big ? 2 : 1}
           maxLength={2000}
-          disabled={!configured}
-          placeholder={active ? "Ask a follow-up…" : PLACEHOLDER[mode]}
+          disabled={aiFull}
+          placeholder={aiFull && configured ? "Your AI allowance is used up this month" : active ? "Ask a follow-up…" : PLACEHOLDER[mode]}
           className={`max-h-48 min-w-0 flex-1 resize-none bg-transparent py-2 outline-none [field-sizing:content] placeholder:text-muted/80 ${big ? "text-lg" : "text-[0.95rem]"}`}
         />
         {streaming ? (
@@ -404,7 +416,7 @@ export function ResearchApp({
             <span className="size-3 rounded-[3px] bg-current" />
           </button>
         ) : (
-          <button disabled={!configured || draft.trim().length < 2} className="grid size-10 shrink-0 place-items-center rounded-full bg-accent text-accent-ink transition disabled:opacity-35" aria-label="Ask">
+          <button disabled={aiFull || draft.trim().length < 2} className="grid size-10 shrink-0 place-items-center rounded-full bg-accent text-accent-ink transition disabled:opacity-35" aria-label="Ask">
             <IconSend size={18} />
           </button>
         )}
@@ -449,35 +461,61 @@ export function ResearchApp({
             <p className="eyebrow-lux">Research</p>
             <h1 className="font-lux mt-4 text-balance text-[2.7rem] font-medium leading-[1.02] tracking-tight sm:text-[4rem]">What are you curious about, {meFirst}?</h1>
             <p className="mt-4 max-w-2xl text-muted">Ask anything. Research reads real studies and cites every claim; Learn teaches it step by step and checks you understood; Explain gives you the simple version.</p>
+            {configured && (
+              <div className="mt-4 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs text-muted">
+                <span className="chip">{ai.plan === "premium" ? "Premium plan" : "Free plan"}</span>
+                <span>{aiIncluded ? `${aiLeft} of ${aiLimit} AI questions left this month` : "AI questions aren't included on this plan"}</span>
+                {aiIncluded && (
+                  <>
+                    <span aria-hidden>·</span>
+                    <span>Resets {resetLabel(ai.resetsAt)}</span>
+                  </>
+                )}
+              </div>
+            )}
             {configured ? (
-              <>
-                {composer(true)}
-                <div className="mt-8">
-                  <p className="text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-muted">Try one</p>
-                  <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-                    {suggestions.map((s) => (
-                      <li key={s.q}>
-                        <button
-                          onClick={() => {
-                            setMode(s.mode);
-                            void ask(s.q, s.mode, null);
-                          }}
-                          className="tile lift group flex h-full w-full items-start gap-3 p-4 text-left"
-                        >
-                          <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-gold-soft text-gold-ink">
-                            <IconSparkle size={14} />
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span className="block text-[0.9rem] leading-snug">{s.q}</span>
-                            <span className="mt-1 block text-[0.68rem] uppercase tracking-[0.14em] text-muted">{MODES.find((m) => m.key === s.mode)?.label}</span>
-                          </span>
-                          <IconArrowRight size={15} className="mt-1 shrink-0 text-muted opacity-0 transition group-hover:translate-x-0.5 group-hover:opacity-100" />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+              aiFull ? (
+                <div role="status" className="card-glow mt-6 p-6">
+                  <p className="font-semibold">{aiIncluded ? "Your AI allowance is used up for this month." : "AI questions aren't included on your plan right now."}</p>
+                  <p className="mt-1 text-sm text-muted">
+                    {aiIncluded ? `It resets ${resetLabel(ai.resetsAt)}. ` : "Ask support to review your limits. "}
+                    You can still read, share and quiz everything you&apos;ve already researched.
+                  </p>
+                  <Link href="/settings#plan" className="btn mt-4">
+                    See plan and usage <IconArrowRight size={15} />
+                  </Link>
                 </div>
-              </>
+              ) : (
+                <>
+                  {composer(true)}
+                  <div className="mt-8">
+                    <p className="text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-muted">Try one</p>
+                    <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {suggestions.map((s) => (
+                        <li key={s.q}>
+                          <button
+                            disabled={aiFull}
+                            onClick={() => {
+                              setMode(s.mode);
+                              void ask(s.q, s.mode, null);
+                            }}
+                            className="tile lift group flex h-full w-full items-start gap-3 p-4 text-left disabled:opacity-50"
+                          >
+                            <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-gold-soft text-gold-ink">
+                              <IconSparkle size={14} />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-[0.9rem] leading-snug">{s.q}</span>
+                              <span className="mt-1 block text-[0.68rem] uppercase tracking-[0.14em] text-muted">{MODES.find((m) => m.key === s.mode)?.label}</span>
+                            </span>
+                            <IconArrowRight size={15} className="mt-1 shrink-0 text-muted opacity-0 transition group-hover:translate-x-0.5 group-hover:opacity-100" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </>
+              )
             ) : (
               <div className="card-glow mt-8 p-6">
                 <p className="font-semibold">Research needs a Gemini API key first.</p>
@@ -566,7 +604,7 @@ export function ResearchApp({
                     <ul className="mt-2 divide-y divide-line border-y border-line">
                       {m.followUps.map((f) => (
                         <li key={f}>
-                          <button onClick={() => followUp(f)} disabled={!configured} className="group flex w-full items-center gap-3 py-3 text-left text-[0.92rem] transition hover:text-accent">
+                          <button onClick={() => followUp(f)} disabled={aiFull} className="group flex w-full items-center gap-3 py-3 text-left text-[0.92rem] transition hover:text-accent disabled:opacity-50">
                             <IconPlus size={14} className="shrink-0 text-gold-ink" />
                             <span className="flex-1">{f}</span>
                             <IconArrowRight size={14} className="shrink-0 opacity-0 transition group-hover:opacity-100" />
@@ -625,7 +663,31 @@ export function ResearchApp({
         </div>
 
         {!hero && configured && (
-          <div className="research-dock sticky bottom-[calc(5.2rem+env(safe-area-inset-bottom))] z-20 mx-auto mt-10 max-w-3xl pt-6 sm:bottom-0 sm:pb-5">{composer(false)}</div>
+          <div className="research-dock sticky bottom-[calc(5.2rem+env(safe-area-inset-bottom))] z-20 mx-auto mt-10 max-w-3xl pt-6 sm:bottom-0 sm:pb-5">
+            {aiFull ? (
+              <div role="status" className="rounded-2xl border border-line bg-surface px-4 py-3 text-center text-xs text-muted shadow-[0_18px_44px_-24px_rgb(0_0_0/0.35)]">
+                {aiIncluded ? (
+                  <>
+                    <span className="font-semibold text-ink">AI allowance used up for this month.</span> Resets {resetLabel(ai.resetsAt)}.{" "}
+                  </>
+                ) : (
+                  <span className="font-semibold text-ink">AI questions aren&apos;t included on this plan.</span>
+                )}{" "}
+                <Link href="/settings#plan" className="text-gold-ink underline underline-offset-2">
+                  See plan
+                </Link>
+              </div>
+            ) : (
+              <>
+                {aiLeft <= 10 && (
+                  <p role="status" className="mb-2 text-center text-[0.72rem] text-muted">
+                    {aiLeft} AI question{aiLeft === 1 ? "" : "s"} left this month · resets {resetLabel(ai.resetsAt)}
+                  </p>
+                )}
+                {composer(false)}
+              </>
+            )}
+          </div>
         )}
       </div>
 

@@ -5,6 +5,7 @@ import { suggestionsFor } from "@/lib/research/suggest";
 import type { ResearchMode } from "@/lib/research/types";
 import { personTopics } from "@/lib/trends/query";
 import { ResearchApp } from "@/components/research/research-app";
+import { planUsage } from "@/lib/entitlements/server";
 
 export const metadata = { title: "Research" };
 
@@ -17,11 +18,12 @@ export default async function ResearchPage({ searchParams }: PageProps<"/researc
   const question = typeof q === "string" ? q.trim().slice(0, 2000) : "";
   const askMode = typeof mode === "string" && MODES.includes(mode as ResearchMode) ? (mode as ResearchMode) : "research";
 
-  const [threads, thread, key, topics] = await Promise.all([
+  const [threads, thread, key, topics, plan] = await Promise.all([
     listThreads(ctx).catch(() => []),
     threadId && !question ? getThread(ctx, threadId).catch(() => null) : Promise.resolve(null),
     geminiKey().catch(() => null),
     personTopics(ctx.me.id).catch(() => []),
+    planUsage(ctx.relationship.id),
   ]);
 
   return (
@@ -32,6 +34,7 @@ export default async function ResearchPage({ searchParams }: PageProps<"/researc
       suggestions={suggestionsFor(topics, `${ctx.me.slug}|${new Date().toISOString().slice(0, 10)}`)}
       people={ctx.members.map((m) => ({ slug: m.slug, first: m.displayName.split(" ")[0], theme: m.theme }))}
       meFirst={ctx.me.displayName.split(" ")[0]}
+      ai={{ used: plan.usage.aiQuestions, limit: plan.limits.aiQuestionsPerMonth, resetsAt: plan.resetsAt, plan: plan.plan }}
       autoAsk={question.length >= 2 ? { q: question, mode: askMode } : null}
     />
   );

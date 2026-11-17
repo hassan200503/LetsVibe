@@ -8,6 +8,7 @@ import { media, mediaComments, mediaReactions, people, roomEvents } from "@/lib/
 import { requireCtx } from "@/lib/context";
 import { ALLOWED_TYPES, LIMITS, inspect, newPath, ownsPath, remove, storageMode, type StorageMode } from "@/lib/media/storage";
 import { youtubeIdFrom } from "@/lib/media/youtube";
+import { storageAvailable } from "@/lib/entitlements/server";
 
 export type Prepared = { ok: true; mode: Exclude<StorageMode, "none">; path: string; thumbPath: string | null } | { ok: false; error: string };
 
@@ -24,6 +25,9 @@ export async function prepareUpload(kind: string, mime: string, size: number): P
   const max = k.data === "avatar" ? LIMITS.thumb : LIMITS[k.data];
   if (size > max) return { ok: false, error: `Too large: the limit for ${k.data}s is ${Math.round(max / 1024 / 1024)} MB.` };
   const rel = ctx.relationship.id;
+  const thumbEstimate = k.data === "photo" || k.data === "video" ? 320 * 1024 : 0;
+  const quota = await storageAvailable(rel, size + thumbEstimate);
+  if (!quota.ok) return { ok: false, error: quota.error };
   return {
     ok: true,
     mode,
@@ -56,6 +60,12 @@ export async function saveUploaded(input: z.infer<typeof saved>): Promise<{ ok: 
   if (!ownsPath(rel, d.path) || (d.thumbPath && !ownsPath(rel, d.thumbPath))) return { ok: false, error: "Not your folder" };
   const info = await inspect(d.path);
   if (!info) return { ok: false, error: "The upload didn't finish. Please try again." };
+  const thumbInfo = d.thumbPath ? await inspect(d.thumbPath) : null;
+  const quota = await storageAvailable(rel, info.size + (thumbInfo?.size ?? 0));
+  if (!quota.ok) {
+    await remove([d.path, d.thumbPath]);
+    return { ok: false, error: quota.error };
+  }
   const db = await getDb();
   const [row] = await db
     .insert(media)
@@ -65,7 +75,7 @@ export async function saveUploaded(input: z.infer<typeof saved>): Promise<{ ok: 
       kind: d.kind,
       source: "upload",
       path: d.path,
-      thumbPath: d.thumbPath && (await inspect(d.thumbPath)) ? d.thumbPath : null,
+      thumbPath: thumbInfo ? d.thumbPath : null,
       mime: info.contentType ?? d.mime,
       bytes: info.size,
       width: d.width ?? null,
@@ -163,7 +173,13 @@ export async function deleteComment(commentId: string): Promise<void> {
 /** Use an uploaded square picture (from Settings) as my profile picture. */
 export async function setAvatar(p: string): Promise<{ ok: boolean; error?: string }> {
   const ctx = await requireCtx();
-  if (!ownsPath(ctx.relationship.id, p) || !(await inspect(p))) return { ok: false, error: "Upload didn't finish" };
+  const info = ownsPath(ctx.relationship.id, p) ? await inspect(p) : null;
+  if (!info) return { ok: false, error: "Upload didn't finish" };
+  const quota = await storageAvailable(ctx.relationship.id, info.size);
+  if (!quota.ok) {
+    await remove([p]);
+    return { ok: false, error: quota.error };
+  }
   const db = await getDb();
   const [old] = await db.select({ avatarPath: people.avatarPath }).from(people).where(eq(people.id, ctx.me.id));
   await db.update(people).set({ avatarPath: p }).where(eq(people.id, ctx.me.id));

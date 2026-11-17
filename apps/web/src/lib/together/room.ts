@@ -5,6 +5,14 @@ import type { Ctx } from "@/lib/context";
 import { getDb } from "@/lib/db/client";
 import { presence, roomEvents, roomState } from "@/lib/db/schema";
 import { mediaByIds, type MediaCard } from "@/lib/media/queries";
+import { roomAvailable } from "@/lib/entitlements/server";
+
+export class RoomUnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "RoomUnavailableError";
+  }
+}
 
 export type RoomPayload = {
   serverNow: string;
@@ -26,6 +34,8 @@ const ONLINE_MS = 70_000;
 const HERE_MS = 12_000;
 
 async function ensureRow(ctx: Ctx) {
+  const access = await roomAvailable(ctx.relationship.id);
+  if (!access.ok) throw new RoomUnavailableError(access.error);
   const db = await getDb();
   await db.insert(roomState).values({ relationshipId: ctx.relationship.id }).onConflictDoNothing();
   const [row] = await db.select().from(roomState).where(eq(roomState.relationshipId, ctx.relationship.id));

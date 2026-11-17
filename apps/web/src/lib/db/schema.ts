@@ -27,6 +27,8 @@ import { sql } from "drizzle-orm";
  */
 
 export type Visibility = "private" | "shared" | "public";
+export type Plan = "free" | "premium";
+export type UsageMetric = "ai_question" | "export";
 
 const id = () => uuid("id").primaryKey().defaultRandom();
 const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
@@ -142,6 +144,78 @@ export const consents = pgTable(
     uniqueIndex("consents_person_kind_version").on(t.personId, t.kind, t.version),
     index("consents_person_accepted").on(t.personId, t.acceptedAt),
   ],
+);
+
+// ─── Plan, usage and audit ────────────────────────────────────────────────
+
+/**
+ * Server-side limits for one couple. The row is created lazily from the free
+ * plan; no client action writes it. Admin overrides go through
+ * `applyEntitlementOverride`, which also appends to `audit_log`.
+ */
+export const entitlements = pgTable(
+  "entitlements",
+  {
+    coupleId: uuid("couple_id").primaryKey().references(() => couples.id, { onDelete: "cascade" }),
+    plan: text("plan").$type<Plan>().notNull().default("free"),
+    storageBytes: bigint("storage_bytes", { mode: "number" }).notNull().default(1_073_741_824),
+    aiQuestionsPerMonth: integer("ai_questions_per_month").notNull().default(100),
+    rooms: smallint("rooms").notNull().default(1),
+    exportsPerMonth: integer("exports_per_month").notNull().default(3),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    check("entitlements_plan_check", sql`${t.plan} in ('free', 'premium')`),
+    check("entitlements_storage_check", sql`${t.storageBytes} > 0`),
+    check("entitlements_ai_check", sql`${t.aiQuestionsPerMonth} >= 0`),
+    check("entitlements_rooms_check", sql`${t.rooms} >= 0`),
+    check("entitlements_exports_check", sql`${t.exportsPerMonth} >= 0`),
+  ],
+);
+
+/**
+ * Metered usage. Monthly limits are summed by `period` (YYYY-MM, UTC), so a
+ * new month starts at zero without a reset job. `sourceId` makes a request
+ * idempotent when the caller can name the thing it paid for.
+ */
+export const usageLedger = pgTable(
+  "usage_ledger",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
+    metric: text("metric").$type<UsageMetric>().notNull(),
+    period: text("period").notNull(),
+    quantity: integer("quantity").notNull().default(1),
+    sourceId: text("source_id"),
+    createdBy: uuid("created_by").references(() => people.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index("usage_ledger_couple_period").on(t.coupleId, t.metric, t.period),
+    uniqueIndex("usage_ledger_source").on(t.coupleId, t.metric, t.sourceId).where(sql`${t.sourceId} is not null`),
+    check("usage_ledger_metric_check", sql`${t.metric} in ('ai_question', 'export')`),
+    check("usage_ledger_period_check", sql`${t.period} ~ '^[0-9]{4}-[0-9]{2}$'`),
+    check("usage_ledger_quantity_check", sql`${t.quantity} > 0`),
+  ],
+);
+
+/**
+ * Append-only record of privileged actions: entitlement overrides, exports,
+ * deletions and moderation. A trigger blocks UPDATE and DELETE.
+ */
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    /** "admin:cli", "system", or a person id. Never an email or token. */
+    actor: text("actor").notNull(),
+    action: text("action").notNull(),
+    targetType: text("target_type").notNull(),
+    targetId: text("target_id").notNull(),
+    detail: jsonb("detail").$type<Record<string, unknown>>().notNull().default({}),
+    createdAt: createdAt(),
+  },
+  (t) => [index("audit_log_target").on(t.targetType, t.targetId, t.createdAt)],
 );
 
 // ─── Interests, skills, preferences ───────────────────────────────────────

@@ -98,6 +98,7 @@ Current tests cover: trends engine, visibility/clock/verse logic, push key deriv
 | E0-004 | 2026-11-15 | Next 16.4.6; prod audit clean; dev-only 2 moderate; gates in `.loop/progress.md` iteration 004 |
 | E0-007 | 2026-11-15 | Fresh-workspace `pnpm run setup`; generic Alex/Sam seed idempotent; gates in `.loop/progress.md` iteration 005 |
 | E1-001 | 2026-11-16 | `0006_identity.sql` rename/backfill plus `identity.test.ts` and `identity-migration.test.ts`; `pnpm check` 7 files / 51 tests, 34 pages; `db:generate` clean; seed/reset pass; staging rehearsal pending E0-006 |
+| E1-012 | 2026-11-17 | `0007_mysterious_puff_adder.sql` adds `entitlements`, monthly `usage_ledger`, append-only `audit_log` and free-plan backfill. Six PGlite tests cover defaults, storage incl. base64 photos, AI quota boundary/idempotency, room disable, audited overrides and validation. Enforcement at presigned/local upload, avatar, AI reservation and room access; Settings/Gallery/Research show usage and clear exhausted/excluded states. `pnpm check` 10 files / 64 tests, 35-route build; axe 0 violations on `/`, `/research`, `/gallery`, `/together`, `/settings`; local screenshots verified normal and limit states, demo restored. |
 | E1-002 | — | _pending_ |
 | E1-003 | — | _pending_ |
 | E0-008 | 2026-11-16 | CI gate + PR template; YAML parse, frozen install, `pnpm check` (44 tests, 34 pages) and prod audit recorded in `.loop/progress.md` iteration 007; branch protection H30 and GitHub median runtime still pending |

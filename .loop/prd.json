@@ -377,9 +377,9 @@
       "dependsOn": [
         "E1-001"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "Per-couple entitlements and monthly usage_ledger (UTC period) with an append-only audit_log trigger. Free: 1 GB, 100 AI questions/month, 1 room, 3 exports; premium limits reserved but not sold. Limits enforced server-side: presigned/local uploads and avatars (actual bytes incl. legacy photos), AI questions reserved transactionally with row lock and idempotent source id, and room access (rooms=0 returns 403/resting UI). Settings, gallery and research show usage and clear limit states; research disables asking when exhausted. Break-glass overrides only via audited ENTITLEMENTS_ADMIN CLI/core function with actor, reason and before/after. PGlite tests: 6 new (defaults, storage incl. base64 photos, AI boundary/idempotency, room disable, audited override, input validation). Gates: pnpm check green (10 files / 64 tests); axe 0 violations on /, /research, /gallery, /together, /settings. Local UI verified for normal, AI-excluded and room-disabled states; demo limits restored after verification."
     },
     {
       "id": "E1-013",

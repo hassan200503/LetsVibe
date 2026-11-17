@@ -76,7 +76,8 @@ Actors: two members of a couple; anonymous internet; abusive authenticated users
 
 - Never log message bodies, media contents, daily answers, OTPs, tokens, keys, full emails or IPs in application logs. Use pseudonymous ids.
 - Sentry: scrub request bodies and query strings; disable automatic PII where possible; review events.
-- Audit log covers admin actions, exports, deletions, entitlement overrides, moderation; append-only.
+- Audit log covers admin actions, exports, deletions, entitlement overrides, moderation; append-only. The `audit_log` table has a database trigger that rejects `UPDATE` and `DELETE`; entitlement overrides record actor, reason and before/after limits.
+- Entitlements are per couple and changed server-side only; no client-callable plan action exists. Break-glass changes require `ENTITLEMENTS_ADMIN=1` plus an actor and reason, and every change is audited.
 - Metrics may include counts/latency, not content.
 
 ## Secrets management

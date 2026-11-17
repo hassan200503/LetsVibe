@@ -93,6 +93,7 @@ export async function putObject(mode: "blob" | "local", path: string, body: Blob
     await uploadPresigned(path, body, {
       access: "private",
       handleUploadUrl: "/api/media/upload",
+      clientPayload: JSON.stringify({ size: body.size }),
       contentType: body.type || undefined,
       multipart: body.size > 8 * 1024 * 1024,
       onUploadProgress: (e) => onProgress(e.percentage),

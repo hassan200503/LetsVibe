@@ -14,6 +14,7 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "a11y": "corepack pnpm --filter @letsvibe/web a11y",
+    "entitlements": "corepack pnpm --filter @letsvibe/web entitlements",
     "setup": "corepack pnpm install && corepack pnpm typegen && corepack pnpm seed",
     "reset": "node apps/web/scripts/reset.mjs",
     "check": "corepack pnpm typecheck && corepack pnpm lint && corepack pnpm test && corepack pnpm build",

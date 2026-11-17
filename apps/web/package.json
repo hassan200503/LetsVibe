@@ -18,6 +18,7 @@
     "a11y": "node scripts/a11y-audit.mjs",
     "retag": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/retag.ts",
     "passcodes": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/passcodes.ts",
+    "entitlements": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/entitlements.ts",
     "go-live": "node scripts/go-live.mjs"
   },
   "dependencies": {

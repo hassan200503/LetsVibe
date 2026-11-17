@@ -28,6 +28,7 @@ pnpm test                  # vitest
 pnpm a11y                  # axe WCAG audit against a seeded app on :3100
 pnpm build                 # production build
 pnpm seed                  # seed local demo data
+pnpm entitlements -- --couple=<id|name> --show   # break-glass; needs ENTITLEMENTS_ADMIN=1
 ```
 
 A change is done only when typegen, typecheck, lint, test, build and the production audit pass. In the loop, record real output; never claim a gate you did not run. CI is `.github/workflows/ci.yml`; the required check is `CI / check`. Use `.github/pull_request_template.md` for evidence, parity, risk and rollback.
@@ -40,7 +41,7 @@ A change is done only when typegen, typecheck, lint, test, build and the product
 - `packages/domain` — framework-free product/domain code shared by web and future mobile; currently the brand constants.
 - `packages/ui-tokens` — semantic colour, type, spacing, radius, elevation and motion tokens shared by web and future mobile; `tokens.css` is generated from `src/tokens.ts`.
 - `packages/config` — shared TypeScript base config.
-- `apps/web/src/lib/db/schema.ts` — all 32 tables and indexes; migrations in `apps/web/drizzle/`.
+- `apps/web/src/lib/db/schema.ts` — all 38 tables and indexes; migrations in `apps/web/drizzle/`.
 - `apps/web/public` — PWA manifest assets and the push service worker.
 - `docs/` — product/architecture/design/security/privacy/compliance/runbook/verification, ADRs.
 - `.loop/` — loop bookkeeping: `audit.md`, `prd.json`, `progress.md`, `HUMAN_TASKS.md`; `STATUS` and `logs/` are git-excluded.

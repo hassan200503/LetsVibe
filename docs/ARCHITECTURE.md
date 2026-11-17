@@ -86,6 +86,8 @@ New: `couples`, `couple_members`, `invitations`, `profiles`, `consents`, `entitl
 
 E1-001 has applied the expand step: migration `0006_identity` renames `relationships`/`relationship_members` to `couples`/`couple_members`, backfills slots 1–2, and adds `invitations`, `profiles` and `consents`. Existing content still uses `relationship_id`; it becomes `couple_id` in E2-001/E11-007. `people` becomes a profile linked to `auth.users`; slug is no longer a login. The local adapter keeps `relationship_id` queries compiling until that contract step.
 
+E1-012 has applied `entitlements`, `usage_ledger` and `audit_log`: each couple has server-owned limits (free: 1 GB, 100 AI questions/month, 1 room, 3 exports), usage is a UTC-month ledger with idempotent source ids, and the audit table rejects updates and deletes with a database trigger. Uploads, avatars, AI questions and room access check limits before doing work; there is no client-callable plan mutation. Admin overrides are a deliberate CLI/core path that records actor, reason and before/after values. RLS still does not exist for these tables and remains owned by E1-002/E2-002.
+
 ## Authentication and sessions
 
 - Supabase Auth handles OTP, OAuth, refresh, revocation and rate limits. Server components and route handlers verify the access token and resolve membership per request.

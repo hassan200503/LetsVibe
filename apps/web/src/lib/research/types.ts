@@ -26,6 +26,7 @@ export type StreamEvent =
   | { t: "status"; text: string }
   | { t: "studies"; items: ResearchSource[] }
   | { t: "delta"; text: string }
+  | { t: "usage"; aiQuestions: number; limit: number }
   | { t: "done"; message: ResearchMessage }
   | { t: "error"; message: string; retry?: boolean };
 
