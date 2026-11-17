@@ -1780,9 +1780,9 @@
       "dependsOn": [
         "E10-001"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "Web verified. A global prefers-reduced-motion rule now forces animations, transitions and smooth scrolling to ~0 for every element, including Tailwind utilities, while ambient CSS remains gated behind no-preference. Forced-colors fallbacks restore gradient text (CanvasText), card/button/chip edges, hide decorative aurora/stars/petals/grain and re-assert a 2px Highlight focus outline. New pnpm motion audits 7 routes (login + 6 core) for reduced-motion leaks, infinite animations faster than 333 ms, invisible gradient text, axe WCAG 2.2 AA with colour-contrast off under forced colours, and three keyboard focus stops per route. All 0 findings in light; 5/5 a11y routes still 0 violations in light and dark; forced-colours screenshots of login and settings inspected. Detectors validated with injected 2s transitions, a 100ms infinite animation and forced-colours media emulation. Canvas/video/third-party iframes and native apps remain out of scope (native follows E8-008); 200% zoom stays manual."
     },
     {
       "id": "E11-001",

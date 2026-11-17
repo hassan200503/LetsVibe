@@ -76,7 +76,7 @@ E0-009 deliberately kept the rendered values unchanged. The remaining hardcoded 
 2. **One-off stage colours** (the cinematic night gradient, aurora blobs, grain, gold shimmer) are intentionally art-directed and live in `globals.css`. Promote them to named stage tokens only when a second surface needs the same material.
 3. **Tailwind arbitrary colours** such as the login gold focus ring (`#e2c794`) and hand-picked red/emerald status colours should move to semantic `success`/`danger`/`stage-gold` tokens in E10-004.
 4. **Component-specific typography and spacing utilities** (`text-[0.82rem]`, `rounded-[22px]`, arbitrary shadows) should be migrated component by component; do not mass-rewrite screens without visual review.
-5. **Ambient animation timings** (aurora drift, twinkle, delayed word/typing reveals) are documented exceptions until E10-005 covers reduced-motion and contrast verification end to end.
+5. **Ambient animation timings** (aurora drift, twinkle, delayed word/typing reveals) are gated behind `prefers-reduced-motion: no-preference` and audited by `pnpm motion` (E10-005). New timed motion must keep that gate; a reduced-motion leak is a review finding.
 
 E10-004 owns the per-couple theming migration and E10-005 owns reduced-motion/contrast verification. Any new hardcoded colour, radius or duration is a review finding.
 
@@ -90,3 +90,17 @@ $env:A11Y_SCHEME = "dark"; pnpm a11y
 ```
 
 Verified 2026-11-17: **0 axe violations** on all five screens in light and dark mode; keyboard tab order has 19-24 visible focus stops per screen with no hidden file-input stops. Known exceptions: the audit covers the five core screens only; login/welcome, research, discover, world sub-pages, native apps, screen-reader passes and 200% zoom remain manual follow-ups under E10-001/E10-002. Embedded YouTube content is third-party.
+
+### Motion and forced colours
+
+`pnpm motion` checks seven routes (login plus home, research, chat, calls, gallery and settings) against a seeded production server. It verifies three things:
+
+1. **Reduced motion.** With `prefers-reduced-motion: reduce`, no rendered element may keep an animation or transition longer than 0.02 s, and smooth scrolling must be off. The global base rule applies `0.01ms` durations, zero delays, one iteration and `scroll-behavior: auto` to every element, including Tailwind's `animate-*` and `transition-*` utilities. Ambient CSS is independently gated behind `no-preference`.
+2. **No fast flashing.** With motion allowed, no infinite CSS animation may cycle faster than 333 ms (the WCAG 2.3.1 three-flashes-per-second threshold).
+3. **Forced colours.** Emulates Windows High Contrast, runs axe WCAG 2.2 AA with colour-contrast disabled (the OS owns the palette), asserts gradient text is not left transparent, and tabs through three focus stops per route to prove a visible outline remains.
+
+```powershell
+pnpm motion
+```
+
+Verified 2026-11-17: **0 findings** across all seven routes. Forced-colours screenshots of login and settings show readable system-colour text, visible card/button edges and a 2px Highlight focus ring. Detector self-checks confirmed an injected 2 s transition collapses to 1e-05 s under reduce, a 100 ms infinite animation is reported when motion is allowed, and the forced-colours media query is actually active. Canvas, video and third-party iframes are out of scope because they cannot be inspected with computed styles; any new animated canvas or autoplaying decorative video needs a manual reduced-motion review.

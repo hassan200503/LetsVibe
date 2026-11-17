@@ -58,6 +58,28 @@
     outline-offset: 2px;
     border-radius: var(--radius-code);
   }
+
+  /* Windows High Contrast replaces custom outlines; keep keyboard focus unmistakable. */
+  @media (forced-colors: active) {
+    :focus-visible {
+      outline: 2px solid Highlight !important;
+      outline-offset: 2px !important;
+    }
+  }
+
+  /* Honour the OS setting for every animation and transition, including Tailwind's own utilities. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      transition-delay: 0ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 /*
@@ -410,6 +432,35 @@
       background: linear-gradient(100deg, #f0d9a8, #d3ac6b 45%, #f4e2bc);
       -webkit-background-clip: text;
       background-clip: text;
+    }
+  }
+
+  /* Forced colours drops gradients and shadows: restore plain text and visible edges. */
+  @media (forced-colors: active) {
+    .gold-shimmer,
+    .gold-deep {
+      background: none;
+      -webkit-background-clip: border-box;
+      background-clip: border-box;
+      color: CanvasText;
+    }
+    .grain::after,
+    .aurora,
+    .stars,
+    .petal {
+      display: none;
+    }
+    .card-glow {
+      background: Canvas;
+      border-color: CanvasText;
+    }
+    .btn,
+    .btn-gold,
+    .btn-glass {
+      border: 1px solid ButtonText;
+    }
+    .chip {
+      border: 1px solid CanvasText;
     }
   }
 

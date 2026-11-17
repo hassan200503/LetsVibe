@@ -26,6 +26,7 @@ pnpm typecheck             # typegen + tsc --noEmit across packages
 pnpm lint                  # eslint
 pnpm test                  # vitest
 pnpm a11y                  # axe WCAG audit against a seeded app on :3100
+pnpm motion                # reduced-motion, flashing and forced-colours audit on :3100
 pnpm build                 # production build
 pnpm seed                  # seed local demo data
 pnpm entitlements -- --couple=<id|name> --show   # break-glass; needs ENTITLEMENTS_ADMIN=1
