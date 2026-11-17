@@ -37,10 +37,11 @@ A change is done only when typegen, typecheck, lint, test, build and the product
 - `apps/web/src/components` — UI (client components under feature folders).
 - `apps/web/src/lib` — domain/service layer: `db/` (Drizzle schema), `actions/` (server actions), `auth/`, `chat/`, `calls/`, `together/`, `media/`, `trends/`, `research/`, `journey/`.
 - `packages/domain` — framework-free product/domain code shared by web and future mobile; currently the brand constants.
+- `packages/ui-tokens` — semantic colour, type, spacing, radius, elevation and motion tokens shared by web and future mobile; `tokens.css` is generated from `src/tokens.ts`.
 - `packages/config` — shared TypeScript base config.
 - `apps/web/src/lib/db/schema.ts` — all 32 tables and indexes; migrations in `apps/web/drizzle/`.
 - `apps/web/public` — PWA manifest assets and the push service worker.
-- `docs/` — product/architecture/security/privacy/compliance/runbook/verification, ADRs.
+- `docs/` — product/architecture/design/security/privacy/compliance/runbook/verification, ADRs.
 - `.loop/` — loop bookkeeping: `audit.md`, `prd.json`, `progress.md`, `HUMAN_TASKS.md`; `STATUS` and `logs/` are git-excluded.
 
 ## Non-negotiable rules

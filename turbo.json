@@ -2,17 +2,27 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**"
+      ]
     },
     "typecheck": {
-      "dependsOn": ["^typecheck"]
+      "dependsOn": [
+        "^typecheck"
+      ]
     },
     "lint": {},
     "test": {},
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "@letsvibe/ui-tokens#build": {
+      "outputs": []
     }
   }
 }

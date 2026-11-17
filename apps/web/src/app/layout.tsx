@@ -9,6 +9,7 @@ import { RoomProvider } from "@/components/together/room-provider";
 import { ReachPrompt, ServiceWorker } from "@/components/push";
 import { getCtx } from "@/lib/context";
 import { BRAND } from "@letsvibe/domain";
+import { baseDark, baseLight } from "@letsvibe/ui-tokens";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -26,8 +27,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f3ec" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b0a0e" },
+    { media: "(prefers-color-scheme: light)", color: baseLight.bg },
+    { media: "(prefers-color-scheme: dark)", color: baseDark.bg },
   ],
   viewportFit: "cover",
   interactiveWidget: "resizes-content",

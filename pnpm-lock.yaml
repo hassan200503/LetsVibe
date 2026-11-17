@@ -190,6 +190,9 @@ importers:
       '@letsvibe/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@letsvibe/ui-tokens':
+        specifier: workspace:*
+        version: link:../../packages/ui-tokens
       '@neondatabase/serverless':
         specifier: ^1.1.0
         version: 1.2.1
@@ -286,6 +289,18 @@ importers:
 
   packages/domain:
     devDependencies:
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
+  packages/ui-tokens:
+    devDependencies:
+      '@types/node':
+        specifier: ^24.19.0
+        version: 24.19.2
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
       typescript:
         specifier: ^5
         version: 5.9.3

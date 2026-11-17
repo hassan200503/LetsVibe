@@ -2276,9 +2276,9 @@
       "dependsOn": [
         "E0-002"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "packages/ui-tokens generates committed tokens.css from typed src/tokens.ts; web consumes it via globals.css, themeColor and the PWA manifest, and Turbo freshness-checks it. Authenticated production computed-style comparison against commit 8e4496c: home and chat, light and dark, 0 diffs. Reduced motion: base/fast durations .01ms, .btn/.field transitions 1e-05s, ambient shimmer disabled. Remaining hardcoded values and owners are in docs/DESIGN.md. Gates: pnpm check green; 9 files / 58 tests; 35-route build; tokens.css up to date."
     },
     {
       "id": "E0-010",

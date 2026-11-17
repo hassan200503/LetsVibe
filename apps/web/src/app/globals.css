@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@letsvibe/ui-tokens/tokens.css";
 
 /*
  * Three identities that share one base:
@@ -10,83 +11,6 @@
  * The base is ivory and ink by day, midnight by night, with champagne gold as
  * the one metallic that ties everything together.
  */
-
-:root {
-  --bg: #f7f3ec;
-  --surface: #fffdf9;
-  --surface-2: #f1ebe1;
-  --ink: #17130f;
-  --muted: #6c645a;
-  --line: #e5ddd0;
-  --focus: #2563eb;
-
-  --gold: #a07b43;
-  --gold-2: #d7b77c;
-  --gold-soft: #f4ead6;
-  --night: #09070d;
-  --pearl: #f6efe4;
-
-  --accent: #c81e3a;
-  --accent-ink: #ffffff;
-  --accent-soft: #fde8ec;
-  --accent-2: #b7791f;
-  --glow: rgba(200, 30, 58, 0.18);
-
-  --ease-lux: cubic-bezier(0.22, 0.8, 0.16, 1);
-}
-
-[data-world="indigo"] {
-  --accent: #4338ca;
-  --accent-soft: #e8e7fb;
-  --accent-2: #0f9488;
-  --glow: rgba(67, 56, 202, 0.2);
-}
-[data-world="sage"] {
-  --accent: #4f7a63;
-  --accent-soft: #e6efe9;
-  --accent-2: #7c6fc0;
-  --glow: rgba(79, 122, 99, 0.2);
-}
-[data-world="us"] {
-  --accent: #c81e3a;
-  --accent-soft: #fde8ec;
-  --accent-2: #b7791f;
-  --glow: rgba(200, 30, 58, 0.18);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0b0a0e;
-    --surface: #141218;
-    --surface-2: #1c1a21;
-    --ink: #f2ede5;
-    --muted: #a59e9f;
-    --line: #2b2831;
-    --focus: #93c5fd;
-    --gold: #d6b67c;
-    --gold-2: #f0dcae;
-    --gold-soft: #2a2319;
-    --accent: #f0556d;
-    --accent-ink: #14060a;
-    --accent-soft: #3a1620;
-    --accent-2: #e0b25c;
-  }
-  [data-world="indigo"] {
-    --accent: #8b87ff;
-    --accent-soft: #23214a;
-    --accent-2: #2dd4bf;
-  }
-  [data-world="sage"] {
-    --accent: #8cc3a4;
-    --accent-soft: #1d2e25;
-    --accent-2: #b4a8f0;
-  }
-  [data-world="us"] {
-    --accent: #f0556d;
-    --accent-soft: #3a1620;
-    --accent-2: #e0b25c;
-  }
-}
 
 @theme inline {
   --color-bg: var(--bg);
@@ -118,7 +42,7 @@
   body {
     background: var(--bg);
     color: var(--ink);
-    font-family: var(--font-inter), system-ui, sans-serif;
+    font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -131,7 +55,7 @@
   :focus-visible {
     outline: 2px solid var(--focus);
     outline-offset: 2px;
-    border-radius: 6px;
+    border-radius: var(--radius-code);
   }
 }
 
@@ -141,11 +65,11 @@
  */
 @layer components {
   .font-display {
-    font-family: var(--font-fraunces), Georgia, serif;
+    font-family: var(--font-display-stack);
     font-optical-sizing: auto;
   }
   .font-lux {
-    font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+    font-family: var(--font-lux-stack);
     font-feature-settings:
       "liga",
       "dlig",
@@ -163,12 +87,12 @@
     border: 1px solid var(--line);
     background: var(--surface);
     color: var(--ink);
-    border-radius: 12px;
-    padding: 0.6rem 0.8rem;
-    font-size: 0.95rem;
+    border-radius: var(--radius-field);
+    padding: var(--space-field-y) var(--space-field-x);
+    font-size: var(--type-field-size);
     transition:
-      border-color 0.2s ease,
-      box-shadow 0.2s ease;
+      border-color var(--motion-duration-base) var(--motion-ease-standard),
+      box-shadow var(--motion-duration-base) var(--motion-ease-standard);
   }
   .field:focus {
     outline: none;
@@ -184,20 +108,18 @@
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
-    border-radius: 999px;
-    padding: 0.55rem 1.1rem;
+    border-radius: var(--radius-pill);
+    padding: var(--space-button-y) var(--space-button-x);
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: var(--type-button-size);
     letter-spacing: 0.005em;
     background: var(--accent);
     color: var(--accent-ink);
-    box-shadow:
-      0 1px 0 rgb(255 255 255 / 0.18) inset,
-      0 6px 18px -8px var(--glow);
+    box-shadow: var(--shadow-button);
     transition:
-      transform 0.15s ease,
-      filter 0.15s ease,
-      box-shadow 0.2s ease;
+      transform var(--motion-duration-fast) var(--motion-ease-standard),
+      filter var(--motion-duration-fast) var(--motion-ease-standard),
+      box-shadow var(--motion-duration-base) var(--motion-ease-standard);
   }
   .btn:hover {
     filter: brightness(1.06);
@@ -224,9 +146,9 @@
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    border-radius: 999px;
-    padding: 0.22rem 0.7rem;
-    font-size: 0.75rem;
+    border-radius: var(--radius-pill);
+    padding: var(--space-chip-y) var(--space-chip-x);
+    font-size: var(--type-chip-size);
     font-weight: 600;
     background: var(--accent-soft);
     color: var(--accent);
@@ -236,17 +158,15 @@
   .card {
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 20px;
-    box-shadow:
-      0 1px 0 color-mix(in oklab, var(--ink) 3%, transparent),
-      0 10px 30px -18px color-mix(in oklab, var(--ink) 22%, transparent);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
   }
 
   .eyebrow {
-    font-size: 0.72rem;
-    letter-spacing: 0.16em;
+    font-size: var(--type-eyebrow-size);
+    letter-spacing: var(--type-eyebrow-tracking);
     text-transform: uppercase;
-    font-weight: 700;
+    font-weight: var(--type-eyebrow-weight);
     color: var(--accent);
   }
 
@@ -271,7 +191,7 @@
 
   @media (prefers-reduced-motion: no-preference) {
     .rise {
-      animation: rise 0.6s var(--ease-lux) both;
+      animation: rise var(--motion-duration-slow) var(--motion-ease-lux) both;
     }
     @keyframes rise {
       from {
@@ -280,7 +200,7 @@
       }
     }
     .petal {
-      animation: sway 6s ease-in-out infinite;
+      animation: sway var(--motion-duration-ambient) var(--motion-ease-in-out) infinite;
       transform-origin: bottom center;
     }
     @keyframes sway {
@@ -304,23 +224,23 @@
       linear-gradient(135deg, color-mix(in oklab, var(--accent) 45%, transparent), var(--line) 40%, color-mix(in oklab, var(--gold-2) 60%, transparent))
         border-box;
     border: 1px solid transparent;
-    border-radius: 22px;
+    border-radius: var(--radius-glow);
   }
   .lift {
     transition:
-      transform 0.35s var(--ease-lux),
-      box-shadow 0.35s ease;
+      transform var(--motion-duration-lift) var(--motion-ease-lux),
+      box-shadow var(--motion-duration-lift) var(--motion-ease-standard);
   }
   .lift:hover {
     transform: translateY(-3px);
-    box-shadow: 0 28px 56px -30px var(--glow);
+    box-shadow: var(--shadow-lift);
   }
   .display-xl {
-    font-family: var(--font-fraunces), Georgia, serif;
-    font-size: clamp(2.6rem, 7vw, 5.2rem);
-    line-height: 1.02;
-    letter-spacing: -0.03em;
-    font-weight: 600;
+    font-family: var(--font-display-stack);
+    font-size: var(--type-display-xl-size);
+    line-height: var(--type-display-xl-line);
+    letter-spacing: var(--type-display-xl-tracking);
+    font-weight: var(--type-display-xl-weight);
   }
   .grain::after {
     content: "";
@@ -469,7 +389,7 @@
   }
   @media (prefers-reduced-motion: no-preference) {
     .gold-shimmer {
-      animation: shimmer 9s linear infinite;
+      animation: shimmer var(--motion-duration-shimmer) var(--motion-ease-linear) infinite;
     }
   }
   @keyframes shimmer {
@@ -498,11 +418,11 @@
     opacity: 0.55;
   }
   .eyebrow-lux {
-    font-size: 0.68rem;
-    line-height: 1;
-    letter-spacing: 0.34em;
+    font-size: var(--type-eyebrow-lux-size);
+    line-height: var(--type-eyebrow-lux-line);
+    letter-spacing: var(--type-eyebrow-lux-tracking);
     text-transform: uppercase;
-    font-weight: 500;
+    font-weight: var(--type-eyebrow-lux-weight);
     color: var(--gold);
   }
   .stage .eyebrow-lux {
@@ -519,12 +439,12 @@
       opacity: 0;
       filter: blur(10px);
       transform: translateY(0.3em);
-      animation: word-in 1.2s var(--ease-lux) forwards;
+      animation: word-in var(--motion-duration-word) var(--motion-ease-lux) forwards;
       animation-delay: calc(var(--i) * 75ms + 150ms);
     }
     .fade-late {
       opacity: 0;
-      animation: fade-in 1.4s var(--ease-lux) forwards;
+      animation: fade-in var(--motion-duration-fade) var(--motion-ease-lux) forwards;
       animation-delay: var(--d, 900ms);
     }
   }
@@ -546,28 +466,22 @@
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
-    border-radius: 999px;
-    padding: 0.8rem 1.4rem;
+    border-radius: var(--radius-pill);
+    padding: var(--space-button-gold-y) var(--space-button-gold-x);
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: var(--type-button-size);
     letter-spacing: 0.01em;
     color: #1a1206;
     background: linear-gradient(180deg, #f6e3b8, #d6ad69);
-    box-shadow:
-      0 1px 0 rgb(255 255 255 / 0.6) inset,
-      0 -1px 0 rgb(120 80 30 / 0.35) inset,
-      0 12px 30px -12px rgb(214 173 105 / 0.55);
+    box-shadow: var(--shadow-gold);
     transition:
-      transform 0.2s var(--ease-lux),
-      box-shadow 0.2s ease,
-      filter 0.2s ease;
+      transform var(--motion-duration-base) var(--motion-ease-lux),
+      box-shadow var(--motion-duration-base) var(--motion-ease-standard),
+      filter var(--motion-duration-base) var(--motion-ease-standard);
   }
   .btn-gold:hover {
     filter: brightness(1.05);
-    box-shadow:
-      0 1px 0 rgb(255 255 255 / 0.6) inset,
-      0 -1px 0 rgb(120 80 30 / 0.35) inset,
-      0 16px 36px -12px rgb(214 173 105 / 0.7);
+    box-shadow: var(--shadow-gold-hover);
   }
   .btn-gold:active {
     transform: translateY(1px);
@@ -576,18 +490,18 @@
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
-    border-radius: 999px;
-    padding: 0.8rem 1.3rem;
+    border-radius: var(--radius-pill);
+    padding: var(--space-button-gold-y) var(--space-button-glass-x);
     font-weight: 500;
-    font-size: 0.9rem;
+    font-size: var(--type-button-size);
     color: #f4ede2;
     background: rgb(255 255 255 / 0.06);
     border: 1px solid rgb(255 255 255 / 0.14);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     transition:
-      background 0.2s ease,
-      border-color 0.2s ease;
+      background var(--motion-duration-base) var(--motion-ease-standard),
+      border-color var(--motion-duration-base) var(--motion-ease-standard);
   }
   .btn-glass:hover {
     background: rgb(255 255 255 / 0.1);
@@ -599,18 +513,8 @@
     position: relative;
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 24px;
-    box-shadow:
-      0 1px 0 rgb(255 255 255 / 0.6) inset,
-      0 1px 2px color-mix(in oklab, var(--ink) 4%, transparent),
-      0 18px 40px -28px color-mix(in oklab, var(--ink) 30%, transparent);
-  }
-  @media (prefers-color-scheme: dark) {
-    .tile {
-      box-shadow:
-        0 1px 0 rgb(255 255 255 / 0.04) inset,
-        0 18px 40px -28px rgb(0 0 0 / 0.8);
-    }
+    border-radius: var(--radius-tile);
+    box-shadow: var(--shadow-tile);
   }
   .glass {
     background: color-mix(in oklab, var(--surface) 78%, transparent);
@@ -618,15 +522,15 @@
     -webkit-backdrop-filter: blur(18px) saturate(1.4);
   }
   .toast {
-    border-radius: 18px;
+    border-radius: var(--radius-toast);
     border: 1px solid var(--line);
     background: color-mix(in oklab, var(--surface) 88%, transparent);
     backdrop-filter: blur(20px) saturate(1.4);
     -webkit-backdrop-filter: blur(20px) saturate(1.4);
-    box-shadow: 0 24px 60px -24px rgb(0 0 0 / 0.35);
+    box-shadow: var(--shadow-toast);
   }
   .num-lux {
-    font-family: var(--font-cormorant), Georgia, serif;
+    font-family: var(--font-lux-numeric-stack);
     font-weight: 400;
     font-variant-numeric: lining-nums tabular-nums;
     letter-spacing: -0.02em;
@@ -667,10 +571,10 @@
   }
   @media (prefers-reduced-motion: no-preference) {
     .bubble-in {
-      animation: bubble-in 0.32s var(--ease-lux) both;
+      animation: bubble-in var(--motion-duration-reveal) var(--motion-ease-lux) both;
     }
     .flash {
-      animation: flash 1.6s ease;
+      animation: flash var(--motion-duration-flash) var(--motion-ease-standard);
     }
   }
   @keyframes bubble-in {
@@ -691,7 +595,7 @@
     border-radius: 50%;
     background: currentColor;
     opacity: 0.35;
-    animation: typing 1.2s ease-in-out infinite;
+    animation: typing var(--motion-duration-typing) var(--motion-ease-in-out) infinite;
   }
   .typing-dot:nth-child(2) {
     animation-delay: 0.15s;
@@ -709,7 +613,7 @@
   /* ─── Calls ─────────────────────────────────────────────────────────────── */
   @media (prefers-reduced-motion: no-preference) {
     .ring-wave {
-      animation: ring-wave 2.2s ease-out infinite;
+      animation: ring-wave var(--motion-duration-ring) var(--motion-ease-out) infinite;
     }
     .ring-wave:nth-child(2) {
       animation-delay: 0.7s;
@@ -718,7 +622,7 @@
       animation-delay: 1.4s;
     }
     .ring-shake {
-      animation: ring-shake 1.6s ease-in-out infinite;
+      animation: ring-shake var(--motion-duration-ring-shake) var(--motion-ease-in-out) infinite;
     }
   }
   @keyframes ring-wave {
@@ -758,13 +662,13 @@
   }
   @media (prefers-reduced-motion: no-preference) {
     .orbit .orbit-spin {
-      animation: u-rotate 70s linear infinite;
+      animation: u-rotate var(--motion-duration-orbit) var(--motion-ease-linear) infinite;
     }
     .orbit .orbit-dash {
-      animation: u-rotate 240s linear infinite reverse;
+      animation: u-rotate var(--motion-duration-orbit-slow) var(--motion-ease-linear) infinite reverse;
     }
     .orbit .orbit-breathe {
-      animation: breathe 7s ease-in-out infinite;
+      animation: breathe var(--motion-duration-breathe) var(--motion-ease-in-out) infinite;
     }
   }
   @keyframes breathe {
@@ -778,8 +682,8 @@
 /* ─── Research: long-form answers ─────────────────────────────────────────── */
 @layer components {
   .prose-lux {
-    font-size: 1.02rem;
-    line-height: 1.75;
+    font-size: var(--type-prose-size);
+    line-height: var(--type-prose-line);
     color: var(--ink);
     overflow-wrap: anywhere;
   }
@@ -798,7 +702,7 @@
   .prose-lux h2,
   .prose-lux h3,
   .prose-lux h4 {
-    font-family: var(--font-fraunces), Georgia, serif;
+    font-family: var(--font-display-stack);
     font-weight: 600;
     letter-spacing: -0.01em;
     line-height: 1.25;
@@ -826,7 +730,7 @@
     top: 0.72em;
     width: 0.36em;
     height: 0.36em;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--gold);
   }
   .prose-lux ol {
@@ -861,12 +765,12 @@
   .prose-lux code {
     font-size: 0.88em;
     background: var(--surface-2);
-    border-radius: 6px;
+    border-radius: var(--radius-code);
     padding: 0.1em 0.35em;
   }
   .prose-lux pre {
     background: var(--surface-2);
-    border-radius: 14px;
+    border-radius: var(--radius-panel);
     padding: 0.9em 1.1em;
     overflow-x: auto;
     font-size: 0.86rem;
@@ -906,7 +810,7 @@
     vertical-align: -0.15em;
     border-radius: 2px;
     background: var(--gold);
-    animation: caret 1s steps(2, start) infinite;
+    animation: caret var(--motion-duration-caret) steps(2, start) infinite;
   }
   @keyframes caret {
     to {
@@ -923,16 +827,16 @@
     padding: 0 0.3rem;
     margin: 0 0.12rem;
     vertical-align: 0.18em;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--gold-soft);
     color: var(--gold);
-    font-size: 0.66rem;
+    font-size: var(--type-mono-label-size);
     font-weight: 700;
     line-height: 1;
     text-decoration: none;
     transition:
-      background 0.2s ease,
-      color 0.2s ease;
+      background var(--motion-duration-base) var(--motion-ease-standard),
+      color var(--motion-duration-base) var(--motion-ease-standard);
   }
   a.cite:hover {
     background: var(--gold);
@@ -949,9 +853,9 @@
   .research-dots i {
     width: 5px;
     height: 5px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--gold);
-    animation: research-dot 1.2s ease-in-out infinite;
+    animation: research-dot var(--motion-duration-typing) var(--motion-ease-in-out) infinite;
   }
   .research-dots i:nth-child(2) {
     animation-delay: 0.15s;
@@ -973,7 +877,7 @@
   }
   @media (prefers-reduced-motion: no-preference) {
     .drawer-in {
-      animation: drawer-in 0.32s var(--ease-lux) both;
+      animation: drawer-in var(--motion-duration-drawer) var(--motion-ease-lux) both;
     }
     @keyframes drawer-in {
       from {

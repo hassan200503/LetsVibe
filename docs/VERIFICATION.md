@@ -103,5 +103,6 @@ Current tests cover: trends engine, visibility/clock/verse logic, push key deriv
 | E0-008 | 2026-11-16 | CI gate + PR template; YAML parse, frozen install, `pnpm check` (44 tests, 34 pages) and prod audit recorded in `.loop/progress.md` iteration 007; branch protection H30 and GitHub median runtime still pending |
 | E1-013 | 2026-11-16 | Neutral theme/identity refactor; name search clean; onboarding/invite Playwright run; `pnpm check` in `.loop/progress.md` iteration 006 |
 | E9-011 | 2026-11-16 | Production-mode local header check: nonce CSP, HSTS, DENY, nosniff, referrer, permissions, Reporting-Endpoints; CSP report endpoint 204 with sanitised log; no ACAO header; 7 new tests, full gate 9 files / 58 tests / 35 routes. External scan and browser YouTube exercise pending deploy. |
+| E0-009 | 2026-11-17 | `@letsvibe/ui-tokens` typed source plus committed generated `tokens.css`, consumed by web CSS, themeColor and manifest; Turbo freshness check passes. Authenticated production computed-style diff vs `8e4496c`: home and chat in light and dark, 0 diffs. Reduced motion: base/fast `.01ms`, `.btn`/`.field` transitions `1e-05s`, ambient shimmer `none`. Hardcoded-value removal plan in `docs/DESIGN.md`. `pnpm check`: typegen, 4-package typecheck, lint clean, 9 files / 58 tests, 35-route build. |
 
 Append one row per completed story; never delete past rows.

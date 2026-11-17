@@ -103,3 +103,13 @@
 - Evidence: 7 new tests (headers/CSP builder + report route); full `pnpm check` PASS with 9 files / 58 tests and 35-route production build. Production-mode local server check: `/welcome` 200 with matching HTML/CSP nonce, HSTS `max-age=63072000`, `X-Frame-Options: DENY`, referrer/permissions/Reporting-Endpoints present; `/` 307 to `/login`; report POST returned 204 and logged `{"directive":"script-src-elem","blocked":"https://evil.example"}` with no secret. No `Access-Control-*` header observed.
 - Remaining: run an external header scan against a deployed HTTPS URL (needs E0-006/staging) and exercise the YouTube embed in a real browser under enforced CSP. E9-011 stays in progress until those checks exist.
 - Next: E0-009 design tokens (local, unblocked) or E1-002 RLS foundation if Supabase staging access appears.
+
+## Iteration 010 - 2026-11-17 - Shared design tokens (E0-009)
+
+- Added `@letsvibe/ui-tokens`: typed `src/tokens.ts` is the source of truth for palette, world accents, type, spacing, radii, elevation and motion; `src/css.ts` renders committed `tokens.css`; the build task fails when the generated file is stale. Web consumes it from `globals.css` and Turbo no longer warns about a missing output.
+- Migrated the base palette, fonts, controls, cards, tiles, toasts, eyebrow/display type, prose, radii, shadows and the main transition/animation timings to token variables. `themeColor` and the PWA manifest now read the same palette values. `.num-lux` keeps its original Cormorant stack.
+- Visual evidence: authenticated production builds compared with the pre-story worktree at `8e4496c` using Playwright computed styles. Home and chat report **0 diffs in both light and dark**. The comparison freezes animations and samples one rotating-verse word so daily content cannot produce false diffs.
+- Reduced motion: `--motion-duration-base`/`fast` become `.01ms`; computed `.btn`/`.field` transitions are `1e-05s` and the ambient shimmer animation is `none`.
+- Added `docs/DESIGN.md` with the north star, Instagram/Facebook/X quality bar, the useful/unique/valuable/loved product standard, token architecture, and the remaining hardcoded-value removal plan owned by E10-004/E10-005. Updated AGENTS and architecture references.
+- Gates: `pnpm check` PASS: typegen; typecheck 4 packages; lint clean; 9 files / 58 tests; `tokens.css up to date`; 35-route Next 16.4.6 build. Temporary servers and baseline worktree removed; local demo data reset.
+- Next: E1-002 RLS foundation if Supabase staging access lands; otherwise take the next local unblocked story.
