@@ -187,6 +187,13 @@ export const usageLedger = pgTable(
     period: text("period").notNull(),
     quantity: integer("quantity").notNull().default(1),
     sourceId: text("source_id"),
+    /** The Gemini model that answered, and what it cost, for BYO-key transparency. */
+    model: text("model"),
+    promptTokens: integer("prompt_tokens").notNull().default(0),
+    completionTokens: integer("completion_tokens").notNull().default(0),
+    totalTokens: integer("total_tokens").notNull().default(0),
+    /** Estimated USD cost in micro-units, at the model's published rate. */
+    costMicros: integer("cost_micros").notNull().default(0),
     createdBy: uuid("created_by").references(() => people.id, { onDelete: "set null" }),
     createdAt: createdAt(),
   },
@@ -196,6 +203,7 @@ export const usageLedger = pgTable(
     check("usage_ledger_metric_check", sql`${t.metric} in ('ai_question', 'export')`),
     check("usage_ledger_period_check", sql`${t.period} ~ '^[0-9]{4}-[0-9]{2}$'`),
     check("usage_ledger_quantity_check", sql`${t.quantity} > 0`),
+    check("usage_ledger_tokens_check", sql`${t.promptTokens} >= 0 and ${t.completionTokens} >= 0 and ${t.totalTokens} >= 0 and ${t.costMicros} >= 0`),
   ],
 );
 

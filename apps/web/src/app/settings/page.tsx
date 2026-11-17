@@ -13,7 +13,7 @@ import { AlertsSetting } from "@/components/push";
 import { storageMode } from "@/lib/media/storage";
 import { logout } from "@/lib/actions/auth";
 import { AiKeySetting, RelaySetting } from "@/components/settings/secrets";
-import { describeSecret, SECRET_GEMINI, SECRET_RELAY } from "@/lib/settings";
+import { describeSecret, geminiSecret, SECRET_RELAY } from "@/lib/settings";
 import { relaySource } from "@/lib/calls/ice";
 import { inviteToken } from "@/lib/auth/invite";
 import { InvitePartner } from "@/components/invite-partner";
@@ -21,7 +21,7 @@ import { Container, PageHeader } from "@/components/ui/page-header";
 import { THEME_OPTIONS, coerceTheme } from "@letsvibe/domain";
 import { UsageMeter } from "@/components/ui/usage";
 import { planUsage } from "@/lib/entitlements/server";
-import { resetLabel } from "@/lib/entitlements/format";
+import { formatCost, formatTokens, resetLabel } from "@/lib/entitlements/format";
 
 export const metadata = { title: "Settings" };
 
@@ -35,7 +35,7 @@ export default async function SettingsPage() {
   const categories = topics.flatMap((t) => [...TOPICS[t].categories.map((c) => c.name), TOPICS[t].fallbackCategory]);
   const plan = await planUsage(ctx.relationship.id);
   const [gemini, relay] = await Promise.all([
-    process.env.GEMINI_API_KEY ? ({ source: "env" } as const) : describeSecret(SECRET_GEMINI).then((d) => ({ ...d, source: d.set ? ("saved" as const) : ("none" as const) })),
+    process.env.GEMINI_API_KEY ? ({ source: "env" } as const) : describeSecret(geminiSecret(ctx.relationship.id)).then((d) => ({ ...d, source: d.set ? ("saved" as const) : ("none" as const) })),
     relaySource() ? ({ source: "env" } as const) : describeSecret(SECRET_RELAY).then((d) => ({ ...d, source: d.set ? ("saved" as const) : ("none" as const) })),
   ]);
 
@@ -84,6 +84,19 @@ export default async function SettingsPage() {
             />
             <UsageMeter label="Data exports" used={plan.usage.exports} limit={plan.limits.exportsPerMonth} hint="A full copy of your world, whenever you ask." />
           </div>
+          <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div className="flex items-baseline justify-between gap-3 rounded-xl border border-line/70 bg-surface-2/40 px-3.5 py-3">
+              <dt className="text-xs font-semibold text-muted">Tokens this month</dt>
+              <dd className="text-sm font-semibold tabular-nums">{formatTokens(plan.usage.aiTokens)}</dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-3 rounded-xl border border-line/70 bg-surface-2/40 px-3.5 py-3">
+              <dt className="text-xs font-semibold text-muted">Estimated AI cost</dt>
+              <dd className="text-sm font-semibold tabular-nums">{formatCost(plan.usage.aiCostMicros)}</dd>
+            </div>
+          </dl>
+          <p className="mt-2 text-[0.7rem] leading-snug text-muted">
+            Read from Gemini&apos;s own usage report for every answer and quiz, at the model&apos;s published rate. Your key, your bill — we never mark usage up.
+          </p>
           <p className="mt-3 text-xs text-muted">No ads, and no selling your data. Premium plans aren&apos;t for sale yet — if your plans ever change, support can adjust your limits and the change is audited.</p>
         </section>
         <div className="grid gap-8 lg:grid-cols-2">

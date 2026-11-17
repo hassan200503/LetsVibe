@@ -77,8 +77,12 @@ export async function describeSecret(key: string): Promise<{ set: boolean; hint?
   return { set: true, hint: s.hint, by: s.by, at: s.at };
 }
 
-export const SECRET_GEMINI = "secret:gemini-api-key";
 export const SECRET_RELAY = "secret:turn-relay";
+
+/** Research keys belong to one couple: a key saved in one world can never be used by another. */
+export function geminiSecret(coupleId: string): string {
+  return `secret:gemini-api-key:${coupleId}`;
+}
 
 export type RelayConfig =
   | { provider: "metered"; domain: string; apiKey: string }

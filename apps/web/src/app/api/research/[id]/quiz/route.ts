@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getCtx } from "@/lib/context";
+import { QuotaExceededError } from "@/lib/entitlements/core";
 import { GeminiError } from "@/lib/research/gemini";
 import { quizFor } from "@/lib/research/server";
 
@@ -15,6 +16,7 @@ export async function POST(_: NextRequest, { params }: RouteContext<"/api/resear
     const quiz = await quizFor(ctx, id);
     return quiz ? NextResponse.json(quiz) : NextResponse.json({ error: "Couldn't make a quiz from this one yet." }, { status: 422 });
   } catch (e) {
+    if (e instanceof QuotaExceededError) return NextResponse.json({ error: e.message }, { status: 429 });
     return NextResponse.json({ error: e instanceof GeminiError ? e.message : "Couldn't make a quiz right now." }, { status: 503 });
   }
 }

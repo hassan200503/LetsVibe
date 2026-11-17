@@ -20,7 +20,7 @@ GitHub Actions ──► 39 RSS/iNaturalist feeds, Gemini REST, OpenAlex
 - Auth is a custom HS256 JWT cookie; tenancy is app-level (`relationship_id` + `visibleTo()`), with no RLS.
 - Chat, room sync, call signalling and presence all poll; several polls write on every tick.
 - Calls are P2P WebRTC; SDP/ICE rows are exchanged by polling.
-- One deployment-global Gemini key and TURN relay live in `kv`.
+- Gemini keys are per couple in `kv` (sealed); a deployment `GEMINI_API_KEY` overrides them. The TURN relay is deployment-wide.
 
 ## Target (multi-couple)
 
@@ -136,7 +136,7 @@ Limits: quotas from `entitlements`; v1 starts conservative (E6-003) instead of t
 
 ## AI and content
 
-- Research calls Gemini server-side with retrieval context and OpenAlex citations. Quotas/cost are enforced by entitlement and `usage_ledger`; optional BYO keys are encrypted at rest and never returned.
+- Research calls Gemini server-side with retrieval context and OpenAlex citations. Questions (including quizzes) are reserved transactionally before the call; Gemini's usage report adds model, tokens and an estimated cost to the ledger. Quotas are enforced per couple; optional BYO keys are sealed per couple and never returned.
 - Untrusted feed/web text is fenced as data, not instructions; outputs are moderated; crisis messages route to external help.
 - Feed ingestion is idempotent, retries with backoff, stores source/licence/attribution, and never proxies YouTube media.
 - YouTube uses the official embedded player; no downloads, no background play, no ad modification.

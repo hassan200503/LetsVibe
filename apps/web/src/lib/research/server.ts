@@ -6,10 +6,12 @@ import type { Ctx } from "@/lib/context";
 import { BRAND } from "@letsvibe/domain";
 import { getDb, withSchema } from "@/lib/db/client";
 import { researchMessages, researchThreads, sharedLearning, type ResearchSource } from "@/lib/db/schema";
-import { reserveAi } from "@/lib/entitlements/server";
+import { QuotaExceededError } from "@/lib/entitlements/core";
+import { recordAi, reserveAi } from "@/lib/entitlements/server";
+import type { AiUsage } from "@/lib/entitlements/types";
 import { personTopics } from "@/lib/trends/query";
 import { TOPICS } from "@/lib/trends/topics";
-import { GeminiError, generateJson, openStream, textOf, type Content, type Grounding } from "./gemini";
+import { GeminiError, generateJson, geminiKey, mergeUsage, openStream, textOf, type Content, type Grounding } from "./gemini";
 import { findStudies, type Study } from "./studies";
 import type { Quiz, ResearchMessage, ResearchMode, StreamEvent, ThreadSummary, ThreadView } from "./types";
 
@@ -208,7 +210,12 @@ export async function* ask(ctx: Ctx, input: z.infer<typeof askSchema>): AsyncGen
     yield { t: "error", message: "That's a lot of questions in a few minutes. Take a breath and try again shortly." };
     return;
   }
-  const quota = await reserveAi(ctx.relationship.id, ctx.me.id, `research:${randomUUID()}`);
+  if (!(await geminiKey(ctx.relationship.id))) {
+    yield { t: "error", message: "Add a Gemini API key in Settings → AI research to switch research on.", retry: false };
+    return;
+  }
+  const sourceId = `research:${randomUUID()}`;
+  const quota = await reserveAi(ctx.relationship.id, ctx.me.id, sourceId);
   if (!quota.ok) {
     yield { t: "error", message: quota.error, retry: false };
     return;
@@ -245,15 +252,17 @@ export async function* ask(ctx: Ctx, input: z.infer<typeof askSchema>): AsyncGen
     let grounding: Grounding | undefined;
     let model = "";
     let grounded = false;
+    let usage: AiUsage | null = null;
     try {
       yield { t: "status", text: studies.length ? `Reading ${studies.length} ${studies.length === 1 ? "study" : "studies"}…` : "Thinking…" };
-      const { attempt, events } = await openStream({ system: await systemFor(ctx, mode), contents, ground: mode === "research", maxTokens: mode === "explain" ? 1200 : 4096 });
+      const { attempt, events } = await openStream({ coupleId: ctx.relationship.id, system: await systemFor(ctx, mode), contents, ground: mode === "research", maxTokens: mode === "explain" ? 1200 : 4096 });
       model = attempt.model;
       grounded = attempt.grounded;
       yield { t: "status", text: "Writing…" };
       for await (const chunk of events) {
         if (chunk.promptFeedback?.blockReason) throw new GeminiError("Gemini declined to answer that question.", "blocked");
         full += textOf(chunk);
+        usage = mergeUsage(usage, chunk, attempt.model);
         const cand = chunk.candidates?.[0];
         if (cand?.groundingMetadata) grounding = cand.groundingMetadata;
         const safe = showable(full);
@@ -269,6 +278,9 @@ export async function* ask(ctx: Ctx, input: z.infer<typeof askSchema>): AsyncGen
         yield { t: "error", message: e instanceof GeminiError ? e.message : "Research couldn't finish. Try again.", retry: true };
         return;
       }
+    } finally {
+      // The question was reserved before the call; attach what the model actually used, even for a cut-off answer.
+      if (usage) await recordAi(ctx.relationship.id, sourceId, usage).catch(() => {});
     }
 
     const { body, followUps } = splitFollowUps(full);
@@ -329,7 +341,7 @@ const QUIZ_SCHEMA = {
   required: ["questions"],
 };
 
-/** Five multiple-choice questions on what the thread covered, to check understanding. */
+/** Five multiple-choice questions on what the thread covered, to check understanding. Counts as one AI question. */
 export async function quizFor(ctx: Ctx, id: string): Promise<Quiz | null> {
   const view = await getThread(ctx, id);
   if (!view) return null;
@@ -339,11 +351,18 @@ export async function quizFor(ctx: Ctx, id: string): Promise<Quiz | null> {
     .map((m) => m.content)
     .join("\n\n---\n\n")
     .slice(0, 12_000);
-  const quiz = await generateJson<Quiz>({
+  if (!material.trim()) return null;
+  if (!(await geminiKey(ctx.relationship.id))) throw new GeminiError("Add a Gemini API key in Settings → AI research.", "no-key");
+  const sourceId = `quiz:${randomUUID()}`;
+  const quota = await reserveAi(ctx.relationship.id, ctx.me.id, sourceId);
+  if (!quota.ok) throw new QuotaExceededError(quota.error);
+  const { value: quiz, usage } = await generateJson<Quiz>({
+    coupleId: ctx.relationship.id,
     system: "You write short, fair multiple-choice quizzes that test real understanding, not trivia. Each question has exactly four options and one correct answer (0-based index). Explanations are one or two sentences.",
     prompt: `Write 5 questions on this material about "${view.title}":\n\n${material}`,
     schema: QUIZ_SCHEMA,
   });
+  if (usage) await recordAi(ctx.relationship.id, sourceId, usage).catch(() => {});
   const questions = (quiz.questions ?? []).filter((q) => q.options?.length === 4 && q.answer >= 0 && q.answer < 4).slice(0, 5);
   return questions.length ? { questions } : null;
 }

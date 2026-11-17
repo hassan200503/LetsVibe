@@ -2,7 +2,7 @@ import { and, eq, sql } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import * as schema from "../db/schema";
 import { formatBytes, resetLabel } from "./format";
-import type { LimitCheck, Plan, PlanLimits, Usage, UsageSummary } from "./types";
+import type { AiUsage, LimitCheck, Plan, PlanLimits, Usage, UsageSummary } from "./types";
 
 export type EntitlementDb = PgDatabase<PgQueryResultHKT, typeof schema>;
 export type Entitlement = typeof schema.entitlements.$inferSelect;
@@ -63,6 +63,62 @@ async function monthlyUsed(db: EntitlementDb, coupleId: string, metric: "ai_ques
   return Number(row?.total ?? 0);
 }
 
+async function monthlyAi(db: EntitlementDb, coupleId: string, period: string): Promise<{ questions: number; tokens: number; costMicros: number }> {
+  const [row] = await db
+    .select({
+      questions: sql<string>`coalesce(sum(${schema.usageLedger.quantity}), 0)`,
+      tokens: sql<string>`coalesce(sum(${schema.usageLedger.totalTokens}), 0)`,
+      costMicros: sql<string>`coalesce(sum(${schema.usageLedger.costMicros}), 0)`,
+    })
+    .from(schema.usageLedger)
+    .where(
+      and(eq(schema.usageLedger.coupleId, coupleId), eq(schema.usageLedger.metric, "ai_question"), eq(schema.usageLedger.period, period)),
+    );
+  return { questions: Number(row?.questions ?? 0), tokens: Number(row?.tokens ?? 0), costMicros: Number(row?.costMicros ?? 0) };
+}
+
+/**
+ * Published Gemini rates, in micro-USD per million tokens. Only an estimate
+ * for the couple's own key — the provider's bill is the source of truth.
+ */
+const AI_RATES: { match: RegExp; input: number; output: number }[] = [
+  { match: /lite/i, input: 100_000, output: 400_000 },
+  { match: /pro/i, input: 1_250_000, output: 10_000_000 },
+];
+const FLASH_RATE = { input: 300_000, output: 2_500_000 };
+
+export function estimateAiCostMicros(model: string, promptTokens: number, completionTokens: number): number {
+  const rate = AI_RATES.find((r) => r.match.test(model)) ?? FLASH_RATE;
+  const cost = (Math.max(0, promptTokens) * rate.input + Math.max(0, completionTokens) * rate.output) / 1_000_000;
+  return Math.max(0, Math.round(cost));
+}
+
+function tokenCount(value: number): number {
+  return Number.isFinite(value) ? Math.max(0, Math.round(value)) : 0;
+}
+
+/**
+ * Attaches what a model call actually used to the question reserved for it.
+ * Silently does nothing when the reservation is unknown (for example a retry
+ * that arrived after the row was cleaned up).
+ */
+export async function recordAiUsage(db: EntitlementDb, coupleId: string, sourceId: string, usage: AiUsage): Promise<void> {
+  const promptTokens = tokenCount(usage.promptTokens);
+  const completionTokens = tokenCount(usage.completionTokens);
+  const totalTokens = Math.max(tokenCount(usage.totalTokens), promptTokens + completionTokens);
+  const model = usage.model.trim().slice(0, 120) || "unknown";
+  await db
+    .update(schema.usageLedger)
+    .set({ model, promptTokens, completionTokens, totalTokens, costMicros: estimateAiCostMicros(model, promptTokens, completionTokens) })
+    .where(
+      and(
+        eq(schema.usageLedger.coupleId, coupleId),
+        eq(schema.usageLedger.metric, "ai_question"),
+        eq(schema.usageLedger.sourceId, sourceId),
+      ),
+    );
+}
+
 async function roomsUsed(db: EntitlementDb, coupleId: string): Promise<number> {
   const [row] = await db.select({ total: sql<string>`count(*)` }).from(schema.roomState).where(eq(schema.roomState.relationshipId, coupleId));
   return Number(row?.total ?? 0);
@@ -70,13 +126,13 @@ async function roomsUsed(db: EntitlementDb, coupleId: string): Promise<number> {
 
 export async function readUsage(db: EntitlementDb, coupleId: string, now = new Date()): Promise<Usage> {
   const period = currentPeriod(now);
-  const [storageBytes, aiQuestions, rooms, exports] = await Promise.all([
+  const [storageBytes, ai, rooms, exports] = await Promise.all([
     storageUsed(db, coupleId),
-    monthlyUsed(db, coupleId, "ai_question", period),
+    monthlyAi(db, coupleId, period),
     roomsUsed(db, coupleId),
     monthlyUsed(db, coupleId, "export", period),
   ]);
-  return { storageBytes, aiQuestions, rooms, exports };
+  return { storageBytes, aiQuestions: ai.questions, aiTokens: ai.tokens, aiCostMicros: ai.costMicros, rooms, exports };
 }
 
 export async function usageSummary(db: EntitlementDb, coupleId: string, now = new Date()): Promise<UsageSummary> {
@@ -119,6 +175,14 @@ export async function checkRoom(db: EntitlementDb, coupleId: string): Promise<Li
     return { ok: false, used, limit, remaining: 0, error: `This couple already has ${used} rooms, above its limit of ${limit}.` };
   }
   return { ok: true, used, limit, remaining: Math.max(0, limit - used) };
+}
+
+/** A model call refused because the couple's monthly AI allowance is spent. */
+export class QuotaExceededError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "QuotaExceededError";
+  }
 }
 
 /**

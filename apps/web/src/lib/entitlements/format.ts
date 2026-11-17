@@ -20,3 +20,16 @@ export function percent(used: number, limit: number): number {
 export function resetLabel(iso: string): string {
   return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(iso));
 }
+
+export function formatTokens(tokens: number): string {
+  if (!Number.isFinite(tokens) || tokens <= 0) return "0";
+  if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toFixed(tokens >= 10_000_000 ? 0 : 1).replace(/\.0$/, "")}M`;
+  if (tokens >= 1000) return `${(tokens / 1000).toFixed(tokens >= 100_000 ? 0 : 1).replace(/\.0$/, "")}k`;
+  return String(Math.round(tokens));
+}
+
+export function formatCost(micros: number): string {
+  if (!Number.isFinite(micros) || micros <= 0) return "$0.00";
+  const usd = micros / 1_000_000;
+  return usd < 0.01 ? "under $0.01" : `$${usd.toFixed(2)}`;
+}

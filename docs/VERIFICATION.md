@@ -1,6 +1,6 @@
 # Verification and claims ledger
 
-Last updated: 2026-11-16. Rule: a claim is VERIFIED only if it was read from an official primary source or produced by a command whose output is recorded here. Everything else is UNVERIFIED and must not be stated as fact in copy, store listings or docs.
+Last updated: 2026-11-17. Rule: a claim is VERIFIED only if it was read from an official primary source or produced by a command whose output is recorded here. Everything else is UNVERIFIED and must not be stated as fact in copy, store listings or docs.
 
 ## Environment of record
 
@@ -99,6 +99,7 @@ Current tests cover: trends engine, visibility/clock/verse logic, push key deriv
 | E0-007 | 2026-11-15 | Fresh-workspace `pnpm run setup`; generic Alex/Sam seed idempotent; gates in `.loop/progress.md` iteration 005 |
 | E1-001 | 2026-11-16 | `0006_identity.sql` rename/backfill plus `identity.test.ts` and `identity-migration.test.ts`; `pnpm check` 7 files / 51 tests, 34 pages; `db:generate` clean; seed/reset pass; staging rehearsal pending E0-006 |
 | E1-012 | 2026-11-17 | `0007_mysterious_puff_adder.sql` adds `entitlements`, monthly `usage_ledger`, append-only `audit_log` and free-plan backfill. Six PGlite tests cover defaults, storage incl. base64 photos, AI quota boundary/idempotency, room disable, audited overrides and validation. Enforcement at presigned/local upload, avatar, AI reservation and room access; Settings/Gallery/Research show usage and clear exhausted/excluded states. `pnpm check` 10 files / 64 tests, 35-route build; axe 0 violations on `/`, `/research`, `/gallery`, `/together`, `/settings`; local screenshots verified normal and limit states, demo restored. |
+| E7-003 | 2026-11-17 | `0008_jittery_ultragirl.sql` adds model, prompt/completion/total token and estimated cost columns to `usage_ledger`. Research streaming and quiz generation record Gemini `usageMetadata` (thinking counted as output) against the reserved question, with per-model rate estimates and reset guidance on quota refusal (quiz returns 429). BYO Gemini keys are namespaced per couple, AES-256-GCM sealed, hint/by/at only in Settings, never returned to clients; env key still wins. PGlite metering/cost/cross-couple tests + seal round-trip/tamper/namespace tests; `pnpm check` 11 files / 67 tests, 35-route build; axe 0 violations on `/settings` and `/research` in light and dark; desktop/mobile plan section screenshots verified. |
 | E1-002 | — | _pending_ |
 | E1-003 | — | _pending_ |
 | E0-008 | 2026-11-16 | CI gate + PR template; YAML parse, frozen install, `pnpm check` (44 tests, 34 pages) and prod audit recorded in `.loop/progress.md` iteration 007; branch protection H30 and GitHub median runtime still pending |

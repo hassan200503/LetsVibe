@@ -1279,9 +1279,9 @@
       "dependsOn": [
         "E1-012"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "Gemini usageMetadata is captured for streamed research answers and JSON quizzes (thinking counts as output) and recorded on the reserved usage_ledger row: model, prompt/completion/total tokens and an estimated USD cost in micros at published per-model rates. Settings shows monthly tokens and estimated cost with a 'your key, your bill' note. Quizzes now reserve one AI question and fail with 429 plus the reset-guidance message when over quota; a missing key is checked before reservation so it never burns allowance. BYO Gemini keys are namespaced per couple (secret:gemini-api-key:<coupleId>), still AES-256-GCM sealed with a hint/by/at preview, never returned to clients, and deployment GEMINI_API_KEY still wins. Tests: PGlite metering/cost/cross-couple isolation plus seal round-trip/tamper/per-couple namespace. Gates: pnpm check green (11 files / 67 tests, 35 routes); axe 0 violations on /settings and /research in light and dark; desktop and mobile screenshots of the plan section verified."
     },
     {
       "id": "E7-004",

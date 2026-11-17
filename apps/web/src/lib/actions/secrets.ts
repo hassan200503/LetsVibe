@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requireCtx } from "@/lib/context";
 import { fetchRelay } from "@/lib/calls/ice";
 import { testKey } from "@/lib/research/gemini";
-import { SECRET_GEMINI, SECRET_RELAY, writeSecret, type RelayConfig } from "@/lib/settings";
+import { SECRET_RELAY, geminiSecret, writeSecret, type RelayConfig } from "@/lib/settings";
 import { firstError, formObject, type ActionState } from "./util";
 
 const last4 = (s: string) => `•••• ${s.slice(-4)}`;
@@ -17,15 +17,15 @@ export async function saveGeminiKey(_: ActionState, fd: FormData): Promise<Actio
   if (!/^[\w.-]{20,200}$/.test(key)) return { error: "That doesn't look like a Gemini API key." };
   const check = await testKey(key);
   if (!check.ok) return { error: check.message };
-  await writeSecret(SECRET_GEMINI, key, { hint: last4(key), by: ctx.me.displayName.split(" ")[0] });
+  await writeSecret(geminiSecret(ctx.relationship.id), key, { hint: last4(key), by: ctx.me.displayName.split(" ")[0] });
   revalidatePath("/settings");
   revalidatePath("/research");
   return { ok: true, message: `Research is on. ${check.message}` };
 }
 
 export async function clearGeminiKey(): Promise<ActionState> {
-  await requireCtx();
-  await writeSecret(SECRET_GEMINI, null);
+  const ctx = await requireCtx();
+  await writeSecret(geminiSecret(ctx.relationship.id), null);
   revalidatePath("/settings");
   revalidatePath("/research");
   return { ok: true, message: "Removed." };

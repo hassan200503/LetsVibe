@@ -32,7 +32,7 @@ Actors: two members of a couple; anonymous internet; abusive authenticated users
 | Secrets | Per-environment secrets, no git, rotation inventory; service role server-only | E0-003, E0-006, E9-006 |
 | Uploads | MIME sniffing, size limits, EXIF removal, CSAM hash match, quarantine, report path | E6-002, E6-004 |
 | Calls | Short-lived per-call TURN credentials, no recording, no global relay secret | E4-003, E4-008 |
-| AI | Server-side keys, quotas, prompt-injection fencing, output moderation, no content logging | E7-003, E7-004 |
+| AI | Per-couple sealed BYO keys (never returned), server-side quotas, token/cost metering, prompt-injection fencing, output moderation, no content logging | E7-003, E7-004 |
 | Abuse | Report/block, moderation queue, per-IP/user limits, anomaly alerts | E9-001, E9-002, E9-005 |
 | Browser hardening | Per-request nonce CSP, HSTS, frame denial, referrer/permissions policy, sanitized violation reports; no wildcard CORS | E9-011 |
 | Dependencies | gitleaks + audit + SAST in CI; patch critical advisories promptly | E0-003, E0-004 |

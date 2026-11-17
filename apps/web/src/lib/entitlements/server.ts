@@ -6,11 +6,12 @@ import {
   checkStorage,
   ensureEntitlement,
   limitsOf,
+  recordAiUsage,
   reserveAiQuestion,
   usageSummary,
   type EntitlementOverride,
 } from "./core";
-import type { LimitCheck, UsageSummary } from "./types";
+import type { AiUsage, LimitCheck, UsageSummary } from "./types";
 
 export async function planUsage(coupleId: string): Promise<UsageSummary> {
   return usageSummary(await getDb(), coupleId);
@@ -26,6 +27,10 @@ export async function roomAvailable(coupleId: string): Promise<LimitCheck> {
 
 export async function reserveAi(coupleId: string, personId: string, sourceId: string): Promise<LimitCheck> {
   return reserveAiQuestion(await getDb(), coupleId, personId, sourceId);
+}
+
+export async function recordAi(coupleId: string, sourceId: string, usage: AiUsage): Promise<void> {
+  return recordAiUsage(await getDb(), coupleId, sourceId, usage);
 }
 
 export async function currentLimits(coupleId: string) {

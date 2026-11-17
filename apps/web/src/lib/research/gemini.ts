@@ -1,5 +1,6 @@
 import "server-only";
-import { readSecret, SECRET_GEMINI } from "@/lib/settings";
+import type { AiUsage } from "@/lib/entitlements/types";
+import { geminiSecret, readSecret } from "@/lib/settings";
 
 /**
  * A small client for the Gemini API (generativelanguage.googleapis.com).
@@ -28,8 +29,9 @@ export class GeminiError extends Error {
   }
 }
 
-export async function geminiKey(): Promise<string | null> {
-  return process.env.GEMINI_API_KEY || (await readSecret<string>(SECRET_GEMINI));
+/** Each couple brings its own key: it is stored per couple, sealed, and never leaves the server. */
+export async function geminiKey(coupleId: string): Promise<string | null> {
+  return process.env.GEMINI_API_KEY || (await readSecret<string>(geminiSecret(coupleId)));
 }
 
 export type Content = { role: "user" | "model"; parts: { text: string }[] };
@@ -41,8 +43,24 @@ export type Grounding = {
 type Chunk = {
   candidates?: { content?: { parts?: { text?: string; thought?: boolean }[] }; finishReason?: string; groundingMetadata?: Grounding }[];
   promptFeedback?: { blockReason?: string };
+  usageMetadata?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+    thoughtsTokenCount?: number;
+    totalTokenCount?: number;
+  };
   modelVersion?: string;
 };
+
+/** Gemini reports cumulative counts, so the highest value seen wins. Thinking counts as output. */
+export function mergeUsage(prev: AiUsage | null, chunk: Chunk, model: string): AiUsage | null {
+  const u = chunk.usageMetadata;
+  if (!u) return prev;
+  const promptTokens = Math.max(prev?.promptTokens ?? 0, u.promptTokenCount ?? 0);
+  const completionTokens = Math.max(prev?.completionTokens ?? 0, (u.candidatesTokenCount ?? 0) + (u.thoughtsTokenCount ?? 0));
+  const totalTokens = Math.max(prev?.totalTokens ?? 0, u.totalTokenCount ?? 0, promptTokens + completionTokens);
+  return { model, promptTokens, completionTokens, totalTokens };
+}
 
 async function explain(res: Response): Promise<GeminiError> {
   const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
@@ -142,8 +160,8 @@ function race<T>(
 }
 
 /** Opens a streamed answer; resolves as soon as one model starts writing. The caller reads `events`. */
-export async function openStream(opts: { system: string; contents: Content[]; ground: boolean; maxTokens?: number }): Promise<{ attempt: Attempt; events: AsyncGenerator<Chunk> }> {
-  const key = await geminiKey();
+export async function openStream(opts: { coupleId: string; system: string; contents: Content[]; ground: boolean; maxTokens?: number }): Promise<{ attempt: Attempt; events: AsyncGenerator<Chunk> }> {
+  const key = await geminiKey(opts.coupleId);
   if (!key) throw new GeminiError("Add a Gemini API key in Settings → AI research to switch research on.", "no-key");
   const ground = opts.ground && Date.now() >= groundingPausedUntil;
   const models = modelOrder();
@@ -225,9 +243,9 @@ export function textOf(chunk: Chunk): string {
     .join("");
 }
 
-/** A structured (JSON) answer, used for quizzes. Same hedged race, no streaming. */
-export async function generateJson<T>(opts: { system: string; prompt: string; schema: object }): Promise<T> {
-  const key = await geminiKey();
+/** A structured (JSON) answer, used for quizzes. Same hedged race, no streaming; reports what it used. */
+export async function generateJson<T>(opts: { coupleId: string; system: string; prompt: string; schema: object }): Promise<{ value: T; usage: AiUsage | null }> {
+  const key = await geminiKey(opts.coupleId);
   if (!key) throw new GeminiError("Add a Gemini API key in Settings → AI research.", "no-key");
   const { value } = await race(
     modelOrder().map((model) => ({ model, grounded: false })),
@@ -242,9 +260,10 @@ export async function generateJson<T>(opts: { system: string; prompt: string; sc
         }),
         signal,
       }),
-    async (_, res) => {
+    async (a, res) => {
       try {
-        return JSON.parse(textOf((await res.json()) as Chunk)) as T;
+        const body = (await res.json()) as Chunk;
+        return { value: JSON.parse(textOf(body)) as T, usage: mergeUsage(null, body, a.model) };
       } catch {
         throw new GeminiError("Gemini's answer couldn't be read. Try again.", "failed");
       }

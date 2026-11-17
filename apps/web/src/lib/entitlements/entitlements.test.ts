@@ -5,7 +5,7 @@ import { migrate } from "drizzle-orm/pglite/migrator";
 import { eq } from "drizzle-orm";
 import path from "node:path";
 import * as schema from "../db/schema";
-import { applyEntitlementOverride, checkRoom, checkStorage, ensureEntitlement, reserveAiQuestion, usageSummary } from "./core";
+import { applyEntitlementOverride, checkRoom, checkStorage, ensureEntitlement, estimateAiCostMicros, recordAiUsage, reserveAiQuestion, usageSummary } from "./core";
 
 type Db = ReturnType<typeof drizzle<typeof schema>>;
 
@@ -56,7 +56,7 @@ describe("entitlements", () => {
 
     const summary = await usageSummary(db, c.id, NOW);
     expect(summary.plan).toBe("free");
-    expect(summary.usage).toEqual({ storageBytes: 0, aiQuestions: 0, rooms: 0, exports: 0 });
+    expect(summary.usage).toEqual({ storageBytes: 0, aiQuestions: 0, aiTokens: 0, aiCostMicros: 0, rooms: 0, exports: 0 });
     expect(summary.resetsAt).toBe("2026-12-01T00:00:00.000Z");
   });
 
@@ -102,6 +102,31 @@ describe("entitlements", () => {
     const rows = await db.select().from(schema.usageLedger).where(eq(schema.usageLedger.coupleId, c.id));
     expect(rows).toHaveLength(2);
     expect((await usageSummary(db, c.id, NOW)).usage.aiQuestions).toBe(2);
+  });
+
+  it("records tokens and estimated cost against the reserved call, and never across couples", async () => {
+    const c = await couple("Metering");
+    const other = await couple("Elsewhere");
+    const p = await person("meter-reader");
+    await ensureEntitlement(db, c.id);
+    await ensureEntitlement(db, other.id);
+    await reserveAiQuestion(db, c.id, p.id, "research:metered", NOW);
+    await recordAiUsage(db, c.id, "research:metered", { model: "gemini-2.5-flash", promptTokens: 1000, completionTokens: 400, totalTokens: 1800 });
+
+    const metered = await usageSummary(db, c.id, NOW);
+    expect(metered.usage.aiQuestions).toBe(1);
+    expect(metered.usage.aiTokens).toBe(1800);
+    // 1,000 input × $0.30/M + 400 output × $2.50/M = $0.0013.
+    expect(metered.usage.aiCostMicros).toBe(1300);
+    expect(metered.usage.aiCostMicros).toBe(estimateAiCostMicros("gemini-2.5-flash", 1000, 400));
+
+    // The same source id under another couple changes nothing there.
+    await recordAiUsage(db, other.id, "research:metered", { model: "gemini-2.5-flash", promptTokens: 9999, completionTokens: 9999, totalTokens: 19998 });
+    expect((await usageSummary(db, other.id, NOW)).usage.aiTokens).toBe(0);
+
+    // Thinking counts as output, and a lighter model is cheaper for identical traffic.
+    expect(estimateAiCostMicros("gemini-flash-lite-latest", 1000, 400)).toBeLessThan(estimateAiCostMicros("gemini-2.5-flash", 1000, 400));
+    expect(estimateAiCostMicros("gemini-2.5-pro", 1000, 400)).toBeGreaterThan(estimateAiCostMicros("gemini-2.5-flash", 1000, 400));
   });
 
   it("disables the Together room when the limit is zero", async () => {

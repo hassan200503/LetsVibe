@@ -21,7 +21,7 @@ export default async function ResearchPage({ searchParams }: PageProps<"/researc
   const [threads, thread, key, topics, plan] = await Promise.all([
     listThreads(ctx).catch(() => []),
     threadId && !question ? getThread(ctx, threadId).catch(() => null) : Promise.resolve(null),
-    geminiKey().catch(() => null),
+    geminiKey(ctx.relationship.id).catch(() => null),
     personTopics(ctx.me.id).catch(() => []),
     planUsage(ctx.relationship.id),
   ]);
