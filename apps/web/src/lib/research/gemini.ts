@@ -52,6 +52,24 @@ type Chunk = {
   modelVersion?: string;
 };
 
+/**
+ * Provider-side moderation, asked for explicitly rather than inherited. Hate,
+ * harassment and dangerous content are blocked from the middle up; sexual
+ * content only when it's explicit, so a couple can still research intimacy and
+ * health. Anything the provider stops this way never reaches the page.
+ */
+const SAFETY_SETTINGS = [
+  { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+  { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+  { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+  { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
+];
+
+/** True when the provider stopped a response for safety rather than finishing it. */
+export function safetyBlocked(chunk: Chunk): boolean {
+  return !!chunk.promptFeedback?.blockReason || /SAFETY|BLOCKLIST|PROHIBITED|RECITATION/i.test(chunk.candidates?.[0]?.finishReason ?? "");
+}
+
 /** Gemini reports cumulative counts, so the highest value seen wins. Thinking counts as output. */
 export function mergeUsage(prev: AiUsage | null, chunk: Chunk, model: string): AiUsage | null {
   const u = chunk.usageMetadata;
@@ -175,6 +193,7 @@ export async function openStream(opts: { coupleId: string; system: string; conte
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: opts.system }] },
           contents: opts.contents,
+          safetySettings: SAFETY_SETTINGS,
           ...(a.grounded ? { tools: [{ google_search: {} }] } : {}),
           generationConfig: { temperature: 0.4, maxOutputTokens: opts.maxTokens ?? 4096, ...thinking(a.model) },
         }),
@@ -256,6 +275,7 @@ export async function generateJson<T>(opts: { coupleId: string; system: string; 
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: opts.system }] },
           contents: [{ role: "user", parts: [{ text: opts.prompt }] }],
+          safetySettings: SAFETY_SETTINGS,
           generationConfig: { temperature: 0.5, responseMimeType: "application/json", responseSchema: opts.schema, ...thinking(a.model) },
         }),
         signal,
@@ -263,8 +283,10 @@ export async function generateJson<T>(opts: { coupleId: string; system: string; 
     async (a, res) => {
       try {
         const body = (await res.json()) as Chunk;
+        if (safetyBlocked(body)) throw new GeminiError("Gemini declined to write that.", "blocked");
         return { value: JSON.parse(textOf(body)) as T, usage: mergeUsage(null, body, a.model) };
-      } catch {
+      } catch (e) {
+        if (e instanceof GeminiError) throw e;
         throw new GeminiError("Gemini's answer couldn't be read. Try again.", "failed");
       }
     },

@@ -1,5 +1,6 @@
 /** Research shapes shared by the API and the page (safe to import on the client). */
 import type { ResearchSource } from "@/lib/db/schema";
+import type { CrisisResource } from "./safety";
 
 export type { ResearchSource };
 export type ResearchMode = "research" | "learn" | "explain";
@@ -28,6 +29,8 @@ export type StreamEvent =
   | { t: "delta"; text: string }
   | { t: "usage"; aiQuestions: number; limit: number }
   | { t: "done"; message: ResearchMessage }
-  | { t: "error"; message: string; retry?: boolean };
+  | { t: "error"; message: string; retry?: boolean }
+  /** The question or the answer wasn't something we can safely answer: no model text is kept. */
+  | { t: "safety"; kind: "crisis" | "blocked"; message: string; resources?: CrisisResource[] };
 
 export type Quiz = { questions: { question: string; options: string[]; answer: number; explanation: string }[] };

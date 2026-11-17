@@ -11,7 +11,8 @@ import { recordAi, reserveAi } from "@/lib/entitlements/server";
 import type { AiUsage } from "@/lib/entitlements/types";
 import { personTopics } from "@/lib/trends/query";
 import { TOPICS } from "@/lib/trends/topics";
-import { GeminiError, generateJson, geminiKey, mergeUsage, openStream, textOf, type Content, type Grounding } from "./gemini";
+import { GeminiError, generateJson, geminiKey, mergeUsage, openStream, safetyBlocked, textOf, type Content, type Grounding } from "./gemini";
+import { CRISIS_MESSAGE, CRISIS_RESOURCES, FENCE_RULE, SAFE_FALLBACK, detectsCrisis, fence, guardAnswer, pruneCitations, safeLog } from "./safety";
 import { findStudies, type Study } from "./studies";
 import type { Quiz, ResearchMessage, ResearchMode, StreamEvent, ThreadSummary, ThreadView } from "./types";
 
@@ -132,6 +133,7 @@ async function systemFor(ctx: Ctx, mode: ResearchMode): Promise<string> {
   return [
     `You are part of "${BRAND.name}", a private site shared by ${ctx.members.map((m) => m.displayName.split(" ")[0]).join(" and ")}. You are helping ${first}.${topics.length ? ` Their interests include ${topics.join(", ")}: draw an example from one only when it fits the question naturally; most answers shouldn't mention them.` : ""}`,
     GUIDES[mode],
+    FENCE_RULE,
     "Write in warm, precise British English. Cite only the numbered studies you are given; if none are given, use no [n] citations. Never add a references or sources list: the page shows the sources itself.",
     `For context only (don't mention it unless the question is about time): today is ${new Date().toISOString().slice(0, 10)}.`,
     `After your answer, end with exactly one final line: "${FOLLOW} <question 1> | <question 2> | <question 3>" — three natural follow-up questions ${first} might ask next.`,
@@ -140,11 +142,17 @@ async function systemFor(ctx: Ctx, mode: ResearchMode): Promise<string> {
 
 function studyBlock(studies: Study[], mode: ResearchMode): string {
   if (!studies.length) return mode === "research" ? "\n\n(No studies were found in the scholarly index for this question. Answer from well-established knowledge, say plainly that you couldn't check specific studies, and use no [n] citations.)" : "";
+  // Abstracts are third-party text, so they are fenced as data: an abstract that
+  // tries to give the model orders is quoted, not obeyed.
   return (
-    "\n\nStudies found in the scholarly index for this question (cite as [n] only when you use one):\n" +
-    studies
-      .map((s) => `[${s.n}] ${s.title} (${s.year ?? "n.d."}). ${s.authors || "Unknown authors"}. ${s.venue ?? ""}${s.citations ? ` Cited ${s.citations} times.` : ""}\nAbstract: ${s.abstract}`)
-      .join("\n\n")
+    "\n\n" +
+    fence(
+      "STUDY EXTRACTS",
+      "Studies found in the scholarly index for this question (cite as [n] only when you use one):\n" +
+        studies
+          .map((s) => `[${s.n}] ${s.title} (${s.year ?? "n.d."}). ${s.authors || "Unknown authors"}. ${s.venue ?? ""}${s.citations ? ` Cited ${s.citations} times.` : ""}\nAbstract: ${s.abstract}`)
+          .join("\n\n"),
+    )
   );
 }
 
@@ -210,6 +218,14 @@ export async function* ask(ctx: Ctx, input: z.infer<typeof askSchema>): AsyncGen
     yield { t: "error", message: "That's a lot of questions in a few minutes. Take a breath and try again shortly." };
     return;
   }
+  // Someone describing danger to themselves or from their partner needs a person,
+  // not a model: route to real lines before any key, quota or model call is
+  // touched, and keep nothing but the fact that it happened.
+  if (detectsCrisis(input.question)) {
+    safeLog("research.crisis", { mode: input.mode });
+    yield { t: "safety", kind: "crisis", message: CRISIS_MESSAGE, resources: CRISIS_RESOURCES };
+    return;
+  }
   if (!(await geminiKey(ctx.relationship.id))) {
     yield { t: "error", message: "Add a Gemini API key in Settings → AI research to switch research on.", retry: false };
     return;
@@ -253,6 +269,7 @@ export async function* ask(ctx: Ctx, input: z.infer<typeof askSchema>): AsyncGen
     let model = "";
     let grounded = false;
     let usage: AiUsage | null = null;
+    let blocked = false;
     try {
       yield { t: "status", text: studies.length ? `Reading ${studies.length} ${studies.length === 1 ? "study" : "studies"}…` : "Thinking…" };
       const { attempt, events } = await openStream({ coupleId: ctx.relationship.id, system: await systemFor(ctx, mode), contents, ground: mode === "research", maxTokens: mode === "explain" ? 1200 : 4096 });
@@ -260,7 +277,11 @@ export async function* ask(ctx: Ctx, input: z.infer<typeof askSchema>): AsyncGen
       grounded = attempt.grounded;
       yield { t: "status", text: "Writing…" };
       for await (const chunk of events) {
-        if (chunk.promptFeedback?.blockReason) throw new GeminiError("Gemini declined to answer that question.", "blocked");
+        // The provider can stop an answer for safety at any point, even after some text.
+        if (safetyBlocked(chunk)) {
+          blocked = true;
+          break;
+        }
         full += textOf(chunk);
         usage = mergeUsage(usage, chunk, attempt.model);
         const cand = chunk.candidates?.[0];
@@ -271,8 +292,15 @@ export async function* ask(ctx: Ctx, input: z.infer<typeof askSchema>): AsyncGen
           sent = safe.length;
         }
       }
+      if (blocked) throw new GeminiError("Gemini declined to answer that question.", "blocked");
       if (!full.trim()) throw new GeminiError("Gemini returned an empty answer. Try asking again.", "failed");
     } catch (e) {
+      // A safety stop keeps nothing, not even the part that was written first.
+      if (e instanceof GeminiError && e.kind === "blocked") {
+        safeLog("research.blocked", { reason: "provider", mode, model });
+        yield { t: "safety", kind: "blocked", message: SAFE_FALLBACK };
+        return;
+      }
       // Nothing useful came back (the finally below tidies the question away). A cut-off answer is still kept.
       if (!full.trim()) {
         yield { t: "error", message: e instanceof GeminiError ? e.message : "Research couldn't finish. Try again.", retry: true };
@@ -283,7 +311,16 @@ export async function* ask(ctx: Ctx, input: z.infer<typeof askSchema>): AsyncGen
       if (usage) await recordAi(ctx.relationship.id, sourceId, usage).catch(() => {});
     }
 
-    const { body, followUps } = splitFollowUps(full);
+    const { body: written, followUps } = splitFollowUps(full);
+    // Only citations that point at a study we actually retrieved survive.
+    const body = pruneCitations(written, studies.map((s) => s.n));
+    const verdict = guardAnswer(body);
+    if (!verdict.ok) {
+      safeLog("research.blocked", { reason: verdict.reason, mode, model });
+      yield { t: "safety", kind: "blocked", message: SAFE_FALLBACK };
+      return;
+    }
+    safeLog("research.answer", { mode, model, grounded: grounded && !!grounding, studies: studies.length, tokens: usage?.totalTokens ?? 0 });
     const web: ResearchSource[] = (grounding?.groundingChunks ?? [])
       .map((c) => c.web)
       .filter((w): w is { uri: string; title?: string } => !!w?.uri)

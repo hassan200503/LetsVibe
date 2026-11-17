@@ -1298,9 +1298,9 @@
       "dependsOn": [
         "E7-003"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "2026-11-18. `src/lib/research/safety.ts` adds an escaped fence around retrieved study/web extracts, sentence-scoped crisis detection with a first-person gate, citation pruning to retrieved source numbers, an output guard for leaks/injection/unsafe text and metadata-only logging. The server emits a `safety` stream event for crisis and blocked answers; the client renders a `role=\"alert\"` card and rolls back a thread that never got a message. Gemini calls now send safety settings and treat a `blockReason`/safety `finishReason` as blocked. 6 new unit tests (research.test.ts now 19)."
     },
     {
       "id": "E7-005",

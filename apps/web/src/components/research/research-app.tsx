@@ -7,10 +7,12 @@ import { MODES, type Suggestion } from "@/lib/research/suggest";
 import type { ResearchMessage, ResearchMode, ResearchSource, StreamEvent, ThreadSummary, ThreadView } from "@/lib/research/types";
 import { Answer, SearchSuggestions, StudyStrip, WebSources } from "./answer";
 import { QuizDialog } from "./quiz";
+import { SafetyCard } from "./safety-card";
 import { IconArrowRight, IconCheck, IconChevronDown, IconCopy, IconPlus, IconSend, IconSparkle, IconTrash, IconX } from "@/components/icons";
 
 type Person = { slug: string; first: string; theme: string };
-type Pending = { question: string; mode: ResearchMode; status: string; studies: ResearchSource[]; text: string; error?: string; retry?: boolean };
+type Safety = Extract<StreamEvent, { t: "safety" }>;
+type Pending = { question: string; mode: ResearchMode; status: string; studies: ResearchSource[]; text: string; error?: string; retry?: boolean; safety?: Safety };
 
 const MODE_LABEL: Record<ResearchMode, string> = { research: "Research", learn: "Lesson", explain: "Explained" };
 const PLACEHOLDER: Record<ResearchMode, string> = {
@@ -69,7 +71,7 @@ export function ResearchApp({
   const abortRef = useRef<AbortController | null>(null);
   const questionRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const streaming = !!pending && !pending.error;
+  const streaming = !!pending && !pending.error && !pending.safety;
   const aiIncluded = aiLimit > 0;
   const aiFull = !configured || !aiIncluded || aiUsed >= aiLimit;
   const aiLeft = Math.max(aiLimit - aiUsed, 0);
@@ -139,6 +141,19 @@ export function ResearchApp({
           case "error":
             finished = true;
             fail(ev.message, ev.retry);
+            break;
+          case "safety":
+            // Nothing was kept: whatever text had already arrived is discarded, and
+            // a thread the server rolled back goes with it. The question stays on
+            // screen so the card makes sense in context.
+            finished = true;
+            setPending((p) => (p ? { ...p, status: "", text: "", safety: ev } : p));
+            if (createdId) {
+              const gone = createdId;
+              setThreads((list) => list.filter((x) => x.id !== gone));
+              setActive((a) => (a?.id === gone && a.messages.length === 0 ? null : a));
+              setUrl(threadId);
+            }
             break;
         }
       };
@@ -622,7 +637,8 @@ export function ResearchApp({
             <div ref={questionRef} className="scroll-mt-24">
               <h2 className={`font-lux text-balance text-[1.85rem] font-medium leading-[1.1] tracking-tight sm:text-[2.3rem] ${active?.messages.length ? "mt-14 border-t border-line pt-10" : "mt-6"}`}>{pending.question}</h2>
               <StudyStrip items={pending.studies} />
-              {pending.status && !pending.error && (
+              {pending.safety && <SafetyCard kind={pending.safety.kind} message={pending.safety.message} resources={pending.safety.resources} />}
+              {pending.status && !pending.error && !pending.safety && (
                 <p className="mt-5 flex items-center gap-2.5 text-sm text-muted" aria-live="polite">
                   <span className="research-dots" aria-hidden>
                     <i />
@@ -632,7 +648,7 @@ export function ResearchApp({
                   {pending.status}
                 </p>
               )}
-              {pending.text && (
+              {pending.text && !pending.safety && (
                 <div className="mt-5">
                   <Answer text={pending.text} sources={pending.studies} streaming={!pending.error} />
                 </div>
