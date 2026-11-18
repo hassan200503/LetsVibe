@@ -8,7 +8,7 @@ const require = createRequire(import.meta.url);
 const axeSource = fs.readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
 const baseUrl = process.env.BASE_URL ?? "http://localhost:3100";
 const colorScheme = process.env.A11Y_SCHEME === "dark" ? "dark" : "light";
-const routes = (process.env.A11Y_ROUTES ?? "/,/together/chat,/together,/gallery,/settings")
+const routes = (process.env.A11Y_ROUTES ?? "/,/together/chat,/together,/together/rituals,/gallery,/settings")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);

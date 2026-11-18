@@ -2841,6 +2841,26 @@
       "status": "done",
       "attempts": 1,
       "notes": "Rebranded visible UI, metadata, package identity, scripts and docs to Let'sVibe/letsvibe. Compatibility identifiers frozen per ADR-002: ou_session, ou_verses, ou_vows, ou:* storage/events, ou-q:, and our-universe/* crypto labels. GitHub remote unchanged. Gates: next typegen, typecheck, lint, 5 files/44 tests, build (33 pages) all pass."
+    },
+    {
+      "id": "E1-017",
+      "epic": "E1",
+      "title": "Shared rituals with a forgiving streak",
+      "description": "Add a couple-scoped ritual board where either partner can keep a daily or weekly ritual for the shared day, with a forgiving streak and a 12-week rhythm instead of punishment.",
+      "acceptance": [
+        "Rituals are stored per couple and scoped by the verified session, never by request input",
+        "The shared day comes from the couple's time zone and an open day never reads as a break",
+        "Either partner keeping a ritual keeps it for both, and the board header count updates immediately",
+        "Daily and weekly cadence, custom time, archive and the 12-week rhythm grid work at 360-1440 in light and dark",
+        "A11y and motion audits stay at zero findings on the new route"
+      ],
+      "priority": 20,
+      "dependsOn": [
+        "E1-013"
+      ],
+      "status": "done",
+      "attempts": 1,
+      "notes": "Shipped /together/rituals with rituals + ritual_checks tables (drizzle 0009), pure streak math (day/streak/shared-day), coupleDay from the first active member's zone, optimistic taps with rollback, and semantic success/danger tokens replacing hardcoded emerald. Gates: typegen, typecheck, lint, 13 files/89 tests, 36-route build; golden-path harness 17/17; a11y 0 violations light and dark; motion 0 findings."
     }
   ]
 }

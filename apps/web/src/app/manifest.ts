@@ -17,5 +17,9 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
       { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
+    shortcuts: [
+      { name: "Messages", short_name: "Messages", url: "/together/chat" },
+      { name: "Rituals", short_name: "Rituals", url: "/together/rituals" },
+    ],
   };
 }

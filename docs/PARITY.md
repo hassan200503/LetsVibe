@@ -42,6 +42,7 @@ Legend: **Yes** = shipped today; **Partial** = exists with a single-couple or in
 | 36 | Internationalisation | packages/i18n | No (English only) | English v1; locale/time-zone formatting correct; strings externalised | Same | E10-003, E1-014 | sw/fr post-launch. |
 | 37 | Offline / poor-network resilience | apps/mobile, packages/api-client | Partial (optimistic chat, ICE restart) | Web: queued sends, error states; Mobile: offline cache/queue, resync | Yes | E3-009, E5-002, E8-003 | Must test on 3G. |
 | 38 | Per-couple theming & identity | packages/ui-tokens | Partial (neutral palettes and per-person colour choice) | Yes: world names/colours from settings; no names in global metadata | Yes | E1-013, E10-004 | Removes founding-couple identity from shared UI. |
+| 39 | Shared rituals — daily/weekly rhythm, forgiving streak, 12-week grid | apps/web, apps/mobile | Yes (couple-scoped board, couple-time-zone day, optimistic taps with rollback) | Yes: reminders, per-ritual history, export/delete | Yes | E1-017 | Either partner keeping a ritual keeps it for both; an open day never reads as a break. |
 
 ## Explicitly out of scope for v1
 

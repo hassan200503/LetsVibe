@@ -166,7 +166,7 @@ export function Viewer({ items, index, onIndex, onClose, onChanged }: { items: M
         <Stage item={item} />
       </div>
 
-      <aside className="max-h-[42dvh] w-full shrink-0 overflow-y-auto bg-zinc-950/80 p-4 lg:max-h-none lg:w-96">
+      <aside className="max-h-[42dvh] w-full shrink-0 overflow-y-auto bg-night/80 p-4 lg:max-h-none lg:w-96">
         <div className="flex items-center gap-3">
           {who && <Avatar name={who.displayName} url={who.avatarUrl} theme={who.theme} size={36} />}
           <div className="text-sm">
@@ -235,7 +235,7 @@ export function Viewer({ items, index, onIndex, onClose, onChanged }: { items: M
           )}
           {item.by.slug === me.slug && (
             <button
-              className="btn btn-ghost border-white/20 text-white hover:text-red-300"
+              className="btn btn-ghost border-white/20 text-white hover:text-danger-on-dark"
               onClick={() => {
                 if (!confirm("Delete this for both of you?")) return;
                 start(async () => {
@@ -252,7 +252,7 @@ export function Viewer({ items, index, onIndex, onClose, onChanged }: { items: M
           )}
         </div>
         {flash && (
-          <p role="status" className="mt-2 text-sm text-pink-300">
+          <p role="status" className="mt-2 text-sm text-gold-on-dark">
             {flash}
           </p>
         )}
@@ -268,7 +268,7 @@ export function Viewer({ items, index, onIndex, onClose, onChanged }: { items: M
                 </span>
                 {c.mine && (
                   <button
-                    className="ml-2 text-[0.65rem] text-white/50 hover:text-red-300"
+                    className="ml-2 text-[0.65rem] text-white/50 hover:text-danger-on-dark"
                     onClick={() => start(async () => void (await deleteComment(c.id), comments.refetch()))}
                   >
                     delete
@@ -292,7 +292,7 @@ export function Viewer({ items, index, onIndex, onClose, onChanged }: { items: M
               });
             }}
           >
-            <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Write a comment…" className="min-w-0 flex-1 rounded-full bg-white/10 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-pink-300" aria-label="Comment" />
+            <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Write a comment…" className="min-w-0 flex-1 rounded-full bg-white/10 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-gold-on-dark" aria-label="Comment" />
             <button className="rounded-full bg-white px-4 text-sm font-semibold text-black" disabled={pending}>
               Send
             </button>

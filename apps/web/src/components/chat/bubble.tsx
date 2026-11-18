@@ -30,9 +30,9 @@ const SWIPE_MAX = 86;
 
 function Ticks({ tick }: { tick: Tick }) {
   if (tick === "pending") return <IconClock size={13} className="opacity-60" />;
-  if (tick === "failed") return <span className="text-[0.7rem] font-bold text-red-500">!</span>;
+  if (tick === "failed") return <span className="text-[0.7rem] font-bold text-danger">!</span>;
   if (tick === "sent") return <IconCheck size={15} strokeWidth={2} className="opacity-60" />;
-  return <IconChecks size={16} strokeWidth={2} className={tick === "read" ? "text-sky-500 dark:text-sky-400" : "opacity-60"} />;
+  return <IconChecks size={16} strokeWidth={2} className={tick === "read" ? "text-link" : "opacity-60"} />;
 }
 
 export function Quote({ q, names, themeOf, mine, onTap }: { q: ChatQuote; names: Record<string, string>; themeOf: (s: string) => string; mine?: boolean; onTap?: () => void }) {
@@ -74,13 +74,13 @@ function CallLine({ m, mine, onCallBack }: { m: ChatMessage; mine: boolean; onCa
   const Dir = mine ? IconArrowUpRight : IconArrowDownLeft;
   return (
     <button type="button" onClick={() => onCallBack?.(c.callKind)} className="inline-flex items-center gap-3 py-0.5 pr-1 text-left" title={`Call back (${kind})`}>
-      <span className={`grid size-10 shrink-0 place-items-center rounded-full ${missedHere ? "bg-red-500/12 text-red-500" : "bg-black/5 text-ink dark:bg-white/10"}`}>
+      <span className={`grid size-10 shrink-0 place-items-center rounded-full ${missedHere ? "bg-danger-soft text-danger" : "bg-black/5 text-ink dark:bg-white/10"}`}>
         {video ? <IconVideo size={19} /> : <IconPhone size={18} />}
       </span>
       <span className="min-w-0">
-        <span className={`block text-[0.92rem] font-semibold ${missedHere ? "text-red-500" : ""}`}>{title}</span>
+        <span className={`block text-[0.92rem] font-semibold ${missedHere ? "text-danger" : ""}`}>{title}</span>
         <span className="flex items-center gap-1 text-xs text-muted">
-          <Dir size={13} className={c.outcome === "completed" ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"} strokeWidth={2} />
+          <Dir size={13} className={c.outcome === "completed" ? "text-success" : "text-danger"} strokeWidth={2} />
           {detail}
         </span>
       </span>
@@ -169,7 +169,7 @@ export function Bubble({ message: m, mine, first, tick, names, themeOf, highligh
     <span className={`whitespace-pre-wrap break-words [overflow-wrap:anywhere] ${big ? "text-[2.6rem] leading-tight" : ""}`}>
       {linkify(m.body).map((p, i) =>
         p.href ? (
-          <a key={i} href={p.href} target="_blank" rel="noopener noreferrer" className="text-sky-600 underline decoration-sky-600/40 underline-offset-2 dark:text-sky-400" onClick={(e) => e.stopPropagation()}>
+          <a key={i} href={p.href} target="_blank" rel="noopener noreferrer" className="text-link underline decoration-link/40 underline-offset-2" onClick={(e) => e.stopPropagation()}>
             {p.t}
           </a>
         ) : (
@@ -267,7 +267,7 @@ export function Bubble({ message: m, mine, first, tick, names, themeOf, highligh
           </button>
         )}
         {tick === "failed" && (
-          <button type="button" onClick={onRetry} className="mt-1 block w-full text-right text-xs font-semibold text-red-500">
+          <button type="button" onClick={onRetry} className="mt-1 block w-full text-right text-xs font-semibold text-danger">
             Not sent · tap to retry
           </button>
         )}

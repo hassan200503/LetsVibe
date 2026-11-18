@@ -39,8 +39,8 @@ export function BottomNav() {
                   <Icon size={20} strokeWidth={on ? 1.9 : 1.6} />
                 </span>
                 {i.label}
-                {!!i.badge && <span className="absolute right-1.5 top-0 grid min-w-[1.05rem] place-items-center rounded-full bg-emerald-500 px-1 text-[0.58rem] leading-[1.05rem] text-white ring-2 ring-surface">{i.badge}</span>}
-                {i.live && !i.badge && <span className="absolute right-3 top-1 size-2 animate-pulse rounded-full bg-emerald-500" aria-label="Your partner is in the room" />}
+                {!!i.badge && <span className="absolute right-1.5 top-0 grid min-w-[1.05rem] place-items-center rounded-full bg-success px-1 text-[0.58rem] leading-[1.05rem] text-success-ink ring-2 ring-surface">{i.badge}</span>}
+                {i.live && !i.badge && <span className="absolute right-3 top-1 size-2 animate-pulse rounded-full bg-success" aria-label="Your partner is in the room" />}
               </Link>
             </li>
           );

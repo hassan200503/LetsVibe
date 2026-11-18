@@ -17,6 +17,26 @@ export const baseLight = {
   accentSoft: "#fde8ec",
   accent2: "#b7791f",
   glow: "rgba(200, 30, 58, 0.18)",
+  /** Reachable links and unread/read affordances, distinct from the couple accent. */
+  link: "#1d5fd0",
+  linkSoft: "#e6eeff",
+  /** Status: measured at or above 4.5:1 on `bg` in this scheme. */
+  success: "#1a6b45",
+  successInk: "#ffffff",
+  successSoft: "#e2f1e8",
+  warn: "#8a5a00",
+  warnInk: "#ffffff",
+  warnSoft: "#f8eed4",
+  danger: "#b3261e",
+  dangerInk: "#ffffff",
+  dangerSoft: "#fce7e4",
+  /** Fixed tints for permanently dark surfaces (calls, the media viewer). */
+  onDark: "#f4efe7",
+  onDarkMuted: "#a9a2a0",
+  successOnDark: "#3ddc84",
+  dangerOnDark: "#ff6b7a",
+  goldOnDark: "#e7c98d",
+  nightSoft: "#17131c",
 } as const;
 
 export const baseDark = {
@@ -35,6 +55,23 @@ export const baseDark = {
   accentInk: "#14060a",
   accentSoft: "#3a1620",
   accent2: "#e0b25c",
+  link: "#8ec5ff",
+  linkSoft: "#16233a",
+  success: "#5fd39a",
+  successInk: "#04150c",
+  successSoft: "#12291d",
+  warn: "#f0c66b",
+  warnInk: "#1c1406",
+  warnSoft: "#2a2211",
+  danger: "#ff8a95",
+  dangerInk: "#210508",
+  dangerSoft: "#3a1620",
+  onDark: "#f4efe7",
+  onDarkMuted: "#a9a2a0",
+  successOnDark: "#3ddc84",
+  dangerOnDark: "#ff6b7a",
+  goldOnDark: "#e7c98d",
+  nightSoft: "#17131c",
 } as const;
 
 export const worldLight = {

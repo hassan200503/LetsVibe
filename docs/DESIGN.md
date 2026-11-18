@@ -45,6 +45,7 @@ Core semantic groups:
 | Ink | `--ink`, `--muted`, `--line` | Text hierarchy and hairlines |
 | Accent | `--accent`, `--accent-ink`, `--accent-soft`, `--accent-2` | One action per view and world identity |
 | Metal | `--gold`, `--gold-2`, `--gold-soft` | Moments, numerals, citations, celebration |
+| State | `--success`, `--success-ink`, `--success-soft`, `--warn*`, `--danger*`, `--link`, `--link-soft` | Kept state, form errors and inline links; fixed `*OnDark` tints for art-directed dark surfaces; never hardcode emerald/red |
 | Type | `--font-body`, `--font-display-stack`, `--font-lux-stack`, `--font-lux-numeric-stack` | Body, editorial display and numerals |
 | Space | `--space-1` ... `--space-16` | Rhythm and component padding |
 | Radius | `--radius-field`, `--radius-card`, `--radius-tile` | Material hierarchy |
@@ -89,11 +90,11 @@ pnpm a11y
 $env:A11Y_SCHEME = "dark"; pnpm a11y
 ```
 
-Verified 2026-11-17: **0 axe violations** on all five screens in light and dark mode; keyboard tab order has 19-24 visible focus stops per screen with no hidden file-input stops. Known exceptions: the audit covers the five core screens only; login/welcome, research, discover, world sub-pages, native apps, screen-reader passes and 200% zoom remain manual follow-ups under E10-001/E10-002. Embedded YouTube content is third-party.
+Verified 2026-11-18: **0 axe violations** on all six web screens (home, chat, together, rituals, gallery, settings) in light and dark mode; keyboard tab order has 19-24 visible focus stops per screen with no hidden file-input stops. Known exceptions: the audit covers those six screens only; login/welcome, research, discover, world sub-pages, native apps, screen-reader passes and 200% zoom remain manual follow-ups under E10-001/E10-002. Embedded YouTube content is third-party.
 
 ### Motion and forced colours
 
-`pnpm motion` checks seven routes (login plus home, research, chat, calls, gallery and settings) against a seeded production server. It verifies three things:
+`pnpm motion` checks eight routes (login plus home, research, chat, together, rituals, gallery and settings) against a seeded production server. It verifies three things:
 
 1. **Reduced motion.** With `prefers-reduced-motion: reduce`, no rendered element may keep an animation or transition longer than 0.02 s, and smooth scrolling must be off. The global base rule applies `0.01ms` durations, zero delays, one iteration and `scroll-behavior: auto` to every element, including Tailwind's `animate-*` and `transition-*` utilities. Ambient CSS is independently gated behind `no-preference`.
 2. **No fast flashing.** With motion allowed, no infinite CSS animation may cycle faster than 333 ms (the WCAG 2.3.1 three-flashes-per-second threshold).
@@ -103,4 +104,4 @@ Verified 2026-11-17: **0 axe violations** on all five screens in light and dark 
 pnpm motion
 ```
 
-Verified 2026-11-17: **0 findings** across all seven routes. Forced-colours screenshots of login and settings show readable system-colour text, visible card/button edges and a 2px Highlight focus ring. Detector self-checks confirmed an injected 2 s transition collapses to 1e-05 s under reduce, a 100 ms infinite animation is reported when motion is allowed, and the forced-colours media query is actually active. Canvas, video and third-party iframes are out of scope because they cannot be inspected with computed styles; any new animated canvas or autoplaying decorative video needs a manual reduced-motion review.
+Verified 2026-11-18: **0 findings** across all eight routes. Forced-colours screenshots of login and settings show readable system-colour text, visible card/button edges and a 2px Highlight focus ring. Detector self-checks confirmed an injected 2 s transition collapses to 1e-05 s under reduce, a 100 ms infinite animation is reported when motion is allowed, and the forced-colours media query is actually active. Canvas, video and third-party iframes are out of scope because they cannot be inspected with computed styles; any new animated canvas or autoplaying decorative video needs a manual reduced-motion review.

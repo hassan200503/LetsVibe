@@ -608,6 +608,59 @@ export const dailyAnswers = pgTable(
   (t) => [primaryKey({ columns: [t.relationshipId, t.day, t.personId] })],
 );
 
+// ─── Rituals: the rhythm that is ours, and the shared streak ───────────────
+
+/**
+ * A ritual is something you do together on a cadence — a good-morning text, a
+ * goodnight voice note, a weekly walk. Rituals belong to the couple, not to a
+ * person, so either of you keeping one keeps it for both.
+ */
+export const rituals = pgTable(
+  "rituals",
+  {
+    id: id(),
+    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
+    createdBy: uuid("created_by").references(() => people.id, { onDelete: "set null" }),
+    title: text("title").notNull(),
+    /** Why it matters to you two, shown in the ritual's detail. */
+    detail: text("detail"),
+    emoji: text("emoji").notNull().default("✷"),
+    /** daily | weekly */
+    cadence: text("cadence").notNull().default("daily"),
+    /** When it belongs to your day, "HH:MM", or null for "whenever". */
+    atTime: text("at_time"),
+    position: integer("position").notNull().default(0),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index("rituals_rel").on(t.relationshipId, t.position, t.createdAt),
+    check("rituals_cadence_check", sql`${t.cadence} in ('daily', 'weekly')`),
+    check("rituals_title_check", sql`char_length(${t.title}) between 1 and 80`),
+    check("rituals_time_check", sql`${t.atTime} is null or ${t.atTime} ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'`),
+  ],
+);
+
+/**
+ * One row per ritual, per day, per person who tapped it. A day counts as kept
+ * for the couple the moment one of you taps, so nobody has to chase the other.
+ */
+export const ritualChecks = pgTable(
+  "ritual_checks",
+  {
+    ritualId: uuid("ritual_id").notNull().references(() => rituals.id, { onDelete: "cascade" }),
+    day: date("day").notNull(),
+    personId: uuid("person_id").notNull().references(() => people.id, { onDelete: "cascade" }),
+    /** A few words kept with the tap — what you did, or how it felt. */
+    note: text("note"),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.ritualId, t.day, t.personId] }),
+    index("ritual_checks_day").on(t.day, t.ritualId),
+  ],
+);
+
 // ─── Messages: the couple's private chat ──────────────────────────────────
 
 /**

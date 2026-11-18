@@ -37,11 +37,11 @@ function StreamVideo({ stream, mirrored, className, muted = true }: { stream: Me
 function Control({ label, onClick, children, on = false, tone = "glass", size = 58 }: { label: string; onClick: () => void; children: React.ReactNode; on?: boolean; tone?: "glass" | "danger" | "accept"; size?: number }) {
   const look =
     tone === "danger"
-      ? "bg-[#e5484d] text-white shadow-[0_12px_30px_-10px_rgb(229_72_77/0.8)] hover:bg-[#d93d42]"
+      ? "bg-danger-on-dark text-night shadow-[0_12px_30px_-10px_var(--danger-on-dark)] hover:brightness-95"
       : tone === "accept"
-        ? "bg-[#30a46c] text-white shadow-[0_12px_30px_-10px_rgb(48_164_108/0.8)] hover:bg-[#2b9a64]"
+        ? "bg-success-on-dark text-night shadow-[0_12px_30px_-10px_var(--success-on-dark)] hover:brightness-95"
         : on
-          ? "bg-white text-[#15121a]"
+          ? "bg-white text-night"
           : "bg-white/12 text-white ring-1 ring-white/15 backdrop-blur-xl hover:bg-white/20";
   return (
     <div className="flex flex-col items-center gap-2">
@@ -127,7 +127,7 @@ export function CallScreen() {
 
   if (minimized && snap.phase !== "incoming" && snap.phase !== "ended") {
     return (
-      <div className="fixed bottom-24 right-3 z-[90] flex items-center gap-2 rounded-full bg-[#15121a]/95 py-1.5 pl-1.5 pr-2 text-white shadow-2xl ring-1 ring-white/10 backdrop-blur-xl sm:bottom-6 sm:right-6">
+      <div className="fixed bottom-24 right-3 z-[90] flex items-center gap-2 rounded-full bg-night-soft/95 py-1.5 pl-1.5 pr-2 text-white shadow-2xl ring-1 ring-white/10 backdrop-blur-xl sm:bottom-6 sm:right-6">
         <button type="button" onClick={() => setMinimized(false)} className="flex items-center gap-2.5 pr-1" aria-label="Return to call">
           {showRemote ? (
             <span className="size-10 overflow-hidden rounded-full">
@@ -138,13 +138,13 @@ export function CallScreen() {
           )}
           <span className="text-left leading-tight">
             <span className="block text-sm font-semibold">{first}</span>
-            <span className="block text-xs tabular-nums text-emerald-300">{status}</span>
+            <span className="block text-xs tabular-nums text-success-on-dark">{status}</span>
           </span>
         </button>
-        <button type="button" onClick={() => engine.toggleMic()} className={`grid size-9 place-items-center rounded-full ${snap.micOn ? "bg-white/10" : "bg-white text-[#15121a]"}`} aria-label={snap.micOn ? "Mute" : "Unmute"}>
+        <button type="button" onClick={() => engine.toggleMic()} className={`grid size-9 place-items-center rounded-full ${snap.micOn ? "bg-white/10" : "bg-white text-night"}`} aria-label={snap.micOn ? "Mute" : "Unmute"}>
           {snap.micOn ? <IconMic size={17} /> : <IconMicOff size={17} />}
         </button>
-        <button type="button" onClick={() => engine.hangup()} className="grid size-9 place-items-center rounded-full bg-[#e5484d]" aria-label="End call">
+        <button type="button" onClick={() => engine.hangup()} className="grid size-9 place-items-center rounded-full bg-danger-on-dark text-night" aria-label="End call">
           <IconPhoneOff size={18} />
         </button>
       </div>
@@ -152,7 +152,7 @@ export function CallScreen() {
   }
 
   return (
-    <div role="dialog" aria-modal="true" aria-label={`${snap.kind === "video" ? "Video" : "Voice"} call with ${first}`} className="fixed inset-0 z-[90] flex flex-col overflow-hidden bg-[#0b0910] text-white">
+    <div role="dialog" aria-modal="true" aria-label={`${snap.kind === "video" ? "Video" : "Voice"} call with ${first}`} className="fixed inset-0 z-[90] flex flex-col overflow-hidden bg-night text-white">
       {/* Backdrop: their video, or a night sky with their face. */}
       {showRemote ? (
         <StreamVideo stream={snap.remote} className="absolute inset-0 size-full bg-black object-cover sm:object-contain" />
@@ -203,7 +203,7 @@ export function CallScreen() {
         {!showRemote && !selfFull && partner && (
           <div className="relative mb-7 grid place-items-center">
             {(snap.phase === "incoming" || snap.phase === "outgoing") &&
-              [0, 1, 2].map((i) => <span key={i} className="ring-wave absolute inset-0 rounded-full border border-[#f0dcae]/40" aria-hidden />)}
+              [0, 1, 2].map((i) => <span key={i} className="ring-wave absolute inset-0 rounded-full border border-gold-on-dark/40" aria-hidden />)}
             <Avatar name={partner.displayName} url={partner.avatarUrl} theme={partner.theme} size={132} className="rounded-full shadow-[0_20px_60px_-10px_rgb(0_0_0/0.6)] ring-1 ring-white/20" />
           </div>
         )}
