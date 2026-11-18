@@ -20,7 +20,7 @@ export async function todaysQuestion(ctx: Ctx, now: Date): Promise<DailyQuestion
   const rows = await db
     .select()
     .from(dailyAnswers)
-    .where(and(eq(dailyAnswers.relationshipId, ctx.relationship.id), eq(dailyAnswers.day, day)));
+    .where(and(eq(dailyAnswers.coupleId, ctx.relationship.id), eq(dailyAnswers.day, day)));
   const mine = rows.find((r) => r.personId === ctx.me.id)?.answer ?? null;
   const others = rows.filter((r) => r.personId !== ctx.me.id);
   return {
@@ -38,7 +38,7 @@ export async function pastAnswers(ctx: Ctx, now: Date, limit = 30) {
   const rows = await db
     .select()
     .from(dailyAnswers)
-    .where(and(eq(dailyAnswers.relationshipId, ctx.relationship.id), lt(dailyAnswers.day, nairobiDay(now))))
+    .where(and(eq(dailyAnswers.coupleId, ctx.relationship.id), lt(dailyAnswers.day, nairobiDay(now))))
     .orderBy(desc(dailyAnswers.day))
     .limit(limit * ctx.members.length);
   const byDay = new Map<string, { slug: string; answer: string }[]>();

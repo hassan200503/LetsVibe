@@ -70,7 +70,7 @@ export async function saveUploaded(input: z.infer<typeof saved>): Promise<{ ok: 
   const [row] = await db
     .insert(media)
     .values({
-      relationshipId: rel,
+      coupleId: rel,
       addedBy: ctx.me.id,
       kind: d.kind,
       source: "upload",
@@ -111,7 +111,7 @@ export async function addYouTube(_: unknown, fd: FormData): Promise<{ ok?: boole
     // The title is a nicety; the video plays without it.
   }
   const db = await getDb();
-  await db.insert(media).values({ relationshipId: ctx.relationship.id, addedBy: ctx.me.id, kind, source: "youtube", youtubeId: id, title, artist, caption });
+  await db.insert(media).values({ coupleId: ctx.relationship.id, addedBy: ctx.me.id, kind, source: "youtube", youtubeId: id, title, artist, caption });
   revalidatePath("/gallery");
   return { ok: true, message: kind === "song" ? "Song added 🎶" : "Video added 🎬" };
 }
@@ -120,7 +120,7 @@ async function ownMedia(id: string) {
   const ctx = await requireCtx();
   if (!z.uuid().safeParse(id).success) return null;
   const db = await getDb();
-  const [row] = await db.select().from(media).where(and(eq(media.id, id), eq(media.relationshipId, ctx.relationship.id)));
+  const [row] = await db.select().from(media).where(and(eq(media.id, id), eq(media.coupleId, ctx.relationship.id)));
   return row ? { ctx, db, row } : null;
 }
 
@@ -149,7 +149,7 @@ export async function reactToMedia(id: string, emoji: string | null): Promise<{ 
   else
     await db
       .insert(mediaReactions)
-      .values({ mediaId: id, personId: ctx.me.id, emoji })
+      .values({ mediaId: id, coupleId: ctx.relationship.id, personId: ctx.me.id, emoji })
       .onConflictDoUpdate({ target: [mediaReactions.mediaId, mediaReactions.personId], set: { emoji, createdAt: new Date() } });
   return { ok: true };
 }
@@ -159,7 +159,7 @@ export async function commentOnMedia(id: string, body: string): Promise<{ ok: bo
   if (!found) return { ok: false, error: "Not found" };
   const text = body.trim().slice(0, 1000);
   if (!text) return { ok: false, error: "Write something first" };
-  await found.db.insert(mediaComments).values({ mediaId: id, personId: found.ctx.me.id, body: text });
+  await found.db.insert(mediaComments).values({ mediaId: id, coupleId: found.ctx.relationship.id, personId: found.ctx.me.id, body: text });
   return { ok: true };
 }
 
@@ -185,7 +185,7 @@ export async function setAvatar(p: string): Promise<{ ok: boolean; error?: strin
   await db.update(people).set({ avatarPath: p }).where(eq(people.id, ctx.me.id));
   // Remove the old avatar file only if it was a dedicated avatar upload.
   if (old?.avatarPath?.includes("/avatar/") && old.avatarPath !== p) await remove([old.avatarPath]);
-  await db.insert(roomEvents).values({ relationshipId: ctx.relationship.id, personId: ctx.me.id, kind: "system", body: "updated their profile picture" });
+  await db.insert(roomEvents).values({ coupleId: ctx.relationship.id, personId: ctx.me.id, kind: "system", body: "updated their profile picture" });
   revalidatePath("/", "layout");
   return { ok: true };
 }

@@ -15,7 +15,7 @@ import { sql } from "drizzle-orm";
  *  - "none":  deployed without a Blob store: uploads are refused with a clear
  *             message instead of being written to a disk that vanishes.
  *
- * Every object lives under rel/<relationshipId>/, which is how access is checked.
+ * Every object lives under rel/<coupleId>/, which is how access is checked.
  */
 export type StorageMode = "blob" | "local" | "none";
 
@@ -57,12 +57,12 @@ const EXT: Record<string, string> = {
 };
 
 /** A fresh, unguessable object path inside the relationship's folder. */
-export function newPath(relationshipId: string, folder: "photo" | "video" | "song" | "thumb" | "avatar", mime: string): string {
-  return `rel/${relationshipId}/${folder}/${randomUUID()}.${EXT[mime] ?? "bin"}`;
+export function newPath(coupleId: string, folder: "photo" | "video" | "song" | "thumb" | "avatar", mime: string): string {
+  return `rel/${coupleId}/${folder}/${randomUUID()}.${EXT[mime] ?? "bin"}`;
 }
 
-export function ownsPath(relationshipId: string, p: string | null | undefined): p is string {
-  return !!p && p.startsWith(`rel/${relationshipId}/`) && !p.includes("..") && /^[\w/.-]+$/.test(p);
+export function ownsPath(coupleId: string, p: string | null | undefined): p is string {
+  return !!p && p.startsWith(`rel/${coupleId}/`) && !p.includes("..") && /^[\w/.-]+$/.test(p);
 }
 
 // ─── Signed reads (blob) ──────────────────────────────────────────────────

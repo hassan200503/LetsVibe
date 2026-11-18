@@ -64,9 +64,9 @@ describe("entitlements", () => {
     const c = await couple("Storage");
     const p = await person("storage-uploader");
     await ensureEntitlement(db, c.id);
-    await db.insert(schema.media).values({ relationshipId: c.id, addedBy: p.id, kind: "video", source: "upload", bytes: 1000 });
+    await db.insert(schema.media).values({ coupleId: c.id, addedBy: p.id, kind: "video", source: "upload", bytes: 1000 });
     const base64 = Buffer.alloc(2048, 1).toString("base64");
-    await db.insert(schema.photos).values({ relationshipId: c.id, uploadedBy: p.id, mime: "image/jpeg", bytes: base64 });
+    await db.insert(schema.photos).values({ coupleId: c.id, uploadedBy: p.id, mime: "image/jpeg", bytes: base64 });
 
     const used = 1000 + Buffer.byteLength(base64);
     const summary = await usageSummary(db, c.id, NOW);

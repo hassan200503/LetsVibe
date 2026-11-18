@@ -32,7 +32,7 @@ export async function ctxFor(personId: string): Promise<Ctx | null> {
   const [link] = await db
     .select({ r: couples })
     .from(coupleMembers)
-    .innerJoin(couples, eq(couples.id, coupleMembers.relationshipId))
+    .innerJoin(couples, eq(couples.id, coupleMembers.coupleId))
     .where(and(eq(coupleMembers.personId, me.id), eq(coupleMembers.status, "active")))
     .limit(1);
   if (!link) return null;
@@ -40,7 +40,7 @@ export async function ctxFor(personId: string): Promise<Ctx | null> {
     .select({ p: people })
     .from(coupleMembers)
     .innerJoin(people, eq(people.id, coupleMembers.personId))
-    .where(and(eq(coupleMembers.relationshipId, link.r.id), eq(coupleMembers.status, "active"), ne(people.id, me.id)));
+    .where(and(eq(coupleMembers.coupleId, link.r.id), eq(coupleMembers.status, "active"), ne(people.id, me.id)));
   const [meP, ...partners] = await Promise.all([strip(me), ...others.map((o) => strip(o.p))]);
   return { me: meP, relationship: link.r, partners, members: [meP, ...partners] };
 }

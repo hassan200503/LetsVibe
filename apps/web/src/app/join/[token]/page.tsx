@@ -24,9 +24,9 @@ async function lookup(token: string): Promise<Invite | null> {
   const invite = readInvite(token);
   if (!invite) return null;
   const db = await getDb();
-  const [couple] = await db.select().from(couples).where(eq(couples.id, invite.relationshipId)).limit(1);
+  const [couple] = await db.select().from(couples).where(eq(couples.id, invite.coupleId)).limit(1);
   if (!couple) return null;
-  const active = and(eq(coupleMembers.relationshipId, couple.id), eq(coupleMembers.status, "active"));
+  const active = and(eq(coupleMembers.coupleId, couple.id), eq(coupleMembers.status, "active"));
   const [{ n }] = await db.select({ n: count() }).from(coupleMembers).where(active);
   const [host] = await db
     .select({ displayName: people.displayName, theme: people.theme })

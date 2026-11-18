@@ -15,7 +15,7 @@ export async function coupleDay(coupleId: string, now: Date): Promise<string> {
     .select({ timezone: profiles.timezone })
     .from(coupleMembers)
     .innerJoin(profiles, eq(profiles.personId, coupleMembers.personId))
-    .where(and(eq(coupleMembers.relationshipId, coupleId), eq(coupleMembers.status, "active")))
+    .where(and(eq(coupleMembers.coupleId, coupleId), eq(coupleMembers.status, "active")))
     .orderBy(asc(coupleMembers.slot))
     .limit(1);
   return dayInZone(now, row?.timezone ?? "UTC");

@@ -74,7 +74,7 @@ async function finish(ctx: Ctx, id: string, from: string[], status: string, by: 
   const [row] = await db
     .update(calls)
     .set({ status, endedAt: now, endedBy: by })
-    .where(and(eq(calls.id, id), eq(calls.relationshipId, ctx.relationship.id), inArray(calls.status, from)))
+    .where(and(eq(calls.id, id), eq(calls.coupleId, ctx.relationship.id), inArray(calls.status, from)))
     .returning();
   if (!row) return null;
   const answered = !!row.answeredAt;
@@ -100,7 +100,7 @@ async function expireStale(ctx: Ctx) {
     .from(calls)
     .where(
       and(
-        eq(calls.relationshipId, ctx.relationship.id),
+        eq(calls.coupleId, ctx.relationship.id),
         or(
           and(inArray(calls.status, ["calling", "ringing"]), lt(calls.createdAt, new Date(now - RING_MS - 15_000))),
           and(eq(calls.status, "active"), sql`greatest(${calls.callerSeenAt}, coalesce(${calls.calleeSeenAt}, ${calls.callerSeenAt})) < ${new Date(now - STALE_MS).toISOString()}::timestamptz`),
@@ -115,7 +115,7 @@ async function live(ctx: Ctx): Promise<Row | null> {
   const [row] = await db
     .select()
     .from(calls)
-    .where(and(eq(calls.relationshipId, ctx.relationship.id), inArray(calls.status, LIVE)))
+    .where(and(eq(calls.coupleId, ctx.relationship.id), inArray(calls.status, LIVE)))
     .limit(1);
   return row ?? null;
 }
@@ -125,7 +125,7 @@ async function mine(ctx: Ctx, id: string): Promise<Row | null> {
   const [row] = await db
     .select()
     .from(calls)
-    .where(and(eq(calls.id, id), eq(calls.relationshipId, ctx.relationship.id), or(eq(calls.callerId, ctx.me.id), eq(calls.calleeId, ctx.me.id))));
+    .where(and(eq(calls.id, id), eq(calls.coupleId, ctx.relationship.id), or(eq(calls.callerId, ctx.me.id), eq(calls.calleeId, ctx.me.id))));
   return row ?? null;
 }
 
@@ -166,7 +166,7 @@ export function applyCall(ctx: Ctx, a: CallAction): Promise<CallResult> {
         try {
           const [created] = await db
             .insert(calls)
-            .values({ relationshipId: ctx.relationship.id, callerId: ctx.me.id, calleeId: partner.id, kind: a.kind, pushedAt: new Date(), pushCount: 1 })
+            .values({ coupleId: ctx.relationship.id, callerId: ctx.me.id, calleeId: partner.id, kind: a.kind, pushedAt: new Date(), pushCount: 1 })
             .returning();
           ringByPush(ctx, created);
           return { ok: true, call: view(ctx, created) };
@@ -221,7 +221,7 @@ export function applyCall(ctx: Ctx, a: CallAction): Promise<CallResult> {
         else await finish(ctx, row.id, ["calling", "ringing"], isCallee ? "declined" : "missed", ctx.me.id);
         break;
       case "signal":
-        await db.insert(callSignals).values(a.signals.map((s) => ({ callId: row.id, fromId: ctx.me.id, kind: s.kind, payload: s.payload })));
+        await db.insert(callSignals).values(a.signals.map((s) => ({ callId: row.id, coupleId: ctx.relationship.id, fromId: ctx.me.id, kind: s.kind, payload: s.payload })));
         break;
     }
     const fresh = await mine(ctx, row.id);

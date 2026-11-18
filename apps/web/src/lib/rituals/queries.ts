@@ -59,13 +59,13 @@ export async function readRituals(ctx: Ctx, now: Date): Promise<RitualsData> {
       db
         .select()
         .from(rituals)
-        .where(and(eq(rituals.relationshipId, ctx.relationship.id), isNull(rituals.archivedAt)))
+        .where(and(eq(rituals.coupleId, ctx.relationship.id), isNull(rituals.archivedAt)))
         .orderBy(asc(rituals.position), asc(rituals.createdAt)),
       db
         .select({ ritualId: ritualChecks.ritualId, day: ritualChecks.day, personId: ritualChecks.personId, cadence: rituals.cadence })
         .from(ritualChecks)
         .innerJoin(rituals, eq(rituals.id, ritualChecks.ritualId))
-        .where(and(eq(rituals.relationshipId, ctx.relationship.id), gte(ritualChecks.day, windowStart))),
+        .where(and(eq(rituals.coupleId, ctx.relationship.id), gte(ritualChecks.day, windowStart))),
     ]);
     return { list, checks };
   });

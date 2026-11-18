@@ -14,7 +14,7 @@ export async function GET(_: NextRequest, { params }: RouteContext<"/api/photos/
   const [p] = await db
     .select({ mime: photos.mime, bytes: photos.bytes })
     .from(photos)
-    .where(and(eq(photos.id, id), eq(photos.relationshipId, ctx.relationship.id)));
+    .where(and(eq(photos.id, id), eq(photos.coupleId, ctx.relationship.id)));
   if (!p) return new NextResponse(null, { status: 404 });
   return new NextResponse(Buffer.from(p.bytes, "base64"), {
     headers: {

@@ -46,12 +46,12 @@ describe("identity constraints", () => {
     const d = await person("slot-c");
 
     await db.insert(schema.coupleMembers).values([
-      { relationshipId: c.id, personId: a.id, slot: 1 },
-      { relationshipId: c.id, personId: b.id, slot: 2 },
+      { coupleId: c.id, personId: a.id, slot: 1 },
+      { coupleId: c.id, personId: b.id, slot: 2 },
     ]);
 
-    await expect(db.insert(schema.coupleMembers).values({ relationshipId: c.id, personId: d.id, slot: 3 })).rejects.toThrow();
-    await expect(db.insert(schema.coupleMembers).values({ relationshipId: c.id, personId: d.id, slot: 1 })).rejects.toThrow();
+    await expect(db.insert(schema.coupleMembers).values({ coupleId: c.id, personId: d.id, slot: 3 })).rejects.toThrow();
+    await expect(db.insert(schema.coupleMembers).values({ coupleId: c.id, personId: d.id, slot: 1 })).rejects.toThrow();
   });
 
   it("allows only one active couple per person", async () => {
@@ -59,17 +59,17 @@ describe("identity constraints", () => {
     const second = await couple("Second");
     const p = await person("one-active-couple");
 
-    await db.insert(schema.coupleMembers).values({ relationshipId: first.id, personId: p.id, slot: 1 });
+    await db.insert(schema.coupleMembers).values({ coupleId: first.id, personId: p.id, slot: 1 });
     await expect(
-      db.insert(schema.coupleMembers).values({ relationshipId: second.id, personId: p.id, slot: 1 }),
+      db.insert(schema.coupleMembers).values({ coupleId: second.id, personId: p.id, slot: 1 }),
     ).rejects.toThrow();
 
     await db
       .update(schema.coupleMembers)
       .set({ status: "left" })
-      .where(and(eq(schema.coupleMembers.relationshipId, first.id), eq(schema.coupleMembers.personId, p.id)));
+      .where(and(eq(schema.coupleMembers.coupleId, first.id), eq(schema.coupleMembers.personId, p.id)));
     await expect(
-      db.insert(schema.coupleMembers).values({ relationshipId: second.id, personId: p.id, slot: 1 }),
+      db.insert(schema.coupleMembers).values({ coupleId: second.id, personId: p.id, slot: 1 }),
     ).resolves.toBeDefined();
   });
 

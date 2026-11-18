@@ -37,8 +37,8 @@ async function ensureRow(ctx: Ctx) {
   const access = await roomAvailable(ctx.relationship.id);
   if (!access.ok) throw new RoomUnavailableError(access.error);
   const db = await getDb();
-  await db.insert(roomState).values({ relationshipId: ctx.relationship.id }).onConflictDoNothing();
-  const [row] = await db.select().from(roomState).where(eq(roomState.relationshipId, ctx.relationship.id));
+  await db.insert(roomState).values({ coupleId: ctx.relationship.id }).onConflictDoNothing();
+  const [row] = await db.select().from(roomState).where(eq(roomState.coupleId, ctx.relationship.id));
   return row;
 }
 
@@ -63,14 +63,14 @@ export async function readRoom(ctx: Ctx, knownVersion: number | null, afterEvent
       ? db
           .select()
           .from(roomEvents)
-          .where(and(eq(roomEvents.relationshipId, ctx.relationship.id), inArray(roomEvents.kind, ["chat", "react", "system"])))
+          .where(and(eq(roomEvents.coupleId, ctx.relationship.id), inArray(roomEvents.kind, ["chat", "react", "system"])))
           .orderBy(desc(roomEvents.id))
           .limit(40)
           .then((r) => r.reverse())
       : db
           .select()
           .from(roomEvents)
-          .where(and(eq(roomEvents.relationshipId, ctx.relationship.id), gt(roomEvents.id, afterEvent)))
+          .where(and(eq(roomEvents.coupleId, ctx.relationship.id), gt(roomEvents.id, afterEvent)))
           .orderBy(roomEvents.id)
           .limit(100),
     partnerIds.length ? db.select().from(presence).where(inArray(presence.personId, partnerIds)) : Promise.resolve([]),
@@ -140,7 +140,7 @@ export async function applyRoom(ctx: Ctx, a: RoomAction): Promise<void> {
   const rel = ctx.relationship.id;
   const row = await ensureRow(ctx);
   const bump = { version: sql`${roomState.version} + 1`, updatedAt: new Date(), updatedBy: ctx.me.id };
-  const log = (kind: string, body: string) => db.insert(roomEvents).values({ relationshipId: rel, personId: ctx.me.id, kind, body });
+  const log = (kind: string, body: string) => db.insert(roomEvents).values({ coupleId: rel, personId: ctx.me.id, kind, body });
 
   switch (a.type) {
     case "chat":
@@ -157,7 +157,7 @@ export async function applyRoom(ctx: Ctx, a: RoomAction): Promise<void> {
       await db
         .update(roomState)
         .set({ ...bump, updatedAt: at, position: a.position, ...(a.type === "seek" ? {} : { playing: a.type === "play" }) })
-        .where(eq(roomState.relationshipId, rel));
+        .where(eq(roomState.coupleId, rel));
       return;
     }
     case "load": {
@@ -167,14 +167,14 @@ export async function applyRoom(ctx: Ctx, a: RoomAction): Promise<void> {
         await db
           .update(roomState)
           .set({ ...bump, mediaId: card.id, youtubeId: null, title: null, position: 0, playing: a.play, queue: row.queue.filter((q) => q !== card.id) })
-          .where(eq(roomState.relationshipId, rel));
+          .where(eq(roomState.coupleId, rel));
         await log("system", `started ${card.kind === "song" ? "playing" : "watching"} ${titleOf(card)}`);
       } else if (a.youtubeId) {
         if (!a.title) a.title = (await youtubeTitle(a.youtubeId)) ?? undefined;
         await db
           .update(roomState)
           .set({ ...bump, mediaId: null, youtubeId: a.youtubeId, title: a.title ?? null, position: 0, playing: a.play })
-          .where(eq(roomState.relationshipId, rel));
+          .where(eq(roomState.coupleId, rel));
         await log("system", `started ${a.title ? `“${a.title}”` : "a video"}`);
       }
       return;
@@ -188,7 +188,7 @@ export async function applyRoom(ctx: Ctx, a: RoomAction): Promise<void> {
       await db
         .update(roomState)
         .set(nextId ? { ...bump, mediaId: nextId, youtubeId: null, title: null, position: 0, playing: true, queue: rest } : { ...bump, playing: false, position: 0 })
-        .where(eq(roomState.relationshipId, rel));
+        .where(eq(roomState.coupleId, rel));
       return;
     }
     case "queue": {
@@ -197,7 +197,7 @@ export async function applyRoom(ctx: Ctx, a: RoomAction): Promise<void> {
       await db
         .update(roomState)
         .set({ ...bump, queue: [...row.queue, card.id] })
-        .where(eq(roomState.relationshipId, rel));
+        .where(eq(roomState.coupleId, rel));
       await log("system", `queued ${titleOf(card)}`);
       return;
     }
@@ -205,7 +205,7 @@ export async function applyRoom(ctx: Ctx, a: RoomAction): Promise<void> {
       await db
         .update(roomState)
         .set({ ...bump, queue: row.queue.filter((q) => q !== a.mediaId) })
-        .where(eq(roomState.relationshipId, rel));
+        .where(eq(roomState.coupleId, rel));
       return;
   }
 }

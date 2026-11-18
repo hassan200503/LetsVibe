@@ -9,7 +9,7 @@ Browser / installed PWA
   |  HTTP polling every 0.6–3 s, server actions
   v
 Next.js 16 on Vercel Hobby  ──────────────►  Vercel Blob (private)
-  |  Drizzle ORM                              (global store, rel/<relationshipId>/…)
+  |  Drizzle ORM                              (global store, rel/<coupleId>/…)
   v
 Neon Postgres (prod) / PGlite (.data, local)
   ▲
@@ -17,7 +17,7 @@ Neon Postgres (prod) / PGlite (.data, local)
 GitHub Actions ──► 39 RSS/iNaturalist feeds, Gemini REST, OpenAlex
 ```
 
-- Auth is a custom HS256 JWT cookie; tenancy is app-level (`relationship_id` + `visibleTo()`), with no RLS.
+- Auth is a custom HS256 JWT cookie; tenancy is `couple_id` on every couple-owned row, plus `visibleTo()` and the composite foreign keys above. RLS is still missing (E1-002/E2-002), so today the application layer is the only gate.
 - Chat, room sync, call signalling and presence all poll; several polls write on every tick.
 - Calls are P2P WebRTC; SDP/ICE rows are exchanged by polling.
 - Gemini keys are per couple in `kv` (sealed); a deployment `GEMINI_API_KEY` overrides them. The TURN relay is deployment-wide.
@@ -80,11 +80,27 @@ Rules:
 - Realtime private channels authorize through RLS on `realtime.messages`; channel names are not authorization.
 - Foreign keys keep references inside the same couple where composite keys are practical; otherwise triggers/tests enforce it.
 
+### Table ownership
+
+All 40 tables, by what a row belongs to. E2-002 (RLS) and E2-003 (cross-couple regression suite) must cover the couple-scoped ones; the rest are scoped by the signed-in person or are platform-wide.
+
+| Owned by | Tables | Column |
+| --- | --- | --- |
+| **Couple** (21) | `couple_members`, `invitations`, `entitlements`, `usage_ledger`, `memories`, `shared_learning`, `photos`, `media`, `media_reactions`, `media_comments`, `room_state`, `room_events`, `daily_answers`, `rituals`, `ritual_checks`, `messages`, `chat_state`, `calls`, `call_signals`, `research_threads`, `research_messages` | `couple_id uuid not null references couples(id)`, indexed |
+| **Person** (13) | `profiles`, `consents`, `interests`, `skills`, `preferences`, `learning_records`, `projects`, `knowledge_entries`, `radar_lanes`, `radar_items`, `saved_discoveries`, `presence`, `push_subscriptions` | `person_id` only; reachable only through the signed-in person |
+| **Platform** (6) | `people`, `couples`, `audit_log`, `trend_sources`, `trends`, `kv` | No tenant column; never queried with request input as the key |
+
+Notes:
+
+- `chat_state` is one row per member inside a couple (`person_id` primary key), so it carries both columns and belongs to the couple for tenancy purposes.
+- Five couple tables are children of another couple table: `media_reactions`, `media_comments`, `call_signals`, `research_messages` and `ritual_checks`. Each carries its own `couple_id` *and* a composite foreign key `(parent_id, couple_id)` → `(parent.id, parent.couple_id)`. The parent therefore holds a redundant unique index on `(id, couple_id)` — `media_id_couple`, `calls_id_couple`, `research_threads_id_couple`, `rituals_id_couple` — which exists to anchor that key, not for lookups.
+- `invitations`, `entitlements` and `usage_ledger` already carried `couple_id` before E2-001, so `0010_couple_id` does not touch them. `0011_drop_legacy_relationship` leaves no table with a `relationship_id` column.
+
 ### Data model changes
 
 New: `couples`, `couple_members`, `invitations`, `profiles`, `consents`, `entitlements`, `usage_ledger`, `reports`, `moderation_actions`, `audit_log`, `export_jobs`, `deletion_requests`.
 
-E1-001 has applied the expand step: migration `0006_identity` renames `relationships`/`relationship_members` to `couples`/`couple_members`, backfills slots 1–2, and adds `invitations`, `profiles` and `consents`. Existing content still uses `relationship_id`; it becomes `couple_id` in E2-001/E11-007. `people` becomes a profile linked to `auth.users`; slug is no longer a login. The local adapter keeps `relationship_id` queries compiling until that contract step.
+E1-001 applied the expand step: migration `0006_identity` renames `relationships`/`relationship_members` to `couples`/`couple_members`, backfills slots 1–2, and adds `invitations`, `profiles` and `consents`. E2-001 has now applied the contract step: `0010_couple_id` adds `couple_id` to the 18 tables that still carried `relationship_id`, backfills every row from the value it already had — a child table inherits its parent's couple — makes the column `NOT NULL`, adds `(parent_id, couple_id)` composite foreign keys and re-indexes each read path with the tenant first; `0011_drop_legacy_relationship` then drops the legacy column. `people` becomes a profile linked to `auth.users` and slug stops being a login in E1-003.
 
 E1-012 has applied `entitlements`, `usage_ledger` and `audit_log`: each couple has server-owned limits (free: 1 GB, 100 AI questions/month, 1 room, 3 exports), usage is a UTC-month ledger with idempotent source ids, and the audit table rejects updates and deletes with a database trigger. Uploads, avatars, AI questions and room access check limits before doing work; there is no client-callable plan mutation. Admin overrides are a deliberate CLI/core path that records actor, reason and before/after values. RLS still does not exist for these tables and remains owned by E1-002/E2-002.
 

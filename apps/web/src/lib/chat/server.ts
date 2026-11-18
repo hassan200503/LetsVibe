@@ -22,7 +22,7 @@ async function toMessages(ctx: Ctx, rows: Row[]): Promise<ChatMessage[]> {
   const slug = (id: string) => ctx.members.find((m) => m.id === id)?.slug ?? "";
   const quoteIds = [...new Set(rows.map((r) => r.replyToId).filter((x): x is number => !!x))];
   const db = await getDb();
-  const quoted = quoteIds.length ? await db.select().from(messages).where(and(eq(messages.relationshipId, ctx.relationship.id), inArray(messages.id, quoteIds))) : [];
+  const quoted = quoteIds.length ? await db.select().from(messages).where(and(eq(messages.coupleId, ctx.relationship.id), inArray(messages.id, quoteIds))) : [];
   const quote = (id: number | null): ChatQuote | null => {
     const q = id ? quoted.find((x) => x.id === id) : null;
     return q ? { id: q.id, slug: slug(q.senderId), kind: q.kind, body: snippet(q), deleted: !!q.deletedAt } : null;
@@ -69,9 +69,9 @@ async function partnerState(ctx: Ctx, now: Date): Promise<ChatPartner | null> {
 export async function markDelivered(ctx: Ctx) {
   const db = await getDb();
   await db.execute(sql`
-    insert into ${chatState} (person_id, relationship_id, last_delivered_id)
+    insert into ${chatState} (person_id, couple_id, last_delivered_id)
     select ${ctx.me.id}::uuid, ${ctx.relationship.id}::uuid, coalesce(max(id), 0) from ${messages}
-    where relationship_id = ${ctx.relationship.id}::uuid and sender_id <> ${ctx.me.id}::uuid
+    where couple_id = ${ctx.relationship.id}::uuid and sender_id <> ${ctx.me.id}::uuid
     on conflict (person_id) do update set last_delivered_id = excluded.last_delivered_id
     where ${chatState.lastDeliveredId} < excluded.last_delivered_id`);
 }
@@ -91,7 +91,7 @@ export function syncChat(ctx: Ctx, opts: { since?: string | null; before?: numbe
   return withSchema(async () => {
     const db = await getDb();
     const now = new Date();
-    const rel = eq(messages.relationshipId, ctx.relationship.id);
+    const rel = eq(messages.coupleId, ctx.relationship.id);
     const sinceMs = opts.since ? Date.parse(opts.since) : NaN;
     await markDelivered(ctx);
 
@@ -135,13 +135,13 @@ async function setTyping(ctx: Ctx, until: Date | null) {
   const db = await getDb();
   await db
     .insert(chatState)
-    .values({ personId: ctx.me.id, relationshipId: ctx.relationship.id, typingUntil: until })
+    .values({ personId: ctx.me.id, coupleId: ctx.relationship.id, typingUntil: until })
     .onConflictDoUpdate({ target: chatState.personId, set: { typingUntil: until, updatedAt: new Date() } });
 }
 
 async function own(ctx: Ctx, id: number): Promise<Row | null> {
   const db = await getDb();
-  const [row] = await db.select().from(messages).where(and(eq(messages.id, id), eq(messages.relationshipId, ctx.relationship.id)));
+  const [row] = await db.select().from(messages).where(and(eq(messages.id, id), eq(messages.coupleId, ctx.relationship.id)));
   return row ?? null;
 }
 
@@ -154,17 +154,17 @@ export function applyChat(ctx: Ctx, a: ChatAction): Promise<ChatActionResult> {
         const reply = a.replyTo ? await own(ctx, a.replyTo) : null;
         const [created] = await db
           .insert(messages)
-          .values({ relationshipId: ctx.relationship.id, senderId: ctx.me.id, clientId: a.clientId, body: a.body, replyToId: reply && !reply.deletedAt ? reply.id : null })
-          .onConflictDoNothing({ target: [messages.relationshipId, messages.clientId] })
+          .values({ coupleId: ctx.relationship.id, senderId: ctx.me.id, clientId: a.clientId, body: a.body, replyToId: reply && !reply.deletedAt ? reply.id : null })
+          .onConflictDoNothing({ target: [messages.coupleId, messages.clientId] })
           .returning();
         // A retry of a send that already landed returns the stored message.
-        const row = created ?? (await db.select().from(messages).where(and(eq(messages.relationshipId, ctx.relationship.id), eq(messages.clientId, a.clientId))))[0];
+        const row = created ?? (await db.select().from(messages).where(and(eq(messages.coupleId, ctx.relationship.id), eq(messages.clientId, a.clientId))))[0];
         await Promise.all([
           setTyping(ctx, null),
           db.execute(sql`
-            insert into ${chatState} (person_id, relationship_id, last_read_id)
+            insert into ${chatState} (person_id, couple_id, last_read_id)
             select ${ctx.me.id}::uuid, ${ctx.relationship.id}::uuid, coalesce(max(id), 0) from ${messages}
-            where relationship_id = ${ctx.relationship.id}::uuid and sender_id <> ${ctx.me.id}::uuid and id < ${row.id}
+            where couple_id = ${ctx.relationship.id}::uuid and sender_id <> ${ctx.me.id}::uuid and id < ${row.id}
             on conflict (person_id) do update set last_read_id = greatest(${chatState.lastReadId}, excluded.last_read_id)`),
         ]);
         const [message] = await toMessages(ctx, [row]);
@@ -210,7 +210,7 @@ export function applyChat(ctx: Ctx, a: ChatAction): Promise<ChatActionResult> {
       case "read":
         await db
           .insert(chatState)
-          .values({ personId: ctx.me.id, relationshipId: ctx.relationship.id, lastReadId: a.upTo, lastDeliveredId: a.upTo })
+          .values({ personId: ctx.me.id, coupleId: ctx.relationship.id, lastReadId: a.upTo, lastDeliveredId: a.upTo })
           .onConflictDoUpdate({
             target: chatState.personId,
             set: { lastReadId: sql`greatest(${chatState.lastReadId}, ${a.upTo})`, lastDeliveredId: sql`greatest(${chatState.lastDeliveredId}, ${a.upTo})`, updatedAt: now },
@@ -224,7 +224,7 @@ export function applyChat(ctx: Ctx, a: ChatAction): Promise<ChatActionResult> {
 export async function unreadSummary(ctx: Ctx): Promise<{ unread: number; latest: { id: number; slug: string; body: string } | null }> {
   const db = await getDb();
   const readUpTo = await myReadUpTo(ctx);
-  const where = and(eq(messages.relationshipId, ctx.relationship.id), ne(messages.senderId, ctx.me.id), gt(messages.id, readUpTo), sql`${messages.deletedAt} is null`, notHiddenFor(ctx.me.id));
+  const where = and(eq(messages.coupleId, ctx.relationship.id), ne(messages.senderId, ctx.me.id), gt(messages.id, readUpTo), sql`${messages.deletedAt} is null`, notHiddenFor(ctx.me.id));
   const [[{ n }], [latest]] = await Promise.all([
     db.select({ n: sql<number>`count(*)::int` }).from(messages).where(where),
     db.select().from(messages).where(where).orderBy(desc(messages.id)).limit(1),
@@ -239,14 +239,14 @@ export async function logCall(ctx: Ctx, call: { id: string; callerId: string; ki
   await db
     .insert(messages)
     .values({
-      relationshipId: ctx.relationship.id,
+      coupleId: ctx.relationship.id,
       senderId: call.callerId,
       clientId: `call:${call.id}`,
       kind: "call",
       body: "",
       meta: { callId: call.id, callKind: call.kind === "video" ? "video" : "audio", outcome: call.outcome, durationSec: call.durationSec ?? undefined },
     })
-    .onConflictDoNothing({ target: [messages.relationshipId, messages.clientId] });
+    .onConflictDoNothing({ target: [messages.coupleId, messages.clientId] });
 }
 
 /** A phone notification for my partner, unless they're looking at the chat right now. */
@@ -264,7 +264,7 @@ async function notifyPartner(ctx: Ctx, m: ChatMessage) {
     const [{ n }] = await db
       .select({ n: sql<number>`count(*)::int` })
       .from(messages)
-      .where(and(eq(messages.relationshipId, ctx.relationship.id), eq(messages.senderId, ctx.me.id), gt(messages.id, state?.lastReadId ?? 0), sql`${messages.deletedAt} is null`, notHiddenFor(partner.id)));
+      .where(and(eq(messages.coupleId, ctx.relationship.id), eq(messages.senderId, ctx.me.id), gt(messages.id, state?.lastReadId ?? 0), sql`${messages.deletedAt} is null`, notHiddenFor(partner.id)));
     const first = ctx.me.displayName.split(" ")[0];
     const { pushTo } = await import("@/lib/push/server");
     await pushTo([partner.id], { type: "message", title: n > 1 ? `${first} · ${n} new messages` : first, body: m.body.slice(0, 180), url: "/together/chat", tag: "chat", unread: n });

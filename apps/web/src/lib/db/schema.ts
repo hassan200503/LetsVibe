@@ -12,6 +12,7 @@ import {
   primaryKey,
   uniqueIndex,
   index,
+  foreignKey,
   real,
   smallint,
   check,
@@ -22,8 +23,14 @@ import { sql } from "drizzle-orm";
  * Data model for "Let'sVibe".
  *
  * People are not hard-coded: every personal area hangs off `people.id`. A
- * couple has at most two active members (slots 1 and 2), and `relationship_id`
- * remains on legacy content tables until E2-001 renames it to `couple_id`.
+ * couple has at most two active members (slots 1 and 2).
+ *
+ * **Tenancy.** `couple_id` is the one tenant key, and every couple-owned table
+ * carries it as NOT NULL with an index, including the child tables that could
+ * otherwise reach a parent only by id. Those children reference their parent
+ * with a *composite* foreign key — `(parent_id, couple_id)` — so a row can
+ * never point at another couple's parent, whatever the application layer does.
+ * The full ownership list is in `docs/ARCHITECTURE.md`.
  */
 
 export type Visibility = "private" | "shared" | "public";
@@ -35,7 +42,7 @@ const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull(
 const updatedAt = () => timestamp("updated_at", { withTimezone: true }).notNull().defaultNow();
 const visibility = () => text("visibility").$type<Visibility>().notNull().default("shared");
 
-// ─── People & relationship ────────────────────────────────────────────────
+// ─── People & couple ──────────────────────────────────────────────────────
 
 export const people = pgTable("people", {
   id: id(),
@@ -78,7 +85,7 @@ export const couples = pgTable("couples", {
 export const coupleMembers = pgTable(
   "couple_members",
   {
-    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
+    coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     personId: uuid("person_id").notNull().references(() => people.id, { onDelete: "cascade" }),
     /** Active member capacity is two: slots are 1 and 2. */
     slot: smallint("slot").notNull(),
@@ -86,10 +93,10 @@ export const coupleMembers = pgTable(
     joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    primaryKey({ columns: [t.relationshipId, t.personId] }),
+    primaryKey({ columns: [t.coupleId, t.personId] }),
     check("couple_members_slot_check", sql`${t.slot} in (1, 2)`),
     check("couple_members_status_check", sql`${t.status} in ('active', 'left')`),
-    uniqueIndex("couple_members_active_slot").on(t.relationshipId, t.slot).where(sql`${t.status} = 'active'`),
+    uniqueIndex("couple_members_active_slot").on(t.coupleId, t.slot).where(sql`${t.status} = 'active'`),
     uniqueIndex("couple_members_active_person").on(t.personId).where(sql`${t.status} = 'active'`),
     index("couple_members_person").on(t.personId),
   ],
@@ -358,7 +365,7 @@ export const memories = pgTable(
   "memories",
   {
     id: id(),
-    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
+    coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     addedBy: uuid("added_by").notNull().references(() => people.id),
     kind: text("kind").notNull().default("memory"),
     title: text("title").notNull(),
@@ -371,22 +378,26 @@ export const memories = pgTable(
     trendId: uuid("trend_id").references(() => trends.id, { onDelete: "set null" }),
     createdAt: createdAt(),
   },
-  (t) => [index("memories_rel_date").on(t.relationshipId, t.occurredOn)],
+  (t) => [index("memories_couple_date").on(t.coupleId, t.occurredOn)],
 );
 
-export const sharedLearning = pgTable("shared_learning", {
-  id: id(),
-  relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
-  addedBy: uuid("added_by").notNull().references(() => people.id),
-  title: text("title").notNull(),
-  topic: text("topic"),
-  notes: text("notes"),
-  source: text("source"),
-  url: text("url"),
-  favorite: boolean("favorite").notNull().default(false),
-  occurredOn: date("occurred_on").notNull(),
-  createdAt: createdAt(),
-});
+export const sharedLearning = pgTable(
+  "shared_learning",
+  {
+    id: id(),
+    coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
+    addedBy: uuid("added_by").notNull().references(() => people.id),
+    title: text("title").notNull(),
+    topic: text("topic"),
+    notes: text("notes"),
+    source: text("source"),
+    url: text("url"),
+    favorite: boolean("favorite").notNull().default(false),
+    occurredOn: date("occurred_on").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("shared_learning_couple").on(t.coupleId, t.createdAt)],
+);
 
 // ─── Live Trends Engine ───────────────────────────────────────────────────
 
@@ -482,7 +493,7 @@ export const photos = pgTable(
   "photos",
   {
     id: id(),
-    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
+    coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     uploadedBy: uuid("uploaded_by").notNull().references(() => people.id),
     mime: text("mime").notNull(),
     bytes: text("bytes").notNull(), // base64: portable across PGlite and node-postgres
@@ -491,7 +502,7 @@ export const photos = pgTable(
     caption: text("caption"),
     createdAt: createdAt(),
   },
-  (t) => [index("photos_rel_created").on(t.relationshipId, t.createdAt)],
+  (t) => [index("photos_couple_created").on(t.coupleId, t.createdAt)],
 );
 
 // ─── Gallery ──────────────────────────────────────────────────────────────
@@ -504,7 +515,7 @@ export const media = pgTable(
   "media",
   {
     id: id(),
-    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
+    coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     addedBy: uuid("added_by").notNull().references(() => people.id),
     /** photo | video | song */
     kind: text("kind").notNull(),
@@ -524,30 +535,45 @@ export const media = pgTable(
     takenOn: date("taken_on"),
     createdAt: createdAt(),
   },
-  (t) => [index("media_rel_created").on(t.relationshipId, t.createdAt, t.id), index("media_rel_kind").on(t.relationshipId, t.kind, t.createdAt)],
+  (t) => [
+    index("media_couple_created").on(t.coupleId, t.createdAt, t.id),
+    index("media_couple_kind").on(t.coupleId, t.kind, t.createdAt),
+    // Lets reactions and comments point at this row and this couple together.
+    uniqueIndex("media_id_couple").on(t.id, t.coupleId),
+  ],
 );
 
 export const mediaReactions = pgTable(
   "media_reactions",
   {
-    mediaId: uuid("media_id").notNull().references(() => media.id, { onDelete: "cascade" }),
+    mediaId: uuid("media_id").notNull(),
+    coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     personId: uuid("person_id").notNull().references(() => people.id, { onDelete: "cascade" }),
     emoji: text("emoji").notNull(),
     createdAt: createdAt(),
   },
-  (t) => [primaryKey({ columns: [t.mediaId, t.personId] })],
+  (t) => [
+    primaryKey({ columns: [t.mediaId, t.personId] }),
+    index("media_reactions_couple").on(t.coupleId, t.createdAt),
+    foreignKey({ columns: [t.mediaId, t.coupleId], foreignColumns: [media.id, media.coupleId] }).onDelete("cascade"),
+  ],
 );
 
 export const mediaComments = pgTable(
   "media_comments",
   {
     id: id(),
-    mediaId: uuid("media_id").notNull().references(() => media.id, { onDelete: "cascade" }),
+    mediaId: uuid("media_id").notNull(),
+    coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     personId: uuid("person_id").notNull().references(() => people.id, { onDelete: "cascade" }),
     body: text("body").notNull(),
     createdAt: createdAt(),
   },
-  (t) => [index("media_comments_media").on(t.mediaId, t.createdAt)],
+  (t) => [
+    index("media_comments_couple").on(t.coupleId, t.createdAt),
+    index("media_comments_media").on(t.mediaId, t.createdAt),
+    foreignKey({ columns: [t.mediaId, t.coupleId], foreignColumns: [media.id, media.coupleId] }).onDelete("cascade"),
+  ],
 );
 
 // ─── Together: presence, the shared room, and its live events ─────────────
@@ -561,12 +587,12 @@ export const presence = pgTable("presence", {
 });
 
 /**
- * The shared player. Everyone in the relationship sees the same row; clients
+ * The shared player. Everyone in the couple sees the same row; clients
  * poll it and steer their own player to match. `version` guards against two
  * people pressing a button at the same moment.
  */
 export const roomState = pgTable("room_state", {
-  relationshipId: uuid("relationship_id").primaryKey().references(() => couples.id, { onDelete: "cascade" }),
+  coupleId: uuid("couple_id").primaryKey().references(() => couples.id, { onDelete: "cascade" }),
   version: integer("version").notNull().default(0),
   mediaId: uuid("media_id").references(() => media.id, { onDelete: "set null" }),
   /** For discovery videos (knitting tutorials, bird videos) that aren't in the gallery. */
@@ -585,27 +611,27 @@ export const roomEvents = pgTable(
   "room_events",
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
-    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
+    coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     personId: uuid("person_id").notNull().references(() => people.id, { onDelete: "cascade" }),
     /** chat | react | nudge | system */
     kind: text("kind").notNull(),
     body: text("body").notNull(),
     createdAt: createdAt(),
   },
-  (t) => [index("room_events_rel_id").on(t.relationshipId, t.id)],
+  (t) => [index("room_events_couple_id").on(t.coupleId, t.id)],
 );
 
 /** One answer each to the question of the day. */
 export const dailyAnswers = pgTable(
   "daily_answers",
   {
-    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
+    coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     day: date("day").notNull(),
     personId: uuid("person_id").notNull().references(() => people.id, { onDelete: "cascade" }),
     answer: text("answer").notNull(),
     createdAt: createdAt(),
   },
-  (t) => [primaryKey({ columns: [t.relationshipId, t.day, t.personId] })],
+  (t) => [primaryKey({ columns: [t.coupleId, t.day, t.personId] })],
 );
 
 // ─── Rituals: the rhythm that is ours, and the shared streak ───────────────
@@ -619,7 +645,7 @@ export const rituals = pgTable(
   "rituals",
   {
     id: id(),
-    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
+    coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     createdBy: uuid("created_by").references(() => people.id, { onDelete: "set null" }),
     title: text("title").notNull(),
     /** Why it matters to you two, shown in the ritual's detail. */
@@ -634,7 +660,9 @@ export const rituals = pgTable(
     createdAt: createdAt(),
   },
   (t) => [
-    index("rituals_rel").on(t.relationshipId, t.position, t.createdAt),
+    index("rituals_couple").on(t.coupleId, t.position, t.createdAt),
+    // Lets a check point at this ritual and this couple together.
+    uniqueIndex("rituals_id_couple").on(t.id, t.coupleId),
     check("rituals_cadence_check", sql`${t.cadence} in ('daily', 'weekly')`),
     check("rituals_title_check", sql`char_length(${t.title}) between 1 and 80`),
     check("rituals_time_check", sql`${t.atTime} is null or ${t.atTime} ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'`),
@@ -648,7 +676,8 @@ export const rituals = pgTable(
 export const ritualChecks = pgTable(
   "ritual_checks",
   {
-    ritualId: uuid("ritual_id").notNull().references(() => rituals.id, { onDelete: "cascade" }),
+    ritualId: uuid("ritual_id").notNull(),
+    coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     day: date("day").notNull(),
     personId: uuid("person_id").notNull().references(() => people.id, { onDelete: "cascade" }),
     /** A few words kept with the tap — what you did, or how it felt. */
@@ -657,7 +686,9 @@ export const ritualChecks = pgTable(
   },
   (t) => [
     primaryKey({ columns: [t.ritualId, t.day, t.personId] }),
+    index("ritual_checks_couple").on(t.coupleId, t.day),
     index("ritual_checks_day").on(t.day, t.ritualId),
+    foreignKey({ columns: [t.ritualId, t.coupleId], foreignColumns: [rituals.id, rituals.coupleId] }).onDelete("cascade"),
   ],
 );
 
@@ -673,7 +704,7 @@ export const messages = pgTable(
   "messages",
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
-    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
+    coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     senderId: uuid("sender_id").notNull().references(() => people.id, { onDelete: "cascade" }),
     /** Generated by the sending device, so a retried send is stored once. */
     clientId: text("client_id"),
@@ -691,9 +722,9 @@ export const messages = pgTable(
     updatedAt: updatedAt(),
   },
   (t) => [
-    index("messages_rel_id").on(t.relationshipId, t.id),
-    index("messages_rel_updated").on(t.relationshipId, t.updatedAt),
-    uniqueIndex("messages_rel_client").on(t.relationshipId, t.clientId),
+    index("messages_couple_id").on(t.coupleId, t.id),
+    index("messages_couple_updated").on(t.coupleId, t.updatedAt),
+    uniqueIndex("messages_couple_client").on(t.coupleId, t.clientId),
   ],
 );
 
@@ -706,21 +737,25 @@ export type MessageMeta = {
 };
 
 /** Per person: how far they've read and received, and whether they're typing. */
-export const chatState = pgTable("chat_state", {
-  personId: uuid("person_id").primaryKey().references(() => people.id, { onDelete: "cascade" }),
-  relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
-  lastReadId: bigint("last_read_id", { mode: "number" }).notNull().default(0),
-  lastDeliveredId: bigint("last_delivered_id", { mode: "number" }).notNull().default(0),
-  typingUntil: timestamp("typing_until", { withTimezone: true }),
-  updatedAt: updatedAt(),
-});
+export const chatState = pgTable(
+  "chat_state",
+  {
+    personId: uuid("person_id").primaryKey().references(() => people.id, { onDelete: "cascade" }),
+    coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
+    lastReadId: bigint("last_read_id", { mode: "number" }).notNull().default(0),
+    lastDeliveredId: bigint("last_delivered_id", { mode: "number" }).notNull().default(0),
+    typingUntil: timestamp("typing_until", { withTimezone: true }),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("chat_state_couple").on(t.coupleId)],
+);
 
 // ─── Calls: voice and video, peer to peer ─────────────────────────────────
 
 /**
  * A call's lifecycle: calling → ringing (the other phone got it) → active →
  * ended, or missed / declined / cancelled / busy / failed. At most one live
- * call per relationship, enforced by a partial unique index. Media never
+ * call per couple, enforced by a partial unique index. Media never
  * touches the server: it flows browser to browser over WebRTC, and these rows
  * only carry the handshake.
  */
@@ -728,7 +763,7 @@ export const calls = pgTable(
   "calls",
   {
     id: id(),
-    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
+    coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     callerId: uuid("caller_id").notNull().references(() => people.id, { onDelete: "cascade" }),
     calleeId: uuid("callee_id").notNull().references(() => people.id, { onDelete: "cascade" }),
     /** audio | video */
@@ -745,8 +780,10 @@ export const calls = pgTable(
     pushCount: integer("push_count").notNull().default(0),
   },
   (t) => [
-    uniqueIndex("calls_one_live").on(t.relationshipId).where(sql`status in ('calling', 'ringing', 'active')`),
-    index("calls_rel_created").on(t.relationshipId, t.createdAt),
+    uniqueIndex("calls_one_live").on(t.coupleId).where(sql`status in ('calling', 'ringing', 'active')`),
+    index("calls_couple_created").on(t.coupleId, t.createdAt),
+    // Lets a signal point at this call and this couple together.
+    uniqueIndex("calls_id_couple").on(t.id, t.coupleId),
   ],
 );
 
@@ -755,14 +792,19 @@ export const callSignals = pgTable(
   "call_signals",
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
-    callId: uuid("call_id").notNull().references(() => calls.id, { onDelete: "cascade" }),
+    callId: uuid("call_id").notNull(),
+    coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     fromId: uuid("from_id").notNull().references(() => people.id, { onDelete: "cascade" }),
     /** offer | answer | ice | restart */
     kind: text("kind").notNull(),
     payload: text("payload").notNull(),
     createdAt: createdAt(),
   },
-  (t) => [index("call_signals_call_id").on(t.callId, t.id)],
+  (t) => [
+    index("call_signals_couple_id").on(t.coupleId, t.id),
+    index("call_signals_call_id").on(t.callId, t.id),
+    foreignKey({ columns: [t.callId, t.coupleId], foreignColumns: [calls.id, calls.coupleId] }).onDelete("cascade"),
+  ],
 );
 
 /** Browser push subscriptions: calls ring and messages arrive even when the site is closed. */
@@ -796,7 +838,7 @@ export const researchThreads = pgTable(
   "research_threads",
   {
     id: id(),
-    relationshipId: uuid("relationship_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
+    coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     ownerId: uuid("owner_id").notNull().references(() => people.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     /** research | learn | explain */
@@ -805,7 +847,11 @@ export const researchThreads = pgTable(
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (t) => [index("research_threads_rel_updated").on(t.relationshipId, t.updatedAt)],
+  (t) => [
+    index("research_threads_couple_updated").on(t.coupleId, t.updatedAt),
+    // Lets a message point at this thread and this couple together.
+    uniqueIndex("research_threads_id_couple").on(t.id, t.coupleId),
+  ],
 );
 
 /** A study found in the scholarly index (cited as [n]) or a web page Google Search grounded the answer in. */
@@ -825,7 +871,8 @@ export const researchMessages = pgTable(
   "research_messages",
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
-    threadId: uuid("thread_id").notNull().references(() => researchThreads.id, { onDelete: "cascade" }),
+    threadId: uuid("thread_id").notNull(),
+    coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     /** user | model */
     role: text("role").notNull(),
     content: text("content").notNull(),
@@ -838,5 +885,9 @@ export const researchMessages = pgTable(
     grounded: boolean("grounded").notNull().default(false),
     createdAt: createdAt(),
   },
-  (t) => [index("research_messages_thread").on(t.threadId, t.id)],
+  (t) => [
+    index("research_messages_couple_id").on(t.coupleId, t.id),
+    index("research_messages_thread").on(t.threadId, t.id),
+    foreignKey({ columns: [t.threadId, t.coupleId], foreignColumns: [researchThreads.id, researchThreads.coupleId] }).onDelete("cascade"),
+  ],
 );

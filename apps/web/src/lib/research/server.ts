@@ -49,7 +49,7 @@ function message(m: MessageRow): ResearchMessage {
 }
 
 /** Mine, plus the ones my partner shared with me. */
-const visible = (ctx: Ctx) => and(eq(researchThreads.relationshipId, ctx.relationship.id), or(eq(researchThreads.ownerId, ctx.me.id), eq(researchThreads.shared, true)));
+const visible = (ctx: Ctx) => and(eq(researchThreads.coupleId, ctx.relationship.id), or(eq(researchThreads.ownerId, ctx.me.id), eq(researchThreads.shared, true)));
 
 export function listThreads(ctx: Ctx): Promise<ThreadSummary[]> {
   return withSchema(async () => {
@@ -245,10 +245,10 @@ export async function* ask(ctx: Ctx, input: z.infer<typeof askSchema>): AsyncGen
   }
   const mode: ResearchMode = input.mode;
   const created = !t;
-  t ??= await withSchema(async () => (await db.insert(researchThreads).values({ relationshipId: ctx.relationship.id, ownerId: ctx.me.id, title: input.question.replace(/\s+/g, " ").slice(0, 100), mode }).returning())[0]);
+  t ??= await withSchema(async () => (await db.insert(researchThreads).values({ coupleId: ctx.relationship.id, ownerId: ctx.me.id, title: input.question.replace(/\s+/g, " ").slice(0, 100), mode }).returning())[0]);
   yield { t: "thread", thread: summary(ctx, t) };
 
-  const [question] = await db.insert(researchMessages).values({ threadId: t.id, role: "user", content: input.question }).returning();
+  const [question] = await db.insert(researchMessages).values({ threadId: t.id, coupleId: ctx.relationship.id, role: "user", content: input.question }).returning();
   let answered = false;
   try {
     const history = await db.select().from(researchMessages).where(eq(researchMessages.threadId, t.id)).orderBy(desc(researchMessages.id)).limit(9);
@@ -330,6 +330,7 @@ export async function* ask(ctx: Ctx, input: z.infer<typeof askSchema>): AsyncGen
       .insert(researchMessages)
       .values({
         threadId: t.id,
+        coupleId: ctx.relationship.id,
         role: "model",
         content: body,
         sources: [...studies.map(studySource), ...uniqueWeb],
@@ -419,7 +420,7 @@ export async function saveToLearning(ctx: Ctx, id: string, messageId: number): P
       .trim();
     const top = (m.sources ?? [])[0];
     await db.insert(sharedLearning).values({
-      relationshipId: ctx.relationship.id,
+      coupleId: ctx.relationship.id,
       addedBy: ctx.me.id,
       title: t.title,
       topic: t.mode === "learn" ? "Lesson" : t.mode === "explain" ? "Explained" : "Research",

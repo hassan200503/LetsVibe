@@ -53,7 +53,7 @@ export async function saveToStory(_: ActionState, fd: FormData): Promise<ActionS
   const [t] = await db.select().from(trends).where(eq(trends.id, parsed.data.trendId));
   if (!t) return { error: "That discovery no longer exists" };
   await db.insert(memories).values({
-    relationshipId: ctx.relationship.id,
+    coupleId: ctx.relationship.id,
     addedBy: ctx.me.id,
     kind: "discovery",
     title: t.title,
@@ -112,7 +112,7 @@ export async function addMemory(_: ActionState, fd: FormData): Promise<ActionSta
   const parsed = memory.safeParse({ occurredOn: today(), ...formObject(fd) });
   if (!parsed.success) return { error: firstError(parsed.error) };
   const db = await getDb();
-  await db.insert(memories).values({ ...parsed.data, relationshipId: ctx.relationship.id, addedBy: ctx.me.id });
+  await db.insert(memories).values({ ...parsed.data, coupleId: ctx.relationship.id, addedBy: ctx.me.id });
   revalidatePath("/story");
   revalidatePath("/");
   return { ok: true, message: parsed.data.kind === "plan" ? "Plan added" : "Memory kept ❤️" };
@@ -121,7 +121,7 @@ export async function addMemory(_: ActionState, fd: FormData): Promise<ActionSta
 export async function togglePlanDone(id: string) {
   const ctx = await requireCtx();
   const db = await getDb();
-  const [m] = await db.select().from(memories).where(and(eq(memories.id, id), eq(memories.relationshipId, ctx.relationship.id)));
+  const [m] = await db.select().from(memories).where(and(eq(memories.id, id), eq(memories.coupleId, ctx.relationship.id)));
   if (!m) return;
   await db.update(memories).set({ planDone: !m.planDone }).where(eq(memories.id, id));
   revalidatePath("/story");
@@ -131,10 +131,10 @@ export async function deleteMemory(id: string) {
   const ctx = await requireCtx();
   const db = await getDb();
   // Either partner can remove a shared memory, but only within their relationship.
-  const [gone] = await db.delete(memories).where(and(eq(memories.id, id), eq(memories.relationshipId, ctx.relationship.id))).returning();
+  const [gone] = await db.delete(memories).where(and(eq(memories.id, id), eq(memories.coupleId, ctx.relationship.id))).returning();
   // An uploaded photo belongs to its memory; remove it too so storage doesn't fill with orphans.
   const photoId = gone?.photoUrl?.match(/^\/api\/photos\/([0-9a-f-]{36})$/i)?.[1];
-  if (photoId) await db.delete(photos).where(and(eq(photos.id, photoId), eq(photos.relationshipId, ctx.relationship.id)));
+  if (photoId) await db.delete(photos).where(and(eq(photos.id, photoId), eq(photos.coupleId, ctx.relationship.id)));
   revalidatePath("/story");
 }
 
@@ -147,7 +147,7 @@ export async function addSharedLearning(_: ActionState, fd: FormData): Promise<A
   const parsed = learning.safeParse({ occurredOn: today(), ...formObject(fd) });
   if (!parsed.success) return { error: firstError(parsed.error) };
   const db = await getDb();
-  await db.insert(sharedLearning).values({ ...parsed.data, relationshipId: ctx.relationship.id, addedBy: ctx.me.id });
+  await db.insert(sharedLearning).values({ ...parsed.data, coupleId: ctx.relationship.id, addedBy: ctx.me.id });
   revalidatePath("/learning");
   return { ok: true, message: "Added to what we're learning" };
 }
@@ -155,7 +155,7 @@ export async function addSharedLearning(_: ActionState, fd: FormData): Promise<A
 export async function toggleLearningFavorite(id: string) {
   const ctx = await requireCtx();
   const db = await getDb();
-  const [row] = await db.select().from(sharedLearning).where(and(eq(sharedLearning.id, id), eq(sharedLearning.relationshipId, ctx.relationship.id)));
+  const [row] = await db.select().from(sharedLearning).where(and(eq(sharedLearning.id, id), eq(sharedLearning.coupleId, ctx.relationship.id)));
   if (!row) return;
   await db.update(sharedLearning).set({ favorite: !row.favorite }).where(eq(sharedLearning.id, id));
   revalidatePath("/learning");
@@ -164,7 +164,7 @@ export async function toggleLearningFavorite(id: string) {
 export async function deleteSharedLearning(id: string) {
   const ctx = await requireCtx();
   const db = await getDb();
-  await db.delete(sharedLearning).where(and(eq(sharedLearning.id, id), eq(sharedLearning.relationshipId, ctx.relationship.id)));
+  await db.delete(sharedLearning).where(and(eq(sharedLearning.id, id), eq(sharedLearning.coupleId, ctx.relationship.id)));
   revalidatePath("/learning");
 }
 

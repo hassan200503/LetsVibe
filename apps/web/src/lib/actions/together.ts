@@ -20,7 +20,7 @@ export async function sendNudge(kind: string): Promise<{ ok: boolean }> {
   const body = MESSAGES[kind];
   if (!body) return { ok: false };
   const db = await getDb();
-  await db.insert(roomEvents).values({ relationshipId: ctx.relationship.id, personId: ctx.me.id, kind: kind === "invite" ? "invite" : "nudge", body });
+  await db.insert(roomEvents).values({ coupleId: ctx.relationship.id, personId: ctx.me.id, kind: kind === "invite" ? "invite" : "nudge", body });
   return { ok: true };
 }
 
@@ -33,9 +33,9 @@ export async function answerToday(_: unknown, fd: FormData): Promise<{ ok?: bool
   const db = await getDb();
   await db
     .insert(dailyAnswers)
-    .values({ relationshipId: ctx.relationship.id, day, personId: ctx.me.id, answer })
-    .onConflictDoUpdate({ target: [dailyAnswers.relationshipId, dailyAnswers.day, dailyAnswers.personId], set: { answer, createdAt: new Date() } });
-  await db.insert(roomEvents).values({ relationshipId: ctx.relationship.id, personId: ctx.me.id, kind: "system", body: "answered today's question — your turn 💌" });
+    .values({ coupleId: ctx.relationship.id, day, personId: ctx.me.id, answer })
+    .onConflictDoUpdate({ target: [dailyAnswers.coupleId, dailyAnswers.day, dailyAnswers.personId], set: { answer, createdAt: new Date() } });
+  await db.insert(roomEvents).values({ coupleId: ctx.relationship.id, personId: ctx.me.id, kind: "system", body: "answered today's question — your turn 💌" });
   revalidatePath("/");
   return { ok: true };
 }

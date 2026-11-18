@@ -46,11 +46,11 @@ async function storageUsed(db: EntitlementDb, coupleId: string): Promise<number>
     db
       .select({ total: sql<string>`coalesce(sum(${schema.media.bytes}), 0)` })
       .from(schema.media)
-      .where(eq(schema.media.relationshipId, coupleId)),
+      .where(eq(schema.media.coupleId, coupleId)),
     db
       .select({ total: sql<string>`coalesce(sum(octet_length(${schema.photos.bytes})), 0)` })
       .from(schema.photos)
-      .where(eq(schema.photos.relationshipId, coupleId)),
+      .where(eq(schema.photos.coupleId, coupleId)),
   ]);
   return Number(media?.total ?? 0) + Number(photos?.total ?? 0);
 }
@@ -120,7 +120,7 @@ export async function recordAiUsage(db: EntitlementDb, coupleId: string, sourceI
 }
 
 async function roomsUsed(db: EntitlementDb, coupleId: string): Promise<number> {
-  const [row] = await db.select({ total: sql<string>`count(*)` }).from(schema.roomState).where(eq(schema.roomState.relationshipId, coupleId));
+  const [row] = await db.select({ total: sql<string>`count(*)` }).from(schema.roomState).where(eq(schema.roomState.coupleId, coupleId));
   return Number(row?.total ?? 0);
 }
 

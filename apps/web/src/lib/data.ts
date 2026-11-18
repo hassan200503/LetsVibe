@@ -82,7 +82,7 @@ export async function story(ctx: Ctx, opts: { kind?: string; limit?: number } = 
     .from(memories)
     .innerJoin(people, eq(people.id, memories.addedBy))
     .leftJoin(trends, eq(trends.id, memories.trendId))
-    .where(and(eq(memories.relationshipId, ctx.relationship.id), opts.kind ? eq(memories.kind, opts.kind) : undefined))
+    .where(and(eq(memories.coupleId, ctx.relationship.id), opts.kind ? eq(memories.kind, opts.kind) : undefined))
     .orderBy(desc(memories.occurredOn), desc(memories.createdAt))
     .limit(opts.limit ?? 500);
 }
@@ -93,7 +93,7 @@ export async function learningTogether(ctx: Ctx) {
     .select({ l: sharedLearning, by: people.displayName, byTheme: people.theme })
     .from(sharedLearning)
     .innerJoin(people, eq(people.id, sharedLearning.addedBy))
-    .where(eq(sharedLearning.relationshipId, ctx.relationship.id))
+    .where(eq(sharedLearning.coupleId, ctx.relationship.id))
     .orderBy(desc(sharedLearning.favorite), desc(sharedLearning.occurredOn), desc(sharedLearning.createdAt));
 }
 
@@ -119,8 +119,8 @@ export async function digest(ctx: Ctx, from: Date, to: Date) {
   const t = to.toISOString().slice(0, 10);
   const members = ctx.members.map((m) => m.id);
   const [mem, learn, saves, records] = await Promise.all([
-    db.select().from(memories).where(and(eq(memories.relationshipId, ctx.relationship.id), gte(memories.createdAt, from), sql`${memories.createdAt} < ${to.toISOString()}::timestamptz`)),
-    db.select().from(sharedLearning).where(and(eq(sharedLearning.relationshipId, ctx.relationship.id), gte(sharedLearning.createdAt, from), sql`${sharedLearning.createdAt} < ${to.toISOString()}::timestamptz`)),
+    db.select().from(memories).where(and(eq(memories.coupleId, ctx.relationship.id), gte(memories.createdAt, from), sql`${memories.createdAt} < ${to.toISOString()}::timestamptz`)),
+    db.select().from(sharedLearning).where(and(eq(sharedLearning.coupleId, ctx.relationship.id), gte(sharedLearning.createdAt, from), sql`${sharedLearning.createdAt} < ${to.toISOString()}::timestamptz`)),
     db
       .select({ personId: savedDiscoveries.personId, t: trends })
       .from(savedDiscoveries)
@@ -155,8 +155,8 @@ export async function searchAll(ctx: Ctx, q: string): Promise<SearchHit[]> {
   const memberIds = members.map((m) => m.id);
 
   const [mem, learn, recs, projs, sk, kn, found] = await Promise.all([
-    db.select().from(memories).where(and(eq(memories.relationshipId, ctx.relationship.id), or(ilike(memories.title, like), ilike(memories.body, like), ilike(memories.place, like), ilike(memories.why, like)))).limit(20),
-    db.select().from(sharedLearning).where(and(eq(sharedLearning.relationshipId, ctx.relationship.id), or(ilike(sharedLearning.title, like), ilike(sharedLearning.notes, like), ilike(sharedLearning.topic, like)))).limit(20),
+    db.select().from(memories).where(and(eq(memories.coupleId, ctx.relationship.id), or(ilike(memories.title, like), ilike(memories.body, like), ilike(memories.place, like), ilike(memories.why, like)))).limit(20),
+    db.select().from(sharedLearning).where(and(eq(sharedLearning.coupleId, ctx.relationship.id), or(ilike(sharedLearning.title, like), ilike(sharedLearning.notes, like), ilike(sharedLearning.topic, like)))).limit(20),
     db.select().from(learningRecords).where(and(inArray(learningRecords.personId, memberIds), visFor(learningRecords), or(ilike(learningRecords.title, like), ilike(learningRecords.description, like), ilike(learningRecords.technology, like), ilike(learningRecords.notes, like), sql`array_to_string(${learningRecords.tags}, ' ') ilike ${like}`))).limit(20),
     db.select().from(projects).where(and(inArray(projects.personId, memberIds), visFor(projects), or(ilike(projects.name, like), ilike(projects.description, like), sql`array_to_string(${projects.stack}, ' ') ilike ${like}`))).limit(20),
     db.select().from(skills).where(and(inArray(skills.personId, memberIds), visFor(skills), or(ilike(skills.name, like), ilike(skills.category, like), ilike(skills.evidence, like)))).limit(20),
@@ -186,7 +186,7 @@ export async function onThisDay(ctx: Ctx, today: Date) {
     .from(memories)
     .where(
       and(
-        eq(memories.relationshipId, ctx.relationship.id),
+        eq(memories.coupleId, ctx.relationship.id),
         sql`extract(month from ${memories.occurredOn}) = ${m}`,
         sql`extract(day from ${memories.occurredOn}) = ${d}`,
         sql`extract(year from ${memories.occurredOn}) < ${today.getUTCFullYear()}`,
@@ -200,7 +200,7 @@ export async function recentPhotos(ctx: Ctx, limit = 8) {
   return db
     .select({ id: photos.id, width: photos.width, height: photos.height, caption: photos.caption, createdAt: photos.createdAt })
     .from(photos)
-    .where(eq(photos.relationshipId, ctx.relationship.id))
+    .where(eq(photos.coupleId, ctx.relationship.id))
     .orderBy(desc(photos.createdAt))
     .limit(limit);
 }

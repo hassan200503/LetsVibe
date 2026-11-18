@@ -71,6 +71,20 @@
       "when": 1794944265781,
       "tag": "0009_flowery_franklin_richards",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795003929716,
+      "tag": "0010_couple_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795003959948,
+      "tag": "0011_drop_legacy_relationship",
+      "breakpoints": true
     }
   ]
 }

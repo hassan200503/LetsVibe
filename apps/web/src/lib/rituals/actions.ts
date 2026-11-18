@@ -27,7 +27,7 @@ export async function toggleRitual(ritualId: string): Promise<{ ok: boolean; kep
   const [ritual] = await db
     .select()
     .from(rituals)
-    .where(and(eq(rituals.id, ritualId), eq(rituals.relationshipId, ctx.relationship.id), isNull(rituals.archivedAt)));
+    .where(and(eq(rituals.id, ritualId), eq(rituals.coupleId, ctx.relationship.id), isNull(rituals.archivedAt)));
   if (!ritual) return { ok: false, error: "That ritual isn't here any more" };
 
   const day = await coupleDay(ctx.relationship.id, new Date());
@@ -40,10 +40,10 @@ export async function toggleRitual(ritualId: string): Promise<{ ok: boolean; kep
     return { ok: true, kept: false };
   }
 
-  await db.insert(ritualChecks).values({ ritualId, day, personId: ctx.me.id }).onConflictDoNothing();
+  await db.insert(ritualChecks).values({ ritualId, coupleId: ctx.relationship.id, day, personId: ctx.me.id }).onConflictDoNothing();
   await db
     .insert(roomEvents)
-    .values({ relationshipId: ctx.relationship.id, personId: ctx.me.id, kind: "system", body: `kept “${ritual.title}” ${ritual.emoji} — your turn, or just smile` })
+    .values({ coupleId: ctx.relationship.id, personId: ctx.me.id, kind: "system", body: `kept “${ritual.title}” ${ritual.emoji} — your turn, or just smile` })
     .catch(() => undefined);
 
   // A gentle milestone note the first time a run reaches a round number.
@@ -51,13 +51,13 @@ export async function toggleRitual(ritualId: string): Promise<{ ok: boolean; kep
     .select({ day: ritualChecks.day })
     .from(ritualChecks)
     .innerJoin(rituals, eq(rituals.id, ritualChecks.ritualId))
-    .where(and(eq(rituals.relationshipId, ctx.relationship.id), eq(rituals.cadence, "daily"), gte(ritualChecks.day, lastDays(day, 400)[0])))
+    .where(and(eq(rituals.coupleId, ctx.relationship.id), eq(rituals.cadence, "daily"), gte(ritualChecks.day, lastDays(day, 400)[0])))
     .catch(() => []);
   const streak = streakFrom(rows.map((r) => r.day), day).current;
   if (streak > 1 && streak % 30 === 0) {
     await db
       .insert(roomEvents)
-      .values({ relationshipId: ctx.relationship.id, personId: ctx.me.id, kind: "system", body: `${streak} days of your rhythm, without a single day of pressure 💛` })
+      .values({ coupleId: ctx.relationship.id, personId: ctx.me.id, kind: "system", body: `${streak} days of your rhythm, without a single day of pressure 💛` })
       .catch(() => undefined);
   }
 
@@ -80,11 +80,11 @@ export async function createRitual(_: unknown, fd: FormData): Promise<{ ok?: boo
   const [{ n }] = await db
     .select({ n: count() })
     .from(rituals)
-    .where(and(eq(rituals.relationshipId, ctx.relationship.id), isNull(rituals.archivedAt)));
+    .where(and(eq(rituals.coupleId, ctx.relationship.id), isNull(rituals.archivedAt)));
   if (Number(n) >= MAX_RITUALS) return { error: `Twelve rituals is the most that stays a rhythm rather than a list` };
 
   await db.insert(rituals).values({
-    relationshipId: ctx.relationship.id,
+    coupleId: ctx.relationship.id,
     createdBy: ctx.me.id,
     title,
     detail,
@@ -104,7 +104,7 @@ export async function archiveRitual(ritualId: string): Promise<{ ok: boolean }> 
   await db
     .update(rituals)
     .set({ archivedAt: new Date() })
-    .where(and(eq(rituals.id, ritualId), eq(rituals.relationshipId, ctx.relationship.id), isNull(rituals.archivedAt)));
+    .where(and(eq(rituals.id, ritualId), eq(rituals.coupleId, ctx.relationship.id), isNull(rituals.archivedAt)));
   touch();
   return { ok: true };
 }
@@ -117,11 +117,11 @@ export async function keepAllToday(ids: string[]): Promise<{ ok: boolean; kept: 
   const mine = await db
     .select({ id: rituals.id })
     .from(rituals)
-    .where(and(eq(rituals.relationshipId, ctx.relationship.id), isNull(rituals.archivedAt)));
+    .where(and(eq(rituals.coupleId, ctx.relationship.id), isNull(rituals.archivedAt)));
   const allowed = new Set(mine.map((r) => r.id));
   const wanted = ids.filter((id) => allowed.has(id));
   if (!wanted.length) return { ok: true, kept: 0 };
-  await db.insert(ritualChecks).values(wanted.map((ritualId) => ({ ritualId, day, personId: ctx.me.id }))).onConflictDoNothing();
+  await db.insert(ritualChecks).values(wanted.map((ritualId) => ({ ritualId, coupleId: ctx.relationship.id, day, personId: ctx.me.id }))).onConflictDoNothing();
   touch();
   return { ok: true, kept: wanted.length };
 }

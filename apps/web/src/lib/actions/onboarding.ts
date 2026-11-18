@@ -68,7 +68,7 @@ async function addPerson(fd: FormData, coupleId: string, slot: 1 | 2, theme: The
         features: [],
       })
       .returning();
-    await tx.insert(coupleMembers).values({ relationshipId: coupleId, personId: person.id, slot });
+    await tx.insert(coupleMembers).values({ coupleId, personId: person.id, slot });
     if (topics.length) {
       await tx.insert(interests).values(topics.map((topic, position) => ({ personId: person.id, topic, position })));
     }
@@ -116,12 +116,12 @@ export async function joinWorld(_: ActionState, fd: FormData): Promise<ActionSta
   if (!chosenTopics(fd).length) return { error: "Pick at least one interest" };
 
   const db = await getDb();
-  const [couple] = await db.select().from(couples).where(eq(couples.id, invite.relationshipId)).limit(1);
+  const [couple] = await db.select().from(couples).where(eq(couples.id, invite.coupleId)).limit(1);
   if (!couple) return { error: "This world no longer exists." };
   const [{ n }] = await db
     .select({ n: count() })
     .from(coupleMembers)
-    .where(and(eq(coupleMembers.relationshipId, couple.id), eq(coupleMembers.status, "active")));
+    .where(and(eq(coupleMembers.coupleId, couple.id), eq(coupleMembers.status, "active")));
   if (Number(n) >= 2) return { error: "This invitation has already been used." };
 
   let person;

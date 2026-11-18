@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   const [row] = await db
     .insert(photos)
     .values({
-      relationshipId: ctx.relationship.id,
+      coupleId: ctx.relationship.id,
       uploadedBy: ctx.me.id,
       mime: file.type,
       bytes: Buffer.from(await file.arrayBuffer()).toString("base64"),

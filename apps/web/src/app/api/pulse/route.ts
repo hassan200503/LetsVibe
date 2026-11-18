@@ -56,16 +56,16 @@ export async function POST(req: NextRequest) {
       .select({ playing: roomState.playing, title: roomState.title, mediaTitle: media.title, updatedBy: roomState.updatedBy, updatedAt: roomState.updatedAt })
       .from(roomState)
       .leftJoin(media, eq(media.id, roomState.mediaId))
-      .where(eq(roomState.relationshipId, ctx.relationship.id)),
+      .where(eq(roomState.coupleId, ctx.relationship.id)),
     after === null
       ? Promise.resolve([])
       : db
           .select()
           .from(roomEvents)
-          .where(and(eq(roomEvents.relationshipId, ctx.relationship.id), gt(roomEvents.id, after), ne(roomEvents.personId, ctx.me.id), inArray(roomEvents.kind, ["nudge", "invite", "system"])))
+          .where(and(eq(roomEvents.coupleId, ctx.relationship.id), gt(roomEvents.id, after), ne(roomEvents.personId, ctx.me.id), inArray(roomEvents.kind, ["nudge", "invite", "system"])))
           .orderBy(roomEvents.id)
           .limit(10),
-    db.select({ id: roomEvents.id }).from(roomEvents).where(eq(roomEvents.relationshipId, ctx.relationship.id)).orderBy(desc(roomEvents.id)).limit(1),
+    db.select({ id: roomEvents.id }).from(roomEvents).where(eq(roomEvents.coupleId, ctx.relationship.id)).orderBy(desc(roomEvents.id)).limit(1),
     // Newer features never take presence down with them.
     withSchema(async () => {
       await markDelivered(ctx);

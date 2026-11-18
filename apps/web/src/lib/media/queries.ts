@@ -69,7 +69,7 @@ export async function toCards(ctx: Ctx, rows: Row[], full = true): Promise<Media
 
 const withPerson = {
   id: media.id,
-  relationshipId: media.relationshipId,
+  coupleId: media.coupleId,
   addedBy: media.addedBy,
   kind: media.kind,
   source: media.source,
@@ -108,7 +108,7 @@ export async function galleryPage(ctx: Ctx, opts: { kind?: string | null; by?: s
   const c = dec(opts.cursor);
   const by = opts.by ? ctx.members.find((m) => m.slug === opts.by) : null;
   const filters: (SQL | undefined)[] = [
-    eq(media.relationshipId, ctx.relationship.id),
+    eq(media.coupleId, ctx.relationship.id),
     opts.kind && ["photo", "video", "song"].includes(opts.kind) ? eq(media.kind, opts.kind) : undefined,
     by ? eq(media.addedBy, by.id) : undefined,
     c ? sql`(${media.createdAt}, ${media.id}) < (${c[0]}::timestamptz, ${c[1]}::uuid)` : undefined,
@@ -132,7 +132,7 @@ export async function mediaByIds(ctx: Ctx, ids: string[]): Promise<MediaCard[]> 
     .select(withPerson)
     .from(media)
     .innerJoin(people, eq(people.id, media.addedBy))
-    .where(and(eq(media.relationshipId, ctx.relationship.id), inArray(media.id, ids)));
+    .where(and(eq(media.coupleId, ctx.relationship.id), inArray(media.id, ids)));
   const cards = await toCards(ctx, rows);
   return ids.map((id) => cards.find((c) => c.id === id)).filter((c): c is MediaCard => !!c);
 }
@@ -144,7 +144,7 @@ export async function mediaComments_(ctx: Ctx, id: string) {
     .from(mediaComments)
     .innerJoin(people, eq(people.id, mediaComments.personId))
     .innerJoin(media, eq(media.id, mediaComments.mediaId))
-    .where(and(eq(mediaComments.mediaId, id), eq(media.relationshipId, ctx.relationship.id)))
+    .where(and(eq(mediaComments.mediaId, id), eq(media.coupleId, ctx.relationship.id)))
     .orderBy(mediaComments.createdAt);
 }
 
@@ -156,7 +156,7 @@ export async function unseenCount(ctx: Ctx): Promise<number> {
     .from(media)
     .where(
       and(
-        eq(media.relationshipId, ctx.relationship.id),
+        eq(media.coupleId, ctx.relationship.id),
         ne(media.addedBy, ctx.me.id),
         ctx.me.gallerySeenAt ? gt(media.createdAt, new Date(ctx.me.gallerySeenAt)) : undefined,
       ),
