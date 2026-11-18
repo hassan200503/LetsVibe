@@ -434,9 +434,9 @@
       "dependsOn": [
         "E1-001"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "0010_couple_id adds a nullable column, backfills from the value each row already had (children inherit their parent), sets NOT NULL, adds the couple FK, moves the primary keys, anchors the four parent tables with unique (id, couple_id), adds five (parent_id, couple_id) composite FKs so a cross-couple reference is impossible at the DB level, and rebuilds the 20 read paths with the tenant first; 0011 drops the legacy column. couple-id-migration.test.ts proves the backfill on two seeded couples and that a cross-couple child insert is rejected. docs/ARCHITECTURE.md lists ownership for all 40 tables. Commit b88ef90."
     },
     {
       "id": "E2-002",
