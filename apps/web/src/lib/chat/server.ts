@@ -47,7 +47,7 @@ async function toMessages(ctx: Ctx, rows: Row[]): Promise<ChatMessage[]> {
 }
 
 async function partnerState(ctx: Ctx, now: Date): Promise<ChatPartner | null> {
-  const partner = ctx.partners[0];
+  const partner = ctx.partner;
   if (!partner) return null;
   const db = await getDb();
   const [[p], [c]] = await Promise.all([
@@ -251,7 +251,7 @@ export async function logCall(ctx: Ctx, call: { id: string; callerId: string; ki
 
 /** A phone notification for my partner, unless they're looking at the chat right now. */
 async function notifyPartner(ctx: Ctx, m: ChatMessage) {
-  const partner = ctx.partners[0];
+  const partner = ctx.partner;
   if (!partner) return;
   try {
     const db = await getDb();

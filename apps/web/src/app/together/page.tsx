@@ -31,7 +31,7 @@ export default async function TogetherRoomPage() {
       </>
     );
   }
-  const first = ctx.partners[0]?.displayName.split(" ")[0];
+  const first = ctx.partner?.displayName.split(" ")[0];
   return (
     <>
       <PageHeader world="us" eyebrow="Together" title="Wherever you are, in the same moment">

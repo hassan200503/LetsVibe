@@ -156,7 +156,7 @@ export function applyCall(ctx: Ctx, a: CallAction): Promise<CallResult> {
   return withSchema(async () => {
     const db = await getDb();
     const now = new Date();
-    const partner = ctx.partners[0];
+    const partner = ctx.partner;
 
     if (a.action === "start") {
       if (!partner) return { ok: false, error: "There's nobody to call yet." };

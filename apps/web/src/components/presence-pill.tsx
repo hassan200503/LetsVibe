@@ -8,14 +8,14 @@ import { ago } from "@/lib/ui/time";
 import { Avatar } from "./avatar";
 import { useCall } from "./call/call-provider";
 import { IconHeadphones, IconMessage, IconPhone, IconVideo } from "./icons";
-import { usePartners } from "./me-context";
+import { usePartner } from "./me-context";
 import { usePulse } from "./pulse";
 
 const PLACE: Record<string, string> = { room: "in the Together room", gallery: "looking at the gallery", chat: "in your messages", site: `on ${BRAND.name}` };
 
 /** My partner's face with a live online/offline dot, and one-tap ways to reach them. */
 export function PresencePill() {
-  const partner = usePartners()[0];
+  const partner = usePartner();
   const { data } = usePulse();
   const call = useCall();
   const [open, setOpen] = useState(false);

@@ -130,7 +130,7 @@ export default async function Home() {
   const serverNow = nowMs();
   const now = new Date(serverNow);
   const members = ctx.members;
-  const partner = ctx.partners[0];
+  const partner = ctx.partner;
   const topicsBy = new Map(await Promise.all(members.map(async (m) => [m.id, await personTopics(m.id)] as const)));
   const mainTopic = (id: string) => topicsBy.get(id)?.find((t) => t !== "nature");
   const [memories, media, photos, memoriesToday, mine, theirs, shared, question, unread] = await Promise.all([
@@ -152,8 +152,7 @@ export default async function Home() {
     .filter((x): x is { m: PublicPerson; b: NonNullable<ReturnType<typeof birthdayInfo>> } => !!x.b)
     .sort((x, y) => x.b.days - y.b.days);
   const birthdayToday = birthdays.find((x) => x.b.days === 0);
-  const [a, b] = members;
-  const names = b ? `${firstOf(a)} & ${firstOf(b)}` : firstOf(a);
+  const names = partner ? `${firstOf(ctx.me)} & ${firstOf(partner)}` : firstOf(ctx.me);
 
   // A moment from the journey, different on every visit (today's anniversary of a memory comes first).
   const lived = memories.filter((r) => r.m.kind !== "plan");
@@ -229,7 +228,7 @@ export default async function Home() {
               </div>
               <div className="pointer-events-none absolute -right-20 top-4 w-[300px] opacity-35 sm:-right-12 sm:w-[420px] lg:relative lg:right-auto lg:top-auto lg:w-auto lg:opacity-100">
                 <div className="fade-late" style={{ "--d": "400ms" } as React.CSSProperties}>
-                  <Orbit left={firstOf(a)} right={firstOf(b)} className="mx-auto h-auto w-full max-w-[520px]" />
+                  <Orbit left={firstOf(ctx.me)} right={firstOf(partner ?? undefined)} className="mx-auto h-auto w-full max-w-[520px]" />
                 </div>
               </div>
             </div>

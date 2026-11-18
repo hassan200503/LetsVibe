@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/avatar";
 import { IconFlip, IconMic, IconMicOff, IconMinimize, IconPhone, IconPhoneOff, IconSignal, IconSpeaker, IconVideo, IconVideoOff } from "@/components/icons";
-import { useMembers } from "@/components/me-context";
+import { useMembers, usePartner } from "@/components/me-context";
 import { duration } from "@/components/chat/format";
 import { useCall } from "./call-provider";
 
@@ -87,6 +87,7 @@ function Pip({ stream, mirrored }: { stream: MediaStream | null; mirrored: boole
 export function CallScreen() {
   const api = useCall();
   const members = useMembers();
+  const fallbackPartner = usePartner();
   const snap = api?.snap;
   const now = useTicker(snap?.phase === "connected" || snap?.phase === "reconnecting");
   const [sinks, setSinks] = useState<MediaDeviceInfo[]>([]);
@@ -103,7 +104,7 @@ export function CallScreen() {
 
   if (!api || !snap || snap.phase === "idle") return null;
   const { engine, minimized, setMinimized } = api;
-  const partner = members.find((m) => m.slug === snap.call?.partnerSlug) ?? members[1];
+  const partner = members.find((m) => m.slug === snap.call?.partnerSlug) ?? fallbackPartner;
   const first = partner?.displayName.split(" ")[0] ?? "";
   const video = snap.kind === "video" || snap.camOn || snap.remoteCamOn;
   const showRemote = snap.remoteCamOn && snap.remoteVideoLive && (snap.phase === "connected" || snap.phase === "reconnecting");

@@ -51,7 +51,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                     <Nav />
                     <main className="flex-1 pb-28 sm:pb-0">{children}</main>
                     <ServiceWorker />
-                    {ctx.partners[0] && <ReachPrompt partnerName={ctx.partners[0].displayName.split(" ")[0]} />}
+                    {ctx.partner && <ReachPrompt partnerName={ctx.partner.displayName.split(" ")[0]} />}
                   </RoomProvider>
                 </CallProvider>
               </PulseProvider>

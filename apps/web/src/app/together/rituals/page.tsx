@@ -9,7 +9,7 @@ export const metadata = { title: "Rituals" };
 export default async function RitualsPage() {
   const ctx = await requireCtx();
   const data = await readRituals(ctx, new Date());
-  const partner = ctx.partners[0]?.displayName.split(" ")[0];
+  const partner = ctx.partner?.displayName.split(" ")[0];
   return (
     <>
       <PageHeader world="us" eyebrow="Together" title="The small things, on repeat">

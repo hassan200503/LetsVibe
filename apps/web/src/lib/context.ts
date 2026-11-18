@@ -21,28 +21,45 @@ export type Ctx = {
   relationship: typeof couples.$inferSelect;
   /** Everyone else in the relationship (one person today, but not assumed). */
   partners: PublicPerson[];
+  /** The other half, which is what every screen means by "your partner": null until they join. */
+  partner: PublicPerson | null;
   members: PublicPerson[];
 };
+
+/**
+ * The couple a person belongs to, from their own membership.
+ *
+ * A person can only be in one couple at a time — `couple_members_active_person`
+ * enforces it in the database — so this is the couple, never one of several.
+ * If the data ever disagrees, fail closed rather than guess whose world a
+ * request belongs to.
+ */
+function soleActiveLink<T>(personId: string, links: T[]): T | null {
+  if (links.length > 1) throw new Error(`person ${personId} belongs to ${links.length} active couples`);
+  return links[0] ?? null;
+}
 
 /** Someone's context by id: their relationship and partner. Only for trusted server code. */
 export async function ctxFor(personId: string): Promise<Ctx | null> {
   const db = await getDb();
   const [me] = await db.select().from(people).where(eq(people.id, personId));
   if (!me) return null;
-  const [link] = await db
+  const links = await db
     .select({ r: couples })
     .from(coupleMembers)
     .innerJoin(couples, eq(couples.id, coupleMembers.coupleId))
-    .where(and(eq(coupleMembers.personId, me.id), eq(coupleMembers.status, "active")))
-    .limit(1);
+    .where(and(eq(coupleMembers.personId, me.id), eq(coupleMembers.status, "active")));
+  const link = soleActiveLink(me.id, links);
   if (!link) return null;
   const others = await db
     .select({ p: people })
     .from(coupleMembers)
     .innerJoin(people, eq(people.id, coupleMembers.personId))
     .where(and(eq(coupleMembers.coupleId, link.r.id), eq(coupleMembers.status, "active"), ne(people.id, me.id)));
-  const [meP, ...partners] = await Promise.all([strip(me), ...others.map((o) => strip(o.p))]);
-  return { me: meP, relationship: link.r, partners, members: [meP, ...partners] };
+  const meP = await strip(me);
+  const partners = await Promise.all(others.map((o) => strip(o.p)));
+  const [partner = null] = partners;
+  return { me: meP, relationship: link.r, partners, partner, members: [meP, ...partners] };
 }
 
 /** The signed-in person and their relationship, or null. Cached per request. */

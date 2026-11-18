@@ -22,7 +22,8 @@ export function useMembers(): Member[] {
   return useContext(MeContext)?.members ?? [];
 }
 
-export function usePartners(): Member[] {
+/** The other half, or null until they join. The one way to find "my partner". */
+export function usePartner(): Member | null {
   const v = useContext(MeContext);
-  return v ? v.members.filter((m) => m.id !== v.me.id) : [];
+  return v?.members.find((m) => m.id !== v.me.id) ?? null;
 }

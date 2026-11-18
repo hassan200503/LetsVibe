@@ -6,12 +6,12 @@ import { sendNudge } from "@/lib/actions/together";
 import { Avatar } from "@/components/avatar";
 import { useCall } from "@/components/call/call-provider";
 import { IconHeadphones, IconMessage, IconPhone, IconVideo } from "@/components/icons";
-import { usePartners } from "@/components/me-context";
+import { usePartner } from "@/components/me-context";
 import { usePulse } from "@/components/pulse";
 
 /** Appears when your partner is online right now — the moment to do something together. */
 export function TogetherNow() {
-  const partner = usePartners()[0];
+  const partner = usePartner();
   const { data } = usePulse();
   const call = useCall();
   const [pending, start] = useTransition();

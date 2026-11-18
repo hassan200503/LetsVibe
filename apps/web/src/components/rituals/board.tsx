@@ -7,7 +7,7 @@ import { archiveRitual, createRitual } from "@/lib/rituals/actions";
 import type { RitualsData, RitualView } from "@/lib/rituals/queries";
 import { nextMilestone } from "@/lib/rituals/streak";
 import { Avatar } from "@/components/avatar";
-import { useMembers, type Member } from "@/components/me-context";
+import { useMe, useMembers, usePartner, type Member } from "@/components/me-context";
 import { IconArrowRight, IconCheck, IconClock, IconPlus, IconTrash } from "@/components/icons";
 import { useRitualTaps } from "./use-rituals";
 
@@ -354,14 +354,16 @@ function NewRitual() {
 }
 
 export function RitualBoard({ data }: { data: RitualsData }) {
+  const me = useMe();
   const members = useMembers();
+  const partner = usePartner();
   const taps = useRitualTaps(data.rituals);
   const { streak } = data;
   const goal = nextMilestone(streak.current);
   const daily = data.rituals.filter((r) => r.cadence === "daily");
   const weekly = data.rituals.filter((r) => r.cadence === "weekly");
-  const partnerFirst = members[1]?.displayName.split(" ")[0] ?? "They";
-  const theirs = members.slice(1);
+  const partnerFirst = partner?.displayName.split(" ")[0] ?? "They";
+  const theirs = members.filter((m) => m.id !== me.id);
 
   const status = streak.keptToday
     ? streak.current === 1

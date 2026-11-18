@@ -4,10 +4,11 @@ import { useActionState, useState } from "react";
 import { answerToday } from "@/lib/actions/together";
 import type { DailyQuestion } from "@/lib/together/daily";
 import { Avatar } from "@/components/avatar";
-import { useMembers } from "@/components/me-context";
+import { useMe, useMembers, usePartner } from "@/components/me-context";
 
 /** Today's question, written like a letter: each answer stays sealed until you've both written yours. */
 export function QuestionCard({ q }: { q: DailyQuestion }) {
+  const me = useMe();
   const members = useMembers();
   const [editing, setEditing] = useState(!q.mine);
   const [state, action, pending] = useActionState(async (s: unknown, fd: FormData) => {
@@ -15,7 +16,7 @@ export function QuestionCard({ q }: { q: DailyQuestion }) {
     if (r.ok) setEditing(false);
     return r;
   }, null);
-  const partner = members[1];
+  const partner = usePartner();
   const partnerFirst = partner?.displayName.split(" ")[0] ?? "They";
   return (
     <section className="tile relative overflow-hidden p-6 sm:p-9">
@@ -38,7 +39,7 @@ export function QuestionCard({ q }: { q: DailyQuestion }) {
           <figure className="rounded-2xl border border-line bg-surface-2/60 p-5">
             <blockquote className="font-lux text-xl leading-snug">“{q.mine}”</blockquote>
             <figcaption className="mt-3 flex items-center gap-2 text-xs text-muted">
-              <Avatar name={members[0]?.displayName ?? ""} url={members[0]?.avatarUrl} theme={members[0]?.theme ?? "us"} size={22} /> You
+              <Avatar name={me.displayName} url={me.avatarUrl} theme={me.theme} size={22} /> You
             </figcaption>
           </figure>
           {q.theirs.map((t) => {
