@@ -491,9 +491,9 @@
       "dependsOn": [
         "E2-001"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "ctxFor reads every active membership instead of limit(1) and fails closed (throws) if a person is ever in two active couples, rather than picking one; Ctx gains an explicit partner (null until the second person joins) and Ctx.partners stays as the full list. usePartners()[0] / members[1] were replaced by usePartner() and by me/partner directly in layout, home, chat, together, rituals, call-screen, question-card, together-now and presence-pill, so no call site indexes members by position. Every API route already resolved through getCtx (session-derived); only /api/cron/ingest uses CRON_SECRET and /api/csp-report is unauthenticated, and neither reads couple data. A request for another couple's row reads as nothing: /api/gallery/[id] and /api/photos/[id] return 404 and mediaByIds is couple-scoped. context.test.ts (10 tests) proves resolution from either half, the solo case, the unknown id, the two-couple failure and cross-couple reads. Commit d1507ca."
     },
     {
       "id": "E2-005",

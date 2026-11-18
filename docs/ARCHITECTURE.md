@@ -95,6 +95,7 @@ Notes:
 - `chat_state` is one row per member inside a couple (`person_id` primary key), so it carries both columns and belongs to the couple for tenancy purposes.
 - Five couple tables are children of another couple table: `media_reactions`, `media_comments`, `call_signals`, `research_messages` and `ritual_checks`. Each carries its own `couple_id` *and* a composite foreign key `(parent_id, couple_id)` → `(parent.id, parent.couple_id)`. The parent therefore holds a redundant unique index on `(id, couple_id)` — `media_id_couple`, `calls_id_couple`, `research_threads_id_couple`, `rituals_id_couple` — which exists to anchor that key, not for lookups.
 - `invitations`, `entitlements` and `usage_ledger` already carried `couple_id` before E2-001, so `0010_couple_id` does not touch them. `0011_drop_legacy_relationship` leaves no table with a `relationship_id` column.
+- The couple is derived only from the verified session (E2-004): `ctxFor` resolves the signed-in person's active membership, and `soleActiveLink` throws if a person is ever in more than one active couple rather than picking one. `Ctx.partner` is the other half (null until they join); `Ctx.partners` is the full list. No handler reads a couple or relationship id from request input, and a request naming another couple's row reads as nothing — `/api/gallery/[id]` and `/api/photos/[id]` answer 404.
 
 ### Data model changes
 
