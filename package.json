@@ -19,6 +19,7 @@
     "setup": "corepack pnpm install && corepack pnpm typegen && corepack pnpm seed",
     "reset": "node apps/web/scripts/reset.mjs",
     "check": "corepack pnpm typecheck && corepack pnpm lint && corepack pnpm test && corepack pnpm build",
+    "audit:deps": "node scripts/audit-deps.mjs",
     "db:generate": "corepack pnpm --filter @letsvibe/web db:generate",
     "db:migrate": "corepack pnpm --filter @letsvibe/web db:migrate",
     "seed": "corepack pnpm --filter @letsvibe/web seed",

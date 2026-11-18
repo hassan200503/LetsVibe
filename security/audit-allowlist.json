@@ -1,0 +1,6 @@
+{
+  "$comment": "Read by scripts/audit-deps.mjs. See docs/SECURITY.md §Dependency audit for the policy. Nothing is currently suppressed: every production finding must be fixed or suppressed here with a reason, an owner and an expiry.",
+  "threshold": "high",
+  "scope": "prod",
+  "entries": []
+}

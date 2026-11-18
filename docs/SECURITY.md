@@ -87,6 +87,20 @@ Actors: two members of a couple; anonymous internet; abusive authenticated users
 - Rotation owners and dates in the inventory (E9-006); rehearse rotation of session/auth/TURN/AI keys.
 - No secrets in client bundles; `NEXT_PUBLIC_*` is treated as public.
 
+## Secret scanning (E0-003)
+
+- `.github/workflows/security.yml` runs `gitleaks/gitleaks-action` over the **full commit history** (`fetch-depth: 0`) on every push to `main`, every pull request, a weekly schedule and manual dispatch. A finding fails the workflow; it is never `continue-on-error`.
+- `.gitleaks.toml` extends the default rule set (`useDefault = true`) and suppresses **nothing** today. A false positive is added only as a path-scoped allowlist entry with a one-line reason; a real secret is rotated (H22) and purged from history instead of suppressed inline.
+- Local history scan (2026-11-18): a pattern sweep of `git log -p --all` for AWS/Google/GitHub/Slack/OpenAI keys, PEM private keys, JWTs and `postgres://user:pass@` connection strings returned **3 hits, all false positives** — a CLI validation message and a docs list of secret *names*. The only `.env`-like file ever added is `.env.example`. gitleaks itself is not installed on the dev machine (H1); the CI job is the enforcement point.
+
+## Dependency audit policy (E0-003)
+
+- The production audit runs through `pnpm run audit:deps` → [scripts/audit-deps.mjs](file:///C:/Users/kkc36/projects/our-universe/scripts/audit-deps.mjs), which reads [security/audit-allowlist.json](file:///C:/Users/kkc36/projects/our-universe/security/audit-allowlist.json). Threshold and scope live in that file so a waiver is a reviewed change, not a flag added to a workflow step.
+- Policy: `scope: "prod"` (a dev-only finding is never laundered into the production result); `threshold: "high"` (any finding at or above it fails the build unless waived); every waiver names an advisory id, reason, owner and **expiry** — an expired waiver stops suppressing, so it gets re-reviewed instead of becoming permanent.
+- The script fails loudly if `pnpm audit` output cannot be parsed or returns no advisories map, so an output-shape change can never be mistaken for "clean".
+- Current result (2026-11-18): `pnpm audit --prod` reports **0 advisories** among 193 production dependencies; the allowlist is empty.
+- `.github/workflows/security.yml` also runs a **Semgrep baseline** (`semgrep scan --config auto`) and uploads the SARIF artifact. It reports rather than blocks until the baseline is triaged; publishing to code scanning and adding `--error` is the follow-up.
+
 ## Dependency and build security
 
 - CI: pnpm frozen lockfile, typegen, typecheck, lint, tests, build; gitleaks full history; dependency audit; Semgrep/CodeQL (E0-003).

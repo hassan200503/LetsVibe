@@ -1,0 +1,23 @@
+# gitleaks configuration — https://github.com/gitleaks/gitleaks
+#
+# Policy (see docs/SECURITY.md §Secret scanning):
+#
+# 1. The default rule set is always on. Rules are never deleted to make a build
+#    pass.
+# 2. A false positive is suppressed here, never inline in source, and only with
+#    a path that is specific, a one-line reason, and a date. A real secret is
+#    rotated (H1) and purged from history instead of suppressed.
+# 3. `gitleaks detect` runs over the full history on every push and pull
+#    request, so a commit that adds a key fails the build rather than being
+#    noticed later.
+
+title = "Let'sVibe"
+
+[extend]
+useDefault = true
+
+# Nothing is currently suppressed. Add entries as an array, for example:
+#
+# [[allowlists]]
+# description = "Test fixture that looks like a key"
+# paths = ['''src/lib/example\.test\.ts$''']

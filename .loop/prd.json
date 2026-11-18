@@ -53,9 +53,9 @@
       "dependsOn": [
         "E0-001"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "security.yml (gitleaks full history + Semgrep baseline), .gitleaks.toml (nothing suppressed), scripts/audit-deps.mjs + security/audit-allowlist.json (prod scope, high threshold, expiring waivers), CI step uses pnpm audit:deps. Full-history pattern sweep: 3 hits, all false positives. gitleaks binary absent locally (H1); CI is the enforcement point."
     },
     {
       "id": "E0-004",
