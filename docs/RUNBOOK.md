@@ -91,7 +91,7 @@ npx eas submit --platform android    # human only
 ## Incidents
 
 1. Declare severity (SEV1 cross-tenant/abuse; SEV2 outage/data loss; SEV3 degraded; SEV4 minor) and open a channel.
-2. Contain: revoke sessions/keys if compromised; disable the affected feature flag; block abusive accounts.
+2. Contain: revoke sessions/keys if compromised; disable the affected feature flag; block abusive accounts. Flags live in `apps/web/src/lib/flags/registry.ts`. `FEATURE_FLAGS="<flag>=off"` plus a deploy is the absolute kill switch; `pnpm --filter @letsvibe/web flags -- --couple=<id> --flag=<flag> --off --reason="SEV2"` turns one couple off within the cache TTL and writes the audit entry.
 3. Preserve evidence (logs, audit, object versions) before cleanup; do not copy private content into tickets.
 4. Notify the human owner immediately for SEV1/SEV2. Legal notification timelines follow counsel and local law (Kenya pending).
 5. Communicate status without exposing personal data.

@@ -2295,9 +2295,9 @@
       "dependsOn": [
         "E0-002"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "src/lib/flags: registry (paywall, licensedCatalogue, screenShare, syncTransportV2, publicCommons; all default off), a pure precedence resolver in core.ts (FEATURE_FLAGS=<key>=off is an absolute kill switch > audited per-couple override > <key>=on for everyone > FEATURE_FLAG_ALLOWLIST for one couple > registry default), and a server-only wrapper that reads nothing from the request, so no client can force a flag. Overrides live in one kv row per couple and every change appends a flag.override entry to the append-only audit log. Break-glass tooling: pnpm flags -- --list / --couple=<id> --show / --flag=<key> --on|--off|--clear (FLAGS_ADMIN=1). Unreadable env entries are reported instead of silently ignored. Tests cover the precedence table, env and allowlist parsing, a stored row with junk, and the override+audit round trip on PGlite. Gates: typegen, typecheck 3 tasks, lint, 14 files/100 tests, 36-route build. No product surface consumes a flag yet by design; E1-016 (flag-gated paywall UI) is the first."
     },
     {
       "id": "E1-015",
