@@ -16,8 +16,10 @@ The loop cannot make legal, billing, store, production-access or irreversible de
   Answer:
 - [ ] **Verify the demo-account migration (H6)** — slug/passcode login is removed; `pnpm seed` upgrades the two local demo accounts to email + password without touching couple data, and production has no public users yet. Before launch, verify the seeded accounts on staging and confirm no production data existed under the old login.
   Answer:
-- [ ] **Require CI and protect main (H30)** — repository settings cannot be enforced from code — in GitHub open Settings ? Rules/Branches, protect `main`, require the `CI / check` status check, require a pull request and dismiss stale approvals; then tick this box.
+- [ ] **Configure Vercel and the production database (H31)** — the Vercel project `our-universe` fails because its Root Directory is unset and it has no database — set Root Directory to `apps/web`, add the Neon pooled `DATABASE_URL` (optionally a 32+ character `SESSION_SECRET`), run `pnpm db:migrate` against it, redeploy `main`, and verify `/api/health` returns 200 before inviting users. Demo credentials in `apps/web/PASSWORDS.local.md` are local only.
   Answer:
+- [x] **Require CI and protect main (H30)** — repository settings cannot be enforced from code — in GitHub open Settings ? Rules/Branches, protect `main`, require the `CI / check` status check, require a pull request and dismiss stale approvals; then tick this box.
+  Answer: Applied by the loop on 2026-11-19: `main` requires the `check` status, a pull request and conversation resolution; admins are included; force pushes and deletions are blocked.
 
 ## Legal, safety and privacy
 
