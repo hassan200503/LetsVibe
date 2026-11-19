@@ -5,17 +5,68 @@ on:
     branches: [main]
   pull_request:
 
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CI: "true"
+  NEXT_TELEMETRY_DISABLED: "1"
+  TURBO_TELEMETRY_DISABLED: "1"
+
 jobs:
   check:
+    name: check
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.21.0
+          run_install: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - run: npx next typegen
-      - run: npm run typecheck
-      - run: npm run lint
-      - run: npm test
+          cache: pnpm
+
+      - name: Restore Next/Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/web/.next/cache
+            .turbo
+          key: ${{ runner.os }}-build-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate route types
+        run: pnpm typegen
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: Dependency audit
+        # The threshold and allowlist live in security/audit-allowlist.json so a
+        # waiver is a reviewed file, not a flag added to a workflow step.
+        run: pnpm run audit:deps

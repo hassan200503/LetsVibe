@@ -1,0 +1,153 @@
+#!/usr/bin/env node
+/**
+ * One-command production setup. Run it in your own terminal:
+ *
+ *   pnpm go-live   (from the repository root)
+ *
+ * You paste the Neon connection string once (hidden as you type). The script:
+ *   1. migrates and seeds the Neon database, applies the passwords already in
+ *      PASSWORDS.local.md, and loads the first live discoveries;
+ *   2. stores DATABASE_URL as a GitHub Actions secret (for the scheduled refresh);
+ *   3. logs in to Netlify (your browser opens; you approve), creates the site,
+ *      sets DATABASE_URL, SESSION_SECRET and CRON_SECRET, and deploys.
+ *
+ * Secrets never appear on screen and are only kept in .env.production.local,
+ * which git ignores. Safe to re-run: every step is idempotent.
+ */
+import { spawnSync } from "node:child_process";
+import { randomBytes } from "node:crypto";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import readline from "node:readline";
+
+function remoteRepo() {
+  if (process.env.GITHUB_REPOSITORY) return process.env.GITHUB_REPOSITORY;
+  const r = spawnSync("git", ["remote", "get-url", "origin"], { encoding: "utf8" });
+  const url = r.status === 0 ? r.stdout.trim() : "";
+  const match = url.match(/github\.com[:/]([^/]+)\/([^/]+?)(?:\.git)?$/);
+  if (!match) throw new Error("Add a GitHub remote named origin first: git remote add origin git@github.com:<owner>/<repo>.git");
+  return `${match[1]}/${match[2]}`;
+}
+const REPO = remoteRepo();
+const ENV_FILE = ".env.production.local";
+
+function step(title) {
+  console.log(`\n\x1b[35m❤ ${title}\x1b[0m`);
+}
+
+// cmd.exe splits unquoted arguments at & | < > ^ — quote them on Windows.
+const quote = (a) => (process.platform === "win32" && /[\s&|<>^%"]/.test(a) ? '"' + a.replace(/"/g, '\\"') + '"' : a);
+
+function run(cmd, args, env = {}, { input, allowFail = false, capture = false } = {}) {
+  const r = spawnSync(cmd, args.map(quote), {
+    stdio: capture ? ["pipe", "pipe", "inherit"] : input !== undefined ? ["pipe", "inherit", "inherit"] : "inherit",
+    input,
+    env: { ...process.env, ...env },
+    shell: process.platform === "win32",
+    encoding: "utf8",
+  });
+  if (r.status !== 0 && !allowFail) {
+    // Only the leading arguments: later ones can be secret values.
+    console.error(`\n✗ "${cmd} ${args.slice(0, 3).join(" ")} …" failed. Fix the message above and run pnpm go-live again.`);
+    process.exit(1);
+  }
+  return r;
+}
+
+function readEnvFile() {
+  const env = {};
+  if (!existsSync(ENV_FILE)) return env;
+  for (const line of readFileSync(ENV_FILE, "utf8").split(/\r?\n/)) {
+    const m = line.match(/^([A-Z_]+)=(.*)$/);
+    if (m) env[m[1]] = m[2];
+  }
+  return env;
+}
+
+function writeEnvFile(env) {
+  writeFileSync(ENV_FILE, Object.entries(env).map(([k, v]) => `${k}=${v}`).join("\n") + "\n");
+}
+
+function askHidden(question) {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: true });
+    rl._writeToOutput = (s) => {
+      if (s.includes(question)) process.stdout.write(s);
+      else process.stdout.write("*");
+    };
+    rl.question(question, (answer) => {
+      rl.close();
+      process.stdout.write("\n");
+      resolve(answer.trim());
+    });
+  });
+}
+
+const env = readEnvFile();
+
+step("Neon connection string");
+if (!env.DATABASE_URL) {
+  console.log("In the Neon console, open your project → Connect → turn on \"Connection pooling\" → copy the string.");
+  const url = await askHidden("Paste it here (hidden): ");
+  if (!/^postgres(ql)?:\/\/.+@.+\/.+/.test(url)) {
+    console.error("That doesn't look like a Postgres connection string (postgresql://user:password@host/db).");
+    process.exit(1);
+  }
+  env.DATABASE_URL = url;
+}
+env.SESSION_SECRET ||= randomBytes(32).toString("base64url");
+env.CRON_SECRET ||= randomBytes(24).toString("base64url");
+writeEnvFile(env);
+console.log(`Saved to ${ENV_FILE} (git-ignored).`);
+
+const db = { DATABASE_URL: env.DATABASE_URL };
+
+step("Creating tables");
+run("corepack", ["pnpm", "db:migrate"], db);
+
+step("Adding the demo couple and your worlds");
+run("corepack", ["pnpm", "seed"], db);
+
+step("Applying your passwords from PASSWORDS.local.md");
+if (!existsSync("PASSWORDS.local.md")) {
+  console.error("PASSWORDS.local.md is missing — run `pnpm passwords` first (with the dev server stopped).");
+  process.exit(1);
+}
+run("corepack", ["pnpm", "passwords", "--reuse"], db);
+
+step("Fetching the first live discoveries (about a minute)");
+run("corepack", ["pnpm", "ingest", "--force"], db);
+
+step("GitHub secret for the scheduled refresh");
+run("gh", ["secret", "set", "DATABASE_URL", "--repo", REPO], {}, { input: env.DATABASE_URL });
+
+step("Netlify login (your browser will open — approve it there)");
+const netlify = ["--yes", "netlify-cli@latest"];
+const status = run("npx", [...netlify, "status"], {}, { allowFail: true, capture: true });
+if (status.status !== 0 || /Not logged in/i.test(status.stdout ?? "")) run("npx", [...netlify, "login"]);
+
+step("Netlify site");
+if (!existsSync(".netlify/state.json")) {
+  const name = `lovora-${randomBytes(3).toString("hex")}`;
+  console.log(`Creating ${name}.netlify.app — if asked, pick your own team.`);
+  run("npx", [...netlify, "sites:create", "--name", name]);
+}
+
+step("Setting the site's secrets");
+for (const key of ["DATABASE_URL", "SESSION_SECRET", "CRON_SECRET"]) {
+  run("npx", [...netlify, "env:set", key, env[key]], {}, { capture: true });
+  console.log(`  ✓ ${key}`);
+}
+
+step("Building and deploying (a few minutes)");
+const deploy = run("npx", [...netlify, "deploy", "--build", "--prod", "--json"], {}, { capture: true });
+let url = null;
+try {
+  const json = JSON.parse(deploy.stdout.slice(deploy.stdout.indexOf("{")));
+  url = json.url ?? json.deploy_url;
+} catch {
+  url = deploy.stdout.match(/https:\/\/[a-z0-9-]+\.netlify\.app/)?.[0] ?? null;
+}
+if (url) writeFileSync("DEPLOYED.local.md", `# Lovora is live\n\n${url}\n`);
+
+console.log(`\n\x1b[35m❤ Lovora is live: ${url ?? "(see the Netlify output above)"}\x1b[0m`);
+console.log("Sign in with the email and password in PASSWORDS.local.md.");

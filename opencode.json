@@ -1,0 +1,31 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "bash": {
+      "*": "allow",
+      "sudo *": "deny",
+      "rm -rf /*": "deny",
+      "rm -rf ~*": "deny",
+      "rm -rf .git*": "deny",
+      "git push *": "deny",
+      "git remote *": "deny",
+      "git reset --hard origin*": "deny",
+      "git filter-branch *": "deny",
+      "git rebase *": "deny",
+      "supabase db push*": "deny",
+      "supabase link*": "deny",
+      "supabase functions deploy*": "deny",
+      "eas submit*": "deny",
+      "eas build --profile production*": "deny",
+      "vercel --prod*": "deny",
+      "curl * | *": "deny",
+      "wget * | *": "deny"
+    },
+    "read": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.env.example": "allow"
+    }
+  }
+}

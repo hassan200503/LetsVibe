@@ -1,0 +1,213 @@
+:root {
+  --bg: #f7f3ec;
+  --surface: #fffdf9;
+  --surface-2: #f1ebe1;
+  --ink: #17130f;
+  --muted: #6c645a;
+  --line: #e5ddd0;
+  --focus: #2563eb;
+  --gold: #a07b43;
+  --gold-ink: #80602f;
+  --gold-2: #d7b77c;
+  --gold-soft: #f4ead6;
+  --night: #09070d;
+  --pearl: #f6efe4;
+  --accent: #c81e3a;
+  --accent-ink: #ffffff;
+  --accent-soft: #fde8ec;
+  --accent-2: #b7791f;
+  --glow: rgba(200, 30, 58, 0.18);
+  --link: #1d5fd0;
+  --link-soft: #e6eeff;
+  --success: #1a6b45;
+  --success-ink: #ffffff;
+  --success-soft: #e2f1e8;
+  --warn: #8a5a00;
+  --warn-ink: #ffffff;
+  --warn-soft: #f8eed4;
+  --danger: #b3261e;
+  --danger-ink: #ffffff;
+  --danger-soft: #fce7e4;
+  --on-dark: #f4efe7;
+  --on-dark-muted: #a9a2a0;
+  --success-on-dark: #3ddc84;
+  --danger-on-dark: #ff6b7a;
+  --gold-on-dark: #e7c98d;
+  --night-soft: #17131c;
+  --font-body: var(--font-inter), system-ui, sans-serif;
+  --font-display-stack: var(--font-fraunces), Georgia, serif;
+  --font-lux-stack: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  --font-lux-numeric-stack: var(--font-cormorant), Georgia, serif;
+  --font-mono-stack: var(--font-jetbrains), monospace;
+  --type-eyebrow-size: 0.72rem;
+  --type-eyebrow-tracking: 0.16em;
+  --type-eyebrow-weight: 700;
+  --type-eyebrow-lux-size: 0.68rem;
+  --type-eyebrow-lux-tracking: 0.34em;
+  --type-eyebrow-lux-weight: 500;
+  --type-eyebrow-lux-line: 1;
+  --type-display-xl-size: clamp(2.6rem, 7vw, 5.2rem);
+  --type-display-xl-line: 1.02;
+  --type-display-xl-tracking: -0.03em;
+  --type-display-xl-weight: 600;
+  --type-field-size: 0.95rem;
+  --type-button-size: 0.9rem;
+  --type-chip-size: 0.75rem;
+  --type-prose-size: 1.02rem;
+  --type-prose-line: 1.75;
+  --type-mono-label-size: 0.66rem;
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-field-y: 0.6rem;
+  --space-field-x: 0.8rem;
+  --space-button-y: 0.55rem;
+  --space-button-x: 1.1rem;
+  --space-button-gold-y: 0.8rem;
+  --space-button-gold-x: 1.4rem;
+  --space-button-glass-x: 1.3rem;
+  --space-chip-y: 0.22rem;
+  --space-chip-x: 0.7rem;
+  --radius-code: 6px;
+  --radius-field: 12px;
+  --radius-panel: 14px;
+  --radius-toast: 18px;
+  --radius-card: 20px;
+  --radius-glow: 22px;
+  --radius-tile: 24px;
+  --radius-pill: 999px;
+  --shadow-button: 0 1px 0 rgb(255 255 255 / 0.18) inset, 0 6px 18px -8px var(--glow);
+  --shadow-card: 0 1px 0 color-mix(in oklab, var(--ink) 3%, transparent), 0 10px 30px -18px color-mix(in oklab, var(--ink) 22%, transparent);
+  --shadow-gold: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 -1px 0 rgb(120 80 30 / 0.35) inset, 0 12px 30px -12px rgb(214 173 105 / 0.55);
+  --shadow-gold-hover: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 -1px 0 rgb(120 80 30 / 0.35) inset, 0 16px 36px -12px rgb(214 173 105 / 0.7);
+  --shadow-lift: 0 28px 56px -30px var(--glow);
+  --shadow-tile: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 1px 2px color-mix(in oklab, var(--ink) 4%, transparent), 0 18px 40px -28px color-mix(in oklab, var(--ink) 30%, transparent);
+  --shadow-toast: 0 24px 60px -24px rgb(0 0 0 / 0.35);
+  --shadow-stage: 0 1px 0 rgb(255 255 255 / 0.07) inset, 0 50px 120px -50px rgb(18 6 20 / 0.6);
+  --motion-duration-fast: 150ms;
+  --motion-duration-base: 200ms;
+  --motion-duration-lift: 350ms;
+  --motion-duration-reveal: 320ms;
+  --motion-duration-slow: 600ms;
+  --motion-duration-word: 1200ms;
+  --motion-duration-fade: 1400ms;
+  --motion-duration-ambient: 6000ms;
+  --motion-duration-shimmer: 9000ms;
+  --motion-duration-breathe: 7000ms;
+  --motion-duration-ring: 2200ms;
+  --motion-duration-ring-shake: 1600ms;
+  --motion-duration-flash: 1600ms;
+  --motion-duration-drawer: 320ms;
+  --motion-duration-typing: 1200ms;
+  --motion-duration-caret: 1000ms;
+  --motion-duration-orbit: 70000ms;
+  --motion-duration-orbit-slow: 240000ms;
+  --motion-ease-standard: ease;
+  --motion-ease-in-out: ease-in-out;
+  --motion-ease-out: ease-out;
+  --motion-ease-linear: linear;
+  --motion-ease-lux: cubic-bezier(0.22, 0.8, 0.16, 1);
+}
+
+[data-world="indigo"] {
+  --accent: #4338ca;
+  --accent-soft: #e8e7fb;
+  --accent-2: #0f9488;
+  --glow: rgba(67, 56, 202, 0.2);
+}
+[data-world="sage"] {
+  --accent: #47715a;
+  --accent-soft: #e6efe9;
+  --accent-2: #7c6fc0;
+  --glow: rgba(79, 122, 99, 0.2);
+}
+[data-world="us"] {
+  --accent: #c81e3a;
+  --accent-soft: #fde8ec;
+  --accent-2: #b7791f;
+  --glow: rgba(200, 30, 58, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0a0e;
+    --surface: #141218;
+    --surface-2: #1c1a21;
+    --ink: #f2ede5;
+    --muted: #a59e9f;
+    --line: #2b2831;
+    --focus: #93c5fd;
+    --gold: #d6b67c;
+    --gold-ink: #f0dcae;
+    --gold-2: #f0dcae;
+    --gold-soft: #2a2319;
+    --accent: #f0556d;
+    --accent-ink: #14060a;
+    --accent-soft: #3a1620;
+    --accent-2: #e0b25c;
+    --link: #8ec5ff;
+    --link-soft: #16233a;
+    --success: #5fd39a;
+    --success-ink: #04150c;
+    --success-soft: #12291d;
+    --warn: #f0c66b;
+    --warn-ink: #1c1406;
+    --warn-soft: #2a2211;
+    --danger: #ff8a95;
+    --danger-ink: #210508;
+    --danger-soft: #3a1620;
+    --on-dark: #f4efe7;
+    --on-dark-muted: #a9a2a0;
+    --success-on-dark: #3ddc84;
+    --danger-on-dark: #ff6b7a;
+    --gold-on-dark: #e7c98d;
+    --night-soft: #17131c;
+    --shadow-tile: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 18px 40px -28px rgb(0 0 0 / 0.8);
+  }
+  [data-world="indigo"] {
+    --accent: #8b87ff;
+    --accent-soft: #23214a;
+    --accent-2: #2dd4bf;
+  }
+  [data-world="sage"] {
+    --accent: #8cc3a4;
+    --accent-soft: #1d2e25;
+    --accent-2: #b4a8f0;
+  }
+  [data-world="us"] {
+    --accent: #f0556d;
+    --accent-soft: #3a1620;
+    --accent-2: #e0b25c;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration-fast: 0.01ms;
+    --motion-duration-base: 0.01ms;
+    --motion-duration-lift: 0.01ms;
+    --motion-duration-reveal: 0.01ms;
+    --motion-duration-slow: 0.01ms;
+    --motion-duration-word: 0.01ms;
+    --motion-duration-fade: 0.01ms;
+    --motion-duration-ambient: 0.01ms;
+    --motion-duration-shimmer: 0.01ms;
+    --motion-duration-breathe: 0.01ms;
+    --motion-duration-ring: 0.01ms;
+    --motion-duration-ring-shake: 0.01ms;
+    --motion-duration-flash: 0.01ms;
+    --motion-duration-drawer: 0.01ms;
+    --motion-duration-typing: 0.01ms;
+    --motion-duration-caret: 0.01ms;
+    --motion-duration-orbit: 0.01ms;
+    --motion-duration-orbit-slow: 0.01ms;
+  }
+}

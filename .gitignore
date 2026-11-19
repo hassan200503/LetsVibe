@@ -1,8 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
+node_modules/
+.pnp
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -11,14 +11,15 @@
 !.yarn/versions
 
 # testing
-/coverage
+coverage/
 
-# next.js
-/.next/
-/out/
+# next.js and turbo
+.next/
+out/
+.turbo/
 
 # production
-/build
+build/
 
 # misc
 .DS_Store
@@ -42,11 +43,18 @@ yarn-error.log*
 next-env.d.ts
 
 # local embedded database
-/.data
+.data/
 
-# plain passcodes for handing over — never commit
+# plaintext credential handover files — never commit
 PASSCODES*.md
+PASSWORDS*.md
+
+# code-review agent reports
+.loop/reviews/
+
+# gate-triage agent plans
+.loop/triage/
 
 # Netlify CLI link state and local deploy notes
-.netlify
+.netlify/
 DEPLOYED.local.md

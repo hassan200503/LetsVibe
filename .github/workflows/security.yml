@@ -1,0 +1,80 @@
+name: Security
+
+# Secret scanning and SAST. Kept apart from the `CI` workflow so a security
+# finding reads as a security finding rather than a failed build, and so the
+# slower scans can be re-run on their own.
+#
+# The dependency audit lives in `CI` next to the other gates because it needs the
+# installed workspace; its policy is security/audit-allowlist.json.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # A key can be committed to a branch that is never merged, and the rule
+    # registry keeps moving. Re-scan the full history weekly.
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: security-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    name: secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out every commit
+        uses: actions/checkout@v6
+        with:
+          # gitleaks walks commit diffs, so a shallow clone would hide history.
+          fetch-depth: 0
+
+      - name: Scan the full history for secrets
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          # Used to comment on pull requests.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # .gitleaks.toml is auto-detected at the repository root; naming it
+          # here makes the policy explicit.
+          GITLEAKS_CONFIG: .gitleaks.toml
+          # Required only for organization-owned repositories; a user account
+          # needs no license, and an unset secret is simply empty.
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  sast:
+    name: sast
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container:
+      # The image ships the Semgrep CLI; the version tracks the image tag.
+      image: semgrep/semgrep
+    # Dependabot pull requests get a read-only token and cannot fetch rules.
+    if: github.actor != 'dependabot[bot]'
+    steps:
+      - name: Check out
+        uses: actions/checkout@v6
+
+      - name: Semgrep baseline
+        # A baseline, not yet a blocking gate: it reports and uploads so findings
+        # become visible and countable before they start failing builds. Adding
+        # `--error` (and publishing to code scanning) is the follow-up once the
+        # baseline is triaged. `--config auto` requires Semgrep's registry
+        # telemetry (rule IDs and file paths, never source); the scan cannot run
+        # with metrics disabled.
+        run: semgrep scan --config auto --sarif --output semgrep.sarif
+
+      - name: Upload the SARIF report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-sarif
+          path: semgrep.sarif
+          # A scan that dies before writing the file should not hide the log.
+          if-no-files-found: warn
