@@ -141,3 +141,4 @@ Nothing below can be substituted by code. Each already has an entry in `.loop/HU
 | 7 | E3-007 chat photos & voice notes | done | `media.origin` split, 7 attachment integration tests + 6 waveform tests, 247 web tests — iteration 024 |
 | 8 | E17-002 repository review agent | done | `pnpm review:agent`, 19 fixture tests, 0 findings on a 220-file branch diff, 266 web tests — iteration 025 |
 | 9 | E1-016 flag-gated paywall | done | `/premium` 404s behind the `paywall` flag, entitlement-driven comparison, disabled CTA, ADR-003, 6 tests, 273 web tests — iteration 026 |
+| 10 | E17-003 gate-failure triage | done | `pnpm triage:agent`, 14 fixture tests, synthetic 3-failure log ranked, live clean typecheck, 287 web tests — iteration 027 |

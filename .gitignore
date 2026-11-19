@@ -51,6 +51,9 @@ PASSCODES*.md
 # code-review agent reports
 .loop/reviews/
 
+# gate-triage agent plans
+.loop/triage/
+
 # Netlify CLI link state and local deploy notes
 .netlify/
 DEPLOYED.local.md

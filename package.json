@@ -21,6 +21,7 @@
     "check": "corepack pnpm typecheck && corepack pnpm lint && corepack pnpm test && corepack pnpm build",
     "audit:deps": "node scripts/audit-deps.mjs",
     "review:agent": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/agent-review.mts",
+    "triage:agent": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/agent-triage.mts",
     "db:generate": "corepack pnpm --filter @letsvibe/web db:generate",
     "db:migrate": "corepack pnpm --filter @letsvibe/web db:migrate",
     "seed": "corepack pnpm --filter @letsvibe/web seed",

@@ -2919,9 +2919,9 @@
       "dependsOn": [
         "E17-002"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "scripts/agent-triage.mts + apps/web/src/lib/agent/triage.ts. Reads a saved log (newest .loop/logs/*.log) or runs one allowlisted gate (typecheck|lint|test|build|a11y); parses turbo/tsc, ESLint, Vitest, Next and axe output into gate/package/file/line/rule, dedupes, ranks compile>lint>test>a11y and emits ordered repair steps each with a focused proof command plus a final full-gate command. Absolute paths are normalised to the workspace; truncated logs, missing files, summaries without a FAIL line and empty logs produce notes, never invented diagnoses. Writes only under .loop/triage/ (refuses other paths); no git, no edits, exit 0 after a report, 2 on usage/read errors. 14 fixture tests. Smoke-tested on a synthetic turbo log (3 failures ranked) and on a live passing typecheck (status clean)."
     },
     {
       "id": "E17-004",

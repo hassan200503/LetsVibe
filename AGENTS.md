@@ -30,6 +30,7 @@ pnpm motion                # reduced-motion, flashing and forced-colours audit o
 pnpm build                 # production build
 pnpm audit:deps            # dependency-audit policy in security/audit-allowlist.json
 pnpm review:agent -- --no-ai   # heuristic code review of the branch diff; add a Gemini key for the model pass
+pnpm triage:agent -- --log <file>   # turn a saved gate log (or --run <gate>) into a ranked repair plan under .loop/triage/
 pnpm seed                  # seed local demo data
 pnpm entitlements -- --couple=<id|name> --show   # break-glass; needs ENTITLEMENTS_ADMIN=1
 pnpm flags -- --list                            # every feature flag and its default
