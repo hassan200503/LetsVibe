@@ -7,13 +7,19 @@ import { coupleMembers, couples, people, type Person } from "@/lib/db/schema";
 import { readSession } from "@/lib/auth/session";
 import { viewUrl } from "@/lib/media/storage";
 
-export type PublicPerson = Omit<Person, "passwordHash"> & { avatarUrl: string | null };
+export type PublicPerson = Omit<Person, "passwordHash"> & {
+  /** The couple-scoped member slug: what `/world/<slug>` and `?as=` mean. */
+  slug: string;
+  avatarUrl: string | null;
+};
 
-async function strip(p: Person): Promise<PublicPerson> {
+async function strip(p: Person, slug: string): Promise<PublicPerson> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { passwordHash, ...rest } = p;
   const avatarUrl = p.avatarPath ? await viewUrl(p.avatarPath).catch(() => null) : null;
-  return { ...rest, avatarUrl };
+  // `slug` here is the membership slug, which replaces the account handle on
+  // everything the couple's world renders or links to.
+  return { ...rest, slug, avatarUrl };
 }
 
 export type Ctx = {
@@ -45,19 +51,19 @@ export async function ctxFor(personId: string): Promise<Ctx | null> {
   const [me] = await db.select().from(people).where(eq(people.id, personId));
   if (!me) return null;
   const links = await db
-    .select({ r: couples })
+    .select({ r: couples, slug: coupleMembers.slug })
     .from(coupleMembers)
     .innerJoin(couples, eq(couples.id, coupleMembers.coupleId))
     .where(and(eq(coupleMembers.personId, me.id), eq(coupleMembers.status, "active")));
   const link = soleActiveLink(me.id, links);
   if (!link) return null;
   const others = await db
-    .select({ p: people })
+    .select({ p: people, slug: coupleMembers.slug })
     .from(coupleMembers)
     .innerJoin(people, eq(people.id, coupleMembers.personId))
     .where(and(eq(coupleMembers.coupleId, link.r.id), eq(coupleMembers.status, "active"), ne(people.id, me.id)));
-  const meP = await strip(me);
-  const partners = await Promise.all(others.map((o) => strip(o.p)));
+  const meP = await strip(me, link.slug);
+  const partners = await Promise.all(others.map((o) => strip(o.p, o.slug)));
   const [partner = null] = partners;
   return { me: meP, relationship: link.r, partners, partner, members: [meP, ...partners] };
 }

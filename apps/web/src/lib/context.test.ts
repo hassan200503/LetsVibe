@@ -47,10 +47,10 @@ async function seed() {
   const kim = await person("kim");
   const robin = await person("robin");
   await db.insert(schema.coupleMembers).values([
-    { coupleId: ours.id, personId: alex.id, slot: 1 },
-    { coupleId: ours.id, personId: sam.id, slot: 2 },
-    { coupleId: theirs.id, personId: kim.id, slot: 1 },
-    { coupleId: theirs.id, personId: robin.id, slot: 2 },
+    { coupleId: ours.id, personId: alex.id, slug: "alex", slot: 1 },
+    { coupleId: ours.id, personId: sam.id, slug: "sam", slot: 2 },
+    { coupleId: theirs.id, personId: kim.id, slug: "kim", slot: 1 },
+    { coupleId: theirs.id, personId: robin.id, slug: "robin", slot: 2 },
   ]);
   return { ours, theirs, alex, sam, kim, robin };
 }
@@ -106,7 +106,7 @@ describe("ctxFor", () => {
   it("has no partner until the second person joins", async () => {
     const alone = await couple("Alone");
     const solo = await person("solo");
-    await db.insert(schema.coupleMembers).values({ coupleId: alone.id, personId: solo.id, slot: 1 });
+    await db.insert(schema.coupleMembers).values({ coupleId: alone.id, personId: solo.id, slug: "solo", slot: 1 });
     const ctx = await ctxOf(solo.id);
     expect(ctx.relationship.id).toBe(alone.id);
     expect(ctx.partner).toBeNull();
@@ -127,7 +127,7 @@ describe("ctxFor", () => {
     // prove what the application does if the invariant is ever written around.
     await client.exec('DROP INDEX "couple_members_active_person"');
     const third = await couple("Third");
-    await db.insert(schema.coupleMembers).values({ coupleId: third.id, personId: s.alex.id, slot: 1 });
+    await db.insert(schema.coupleMembers).values({ coupleId: third.id, personId: s.alex.id, slug: "alex", slot: 1 });
 
     await expect(ctxFor(s.alex.id)).rejects.toThrow(/belongs to 2 active couples/);
 

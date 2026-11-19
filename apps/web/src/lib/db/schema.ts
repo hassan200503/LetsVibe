@@ -44,34 +44,50 @@ const visibility = () => text("visibility").$type<Visibility>().notNull().defaul
 
 // ─── People & couple ──────────────────────────────────────────────────────
 
-export const people = pgTable("people", {
-  id: id(),
-  /** URL slug, e.g. "alex". Never a nickname. */
-  slug: text("slug").notNull().unique(),
-  displayName: text("display_name").notNull(),
-  /** Optional, private-to-the-couple nickname. Never shown on public pages. */
-  nickname: text("nickname"),
-  headline: text("headline"),
-  course: text("course"),
-  focus: text("focus"),
-  intro: text("intro"),
-  motto: text("motto"),
-  /** Visual identity key: one of THEME_KEYS in @letsvibe/domain. */
-  theme: text("theme").notNull(),
-  /** Label used for the person's learning journal, e.g. "Engineering Journey". */
-  journalTitle: text("journal_title").notNull().default("Learning Journey"),
-  radarTitle: text("radar_title").notNull().default("Radar"),
-  /** Optional sections this person uses: "projects", "thinking". */
-  features: text("features").array().notNull().default(sql`'{}'::text[]`),
-  publicProfile: boolean("public_profile").notNull().default(false),
-  /** Storage pathname of the profile picture (see src/lib/media/storage.ts). */
-  avatarPath: text("avatar_path"),
-  birthday: date("birthday"),
-  /** When this person last opened the gallery: drives the "new" badge. */
-  gallerySeenAt: timestamp("gallery_seen_at", { withTimezone: true }),
-  passwordHash: text("password_hash").notNull(),
-  createdAt: createdAt(),
-});
+export const people = pgTable(
+  "people",
+  {
+    id: id(),
+    /**
+     * Account handle used to sign in, e.g. "alex". Never a nickname, never a
+     * URL: the couple-scoped slug in `couple_members` is what appears in links.
+     */
+    slug: text("slug").notNull().unique(),
+    displayName: text("display_name").notNull(),
+    /** Optional, private-to-the-couple nickname. Never shown on public pages. */
+    nickname: text("nickname"),
+    headline: text("headline"),
+    course: text("course"),
+    focus: text("focus"),
+    intro: text("intro"),
+    motto: text("motto"),
+    /** Visual identity key: one of THEME_KEYS in @letsvibe/domain. */
+    theme: text("theme").notNull(),
+    /** Label used for the person's learning journal, e.g. "Engineering Journey". */
+    journalTitle: text("journal_title").notNull().default("Learning Journey"),
+    radarTitle: text("radar_title").notNull().default("Radar"),
+    /** Optional sections this person uses: "projects", "thinking". */
+    features: text("features").array().notNull().default(sql`'{}'::text[]`),
+    publicProfile: boolean("public_profile").notNull().default(false),
+    /**
+     * Opaque handle for `/p/<handle>`, generated when the public profile is
+     * switched on. Deliberately not the login slug: the public URL must not
+     * disclose a credential. The check keeps "public" unreachable without one.
+     */
+    publicHandle: text("public_handle"),
+    /** Storage pathname of the profile picture (see src/lib/media/storage.ts). */
+    avatarPath: text("avatar_path"),
+    birthday: date("birthday"),
+    /** When this person last opened the gallery: drives the "new" badge. */
+    gallerySeenAt: timestamp("gallery_seen_at", { withTimezone: true }),
+    passwordHash: text("password_hash").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex("people_public_handle").on(t.publicHandle),
+    check("people_public_handle_check", sql`${t.publicProfile} = false or ${t.publicHandle} is not null`),
+  ],
+);
 
 export const couples = pgTable("couples", {
   id: id(),
@@ -87,6 +103,12 @@ export const coupleMembers = pgTable(
   {
     coupleId: uuid("couple_id").notNull().references(() => couples.id, { onDelete: "cascade" }),
     personId: uuid("person_id").notNull().references(() => people.id, { onDelete: "cascade" }),
+    /**
+     * URL slug inside this couple's world (`/world/<slug>`, `/discover?as=`).
+     * Unique per couple, so two couples can both have an "alex" — it identifies
+     * a member of one world, never a global identity.
+     */
+    slug: text("slug").notNull(),
     /** Active member capacity is two: slots are 1 and 2. */
     slot: smallint("slot").notNull(),
     status: text("status").notNull().default("active"),
@@ -96,6 +118,7 @@ export const coupleMembers = pgTable(
     primaryKey({ columns: [t.coupleId, t.personId] }),
     check("couple_members_slot_check", sql`${t.slot} in (1, 2)`),
     check("couple_members_status_check", sql`${t.status} in ('active', 'left')`),
+    uniqueIndex("couple_members_couple_slug").on(t.coupleId, t.slug),
     uniqueIndex("couple_members_active_slot").on(t.coupleId, t.slot).where(sql`${t.status} = 'active'`),
     uniqueIndex("couple_members_active_person").on(t.personId).where(sql`${t.status} = 'active'`),
     index("couple_members_person").on(t.personId),

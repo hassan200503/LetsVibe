@@ -8,6 +8,7 @@ import { THEME_KEYS } from "@letsvibe/domain";
 import { getDb } from "@/lib/db/client";
 import { couples, interests, knowledgeEntries, learningRecords, people, preferences, projects, radarItems, radarLanes, skills } from "@/lib/db/schema";
 import { requireCtx } from "@/lib/context";
+import { newPublicHandle } from "@/lib/public-profile";
 import { isTopicKey } from "@/lib/trends/topics";
 import { type ActionState, firstError, formObject, isoDate, list, optText, optUrl, reqText, today, visibilityField } from "./util";
 
@@ -243,6 +244,11 @@ export async function saveProfile(_: ActionState, fd: FormData): Promise<ActionS
   const parsed = profile.safeParse(formObject(fd));
   if (!parsed.success) return { error: firstError(parsed.error) };
   const d = parsed.data;
+  const [current] = await db.select({ publicHandle: people.publicHandle }).from(people).where(eq(people.id, personId));
+  const publicProfile = d.publicProfile === "on";
+  // The handle is minted once and kept while the profile is off, so switching
+  // back on restores the same link. Off, the lookup refuses it either way.
+  const publicHandle = current?.publicHandle ?? (publicProfile ? newPublicHandle() : null);
   await db
     .update(people)
     .set({
@@ -255,7 +261,8 @@ export async function saveProfile(_: ActionState, fd: FormData): Promise<ActionS
       intro: d.intro ?? null,
       motto: d.motto ?? null,
       birthday: d.birthday ?? null,
-      publicProfile: d.publicProfile === "on",
+      publicProfile,
+      publicHandle,
     })
     .where(eq(people.id, personId));
   revalidatePath("/", "layout");

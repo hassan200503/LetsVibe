@@ -150,10 +150,10 @@ export default async function SettingsPage() {
               <label className="flex items-start gap-2 text-sm">
                 <input type="checkbox" name="publicProfile" defaultChecked={me.publicProfile} className="mt-1" />
                 <span>
-                  Turn on my public profile at <code>/p/{me.slug}</code>. It shows only your name, introduction, and skills and projects marked 🌍 Public. Never memories, journals,
-                  vaults or your nickname.
-                  {me.publicProfile && (
-                    <Link href={`/p/${me.slug}`} className="ml-1 text-accent underline">
+                  Turn on my public profile. It gets its own private link, never your sign-in name, and shows only your name, introduction, and skills and projects marked 🌍 Public. Never
+                  memories, journals, vaults or your nickname.
+                  {me.publicProfile && me.publicHandle && (
+                    <Link href={`/p/${me.publicHandle}`} className="ml-1 text-accent underline">
                       View it
                     </Link>
                   )}

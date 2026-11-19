@@ -46,12 +46,12 @@ describe("identity constraints", () => {
     const d = await person("slot-c");
 
     await db.insert(schema.coupleMembers).values([
-      { coupleId: c.id, personId: a.id, slot: 1 },
-      { coupleId: c.id, personId: b.id, slot: 2 },
+      { coupleId: c.id, personId: a.id, slug: "slot-a", slot: 1 },
+      { coupleId: c.id, personId: b.id, slug: "slot-b", slot: 2 },
     ]);
 
-    await expect(db.insert(schema.coupleMembers).values({ coupleId: c.id, personId: d.id, slot: 3 })).rejects.toThrow();
-    await expect(db.insert(schema.coupleMembers).values({ coupleId: c.id, personId: d.id, slot: 1 })).rejects.toThrow();
+    await expect(db.insert(schema.coupleMembers).values({ coupleId: c.id, personId: d.id, slug: "slot-c", slot: 3 })).rejects.toThrow();
+    await expect(db.insert(schema.coupleMembers).values({ coupleId: c.id, personId: d.id, slug: "slot-d", slot: 1 })).rejects.toThrow();
   });
 
   it("allows only one active couple per person", async () => {
@@ -59,9 +59,9 @@ describe("identity constraints", () => {
     const second = await couple("Second");
     const p = await person("one-active-couple");
 
-    await db.insert(schema.coupleMembers).values({ coupleId: first.id, personId: p.id, slot: 1 });
+    await db.insert(schema.coupleMembers).values({ coupleId: first.id, personId: p.id, slug: "one-active-couple", slot: 1 });
     await expect(
-      db.insert(schema.coupleMembers).values({ coupleId: second.id, personId: p.id, slot: 1 }),
+      db.insert(schema.coupleMembers).values({ coupleId: second.id, personId: p.id, slug: "one-active-couple", slot: 1 }),
     ).rejects.toThrow();
 
     await db
@@ -69,8 +69,25 @@ describe("identity constraints", () => {
       .set({ status: "left" })
       .where(and(eq(schema.coupleMembers.coupleId, first.id), eq(schema.coupleMembers.personId, p.id)));
     await expect(
-      db.insert(schema.coupleMembers).values({ coupleId: second.id, personId: p.id, slot: 1 }),
+      db.insert(schema.coupleMembers).values({ coupleId: second.id, personId: p.id, slug: "one-active-couple", slot: 1 }),
     ).resolves.toBeDefined();
+  });
+
+  it("scopes the member slug to the couple, so two couples can both have an alex", async () => {
+    const ours = await couple("Ours");
+    const theirs = await couple("Theirs");
+    const a = await person("slug-a");
+    const b = await person("slug-b");
+    const c = await person("slug-c");
+
+    // The same slug in two different worlds is the point: it identifies a
+    // member of one couple, never a global identity.
+    await db.insert(schema.coupleMembers).values([
+      { coupleId: ours.id, personId: a.id, slug: "alex", slot: 1 },
+      { coupleId: theirs.id, personId: b.id, slug: "alex", slot: 1 },
+    ]);
+
+    await expect(db.insert(schema.coupleMembers).values({ coupleId: ours.id, personId: c.id, slug: "alex", slot: 2 })).rejects.toThrow();
   });
 
   it("accepts an invitation at most once", async () => {

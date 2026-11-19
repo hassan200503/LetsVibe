@@ -510,9 +510,9 @@
       "dependsOn": [
         "E2-004"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "Public profiles now answer only at an opaque people.public_handle minted on opt-in (22-char base64url), behind a DB check that a public profile always has one; people.slug stays the sign-in handle and no longer appears in any URL. The member slug moved to couple_members.slug with unique(couple_id, slug), so two couples can both have an alex. lib/public-profile.ts is the single reader with an explicit column allowlist per table and /p/[handle] is noindex; the legacy /p/[slug] route was deleted. 8 tests prove opt-out unreachability, account/member slugs never resolving, exact allowlisted keys, public-only skills/projects, off-then-on handle stability, and refusal of empty/oversized/unknown handles. API pass: trends feed reads take an explicit viewers list so reaction decoration is narrowed in SQL; discover-item notes are scoped with inArray; gallery reactions resolve member slugs through ctx.members. Gates: typecheck, lint, 20 files / 234 tests, 36-route build."
     },
     {
       "id": "E2-006",

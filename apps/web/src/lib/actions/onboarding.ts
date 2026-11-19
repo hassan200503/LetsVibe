@@ -15,6 +15,7 @@ import { ActionState, formObject, isoDate, reqText } from "./util";
 import { z } from "zod";
 
 type Db = Awaited<ReturnType<typeof getDb>>;
+type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 const personInput = z.object({
   displayName: reqText(80),
@@ -39,7 +40,7 @@ function baseSlug(name: string): string {
   );
 }
 
-async function uniqueSlug(db: Db, name: string): Promise<string> {
+async function uniqueAccountSlug(db: Db, name: string): Promise<string> {
   const base = baseSlug(name);
   for (let n = 1; n < 1000; n++) {
     const candidate = n === 1 ? base : `${base}-${n}`;
@@ -49,9 +50,28 @@ async function uniqueSlug(db: Db, name: string): Promise<string> {
   return `${base}-${Date.now().toString(36)}`;
 }
 
+/**
+ * A slug that is free inside one couple's world. The couple is the namespace,
+ * so two worlds can both have an "alex"; the account handle above stays global
+ * because it is what signs you in.
+ */
+async function uniqueMemberSlug(tx: Tx, coupleId: string, name: string): Promise<string> {
+  const base = baseSlug(name);
+  for (let n = 1; n < 1000; n++) {
+    const candidate = n === 1 ? base : `${base}-${n}`;
+    const [found] = await tx
+      .select({ id: coupleMembers.personId })
+      .from(coupleMembers)
+      .where(and(eq(coupleMembers.coupleId, coupleId), eq(coupleMembers.slug, candidate)))
+      .limit(1);
+    if (!found) return candidate;
+  }
+  return `${base}-${Date.now().toString(36)}`;
+}
+
 async function addPerson(fd: FormData, coupleId: string, slot: 1 | 2, theme: ThemeKey, displayName: string, passcode: string) {
   const db = await getDb();
-  const slug = await uniqueSlug(db, displayName);
+  const slug = await uniqueAccountSlug(db, displayName);
   const passwordHash = await bcrypt.hash(passcode, 12);
   const topics = chosenTopics(fd);
 
@@ -68,7 +88,7 @@ async function addPerson(fd: FormData, coupleId: string, slot: 1 | 2, theme: The
         features: [],
       })
       .returning();
-    await tx.insert(coupleMembers).values({ coupleId, personId: person.id, slot });
+    await tx.insert(coupleMembers).values({ coupleId, personId: person.id, slug: await uniqueMemberSlug(tx, coupleId, displayName), slot });
     if (topics.length) {
       await tx.insert(interests).values(topics.map((topic, position) => ({ personId: person.id, topic, position })));
     }

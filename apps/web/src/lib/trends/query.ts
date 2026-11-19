@@ -1,7 +1,7 @@
 import "server-only";
 import { and, arrayOverlaps, desc, eq, gte, inArray, max, notInArray, sql, type SQL } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
-import { interests, people, preferences, savedDiscoveries, trendSources, trends } from "@/lib/db/schema";
+import { interests, preferences, savedDiscoveries, trendSources, trends } from "@/lib/db/schema";
 import { SOURCES } from "./sources";
 import { LIFE_TAGS, MIND_TAGS, TOPICS, type TopicKey, isTopicKey } from "./topics";
 
@@ -66,19 +66,33 @@ async function prefFilters(personId: string | null): Promise<SQL[]> {
   return out;
 }
 
-async function attachReactions(rows: (typeof trends.$inferSelect)[]): Promise<TrendCard[]> {
+/**
+ * Who is reading a feed. Trends themselves are global content, but reactions to
+ * them are personal: every reaction query is narrowed to these people, so a
+ * couple never sees — or leaks — another couple's saves.
+ */
+export type Viewers = { id: string; slug: string }[];
+
+/**
+ * Turns stored rows into cards, decorating each with the reactions of the
+ * people passed in. `viewers` is not a filter on the content — trends are
+ * global — it is the boundary on whose personal activity is read.
+ */
+async function attachReactions(rows: (typeof trends.$inferSelect)[], viewers: Viewers): Promise<TrendCard[]> {
   const db = await getDb();
   const ids = rows.map((r) => r.id);
-  const saves = ids.length
-    ? await db
-        .select({ trendId: savedDiscoveries.trendId, kind: savedDiscoveries.kind, slug: people.slug })
-        .from(savedDiscoveries)
-        .innerJoin(people, eq(people.id, savedDiscoveries.personId))
-        .where(inArray(savedDiscoveries.trendId, ids))
-    : [];
+  const viewerIds = viewers.map((v) => v.id);
+  const saves =
+    ids.length && viewerIds.length
+      ? await db
+          .select({ trendId: savedDiscoveries.trendId, kind: savedDiscoveries.kind, personId: savedDiscoveries.personId })
+          .from(savedDiscoveries)
+          .where(and(inArray(savedDiscoveries.trendId, ids), inArray(savedDiscoveries.personId, viewerIds)))
+      : [];
+  const slugOf = (personId: string) => viewers.find((v) => v.id === personId)?.slug ?? "";
   return rows.map((r) => {
     const reactions: Record<string, string[]> = {};
-    for (const s of saves) if (s.trendId === r.id) (reactions[s.slug] ??= []).push(s.kind);
+    for (const s of saves) if (s.trendId === r.id) (reactions[slugOf(s.personId)] ??= []).push(s.kind);
     return {
       id: r.id,
       title: r.title,
@@ -121,7 +135,7 @@ export async function topicHealth(topics: TopicKey[]): Promise<FeedHealth> {
 }
 
 /** One topic's feed, optionally narrowed to a category. Keyset paginated on (published_at, id). */
-export async function topicFeed(opts: { topic: TopicKey; category?: string | null; cursor?: string | null; limit?: number; personId?: string | null }): Promise<FeedPage> {
+export async function topicFeed(viewers: Viewers, opts: { topic: TopicKey; category?: string | null; cursor?: string | null; limit?: number; personId?: string | null }): Promise<FeedPage> {
   const db = await getDb();
   const limit = Math.min(opts.limit ?? 12, 30);
   const where = and(
@@ -134,7 +148,7 @@ export async function topicFeed(opts: { topic: TopicKey; category?: string | nul
   const page = rows.slice(0, limit);
   const last = page.at(-1);
   return {
-    items: await attachReactions(page),
+    items: await attachReactions(page, viewers),
     nextCursor: rows.length > limit && last ? enc([last.publishedAt.toISOString(), last.id]) : null,
     health: opts.cursor ? undefined : await topicHealth([opts.topic]),
   };
@@ -151,7 +165,7 @@ export async function personTopics(personId: string): Promise<TopicKey[]> {
  * can't drown the others. The cursor holds a position per topic, and
  * favourite topics get twice the share of each page.
  */
-export async function forYouFeed(opts: { personId: string; cursor?: string | null; limit?: number }): Promise<FeedPage> {
+export async function forYouFeed(viewers: Viewers, opts: { personId: string; cursor?: string | null; limit?: number }): Promise<FeedPage> {
   const db = await getDb();
   const topics = await personTopics(opts.personId);
   const [pref] = await db.select().from(preferences).where(eq(preferences.personId, opts.personId));
@@ -194,7 +208,7 @@ export async function forYouFeed(opts: { personId: string; cursor?: string | nul
 
   const done = topics.every((t) => next[t] === "done");
   return {
-    items: await attachReactions(mixed),
+    items: await attachReactions(mixed, viewers),
     nextCursor: done ? null : enc(next),
     health: opts.cursor ? undefined : await topicHealth(topics),
   };
@@ -205,7 +219,7 @@ export async function forYouFeed(opts: { personId: string; cursor?: string | nul
  * tag (AI, software, computing, philosophy) and a life-family tag (biology,
  * birds, wildlife, climate) — the overlap between the two worlds.
  */
-export async function bridgeFeed(opts: { cursor?: string | null; limit?: number; personId?: string | null }): Promise<FeedPage> {
+export async function bridgeFeed(viewers: Viewers, opts: { cursor?: string | null; limit?: number; personId?: string | null }): Promise<FeedPage> {
   const db = await getDb();
   const limit = Math.min(opts.limit ?? 12, 30);
   const rows = await db
@@ -217,14 +231,14 @@ export async function bridgeFeed(opts: { cursor?: string | null; limit?: number;
   const page = rows.slice(0, limit);
   const last = page.at(-1);
   return {
-    items: await attachReactions(page),
+    items: await attachReactions(page, viewers),
     nextCursor: rows.length > limit && last ? enc([last.publishedAt.toISOString(), last.id]) : null,
     health: opts.cursor ? undefined : await topicHealth(Object.keys(TOPICS) as TopicKey[]),
   };
 }
 
 /** A person's saved / favourited / bookmarked discoveries, newest save first. */
-export async function savedFeed(opts: { personId: string; kind?: string | null; cursor?: string | null; limit?: number }): Promise<FeedPage> {
+export async function savedFeed(viewers: Viewers, opts: { personId: string; kind?: string | null; cursor?: string | null; limit?: number }): Promise<FeedPage> {
   const db = await getDb();
   const limit = Math.min(opts.limit ?? 12, 30);
   const c = dec<[string, string]>(opts.cursor);
@@ -242,7 +256,7 @@ export async function savedFeed(opts: { personId: string; kind?: string | null; 
   const page = rows.slice(0, limit);
   const last = page.at(-1);
   return {
-    items: await attachReactions(page.map((r) => r.t)),
+    items: await attachReactions(page.map((r) => r.t), viewers),
     nextCursor: rows.length > limit && last ? enc([new Date(last.savedAt).toISOString(), last.t.id]) : null,
   };
 }
@@ -254,7 +268,7 @@ function dayHash(seed: string): number {
   return h >>> 0;
 }
 
-export async function todaysDiscovery(opts: { topics: TopicKey[]; seed: string; bridge?: boolean }): Promise<TrendCard | null> {
+export async function todaysDiscovery(viewers: Viewers, opts: { topics: TopicKey[]; seed: string; bridge?: boolean }): Promise<TrendCard | null> {
   if (!opts.topics.length && !opts.bridge) return null;
   const db = await getDb();
   const since = new Date(Date.now() - 4 * 24 * 3600 * 1000);
@@ -273,19 +287,19 @@ export async function todaysDiscovery(opts: { topics: TopicKey[]; seed: string; 
   if (!rows.length) return null;
   const today = new Date().toISOString().slice(0, 10);
   const pick = rows[dayHash(`${opts.seed}:${today}`) % rows.length];
-  return (await attachReactions([pick]))[0];
+  return (await attachReactions([pick], viewers))[0];
 }
 
-export async function latestInTopic(topic: TopicKey): Promise<TrendCard | null> {
+export async function latestInTopic(viewers: Viewers, topic: TopicKey): Promise<TrendCard | null> {
   const db = await getDb();
   const [row] = await db.select().from(trends).where(eq(trends.topic, topic)).orderBy(desc(trends.publishedAt)).limit(1);
-  return row ? (await attachReactions([row]))[0] : null;
+  return row ? (await attachReactions([row], viewers))[0] : null;
 }
 
-export async function getTrend(id: string): Promise<TrendCard | null> {
+export async function getTrend(viewers: Viewers, id: string): Promise<TrendCard | null> {
   const db = await getDb();
   const [row] = await db.select().from(trends).where(eq(trends.id, id));
-  return row ? (await attachReactions([row]))[0] : null;
+  return row ? (await attachReactions([row], viewers))[0] : null;
 }
 
 /** Time since any source was last attempted; drives the self-healing refresh when the cron is down. */
@@ -296,7 +310,7 @@ export async function staleness(): Promise<number> {
 }
 
 /** A random stored item from a topic, for "Discover another". Never fetched live. */
-export async function randomTrend(topic: TopicKey, exclude?: string | null): Promise<TrendCard | null> {
+export async function randomTrend(viewers: Viewers, topic: TopicKey, exclude?: string | null): Promise<TrendCard | null> {
   const db = await getDb();
   const [row] = await db
     .select()
@@ -304,5 +318,5 @@ export async function randomTrend(topic: TopicKey, exclude?: string | null): Pro
     .where(and(eq(trends.topic, topic), topic === "birds" ? inArray(trends.contentType, ["observation", "sound"]) : undefined, exclude ? sql`${trends.id} <> ${exclude}::uuid` : undefined))
     .orderBy(sql`random()`)
     .limit(1);
-  return row ? (await attachReactions([row]))[0] : null;
+  return row ? (await attachReactions([row], viewers))[0] : null;
 }

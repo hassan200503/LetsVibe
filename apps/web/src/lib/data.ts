@@ -78,7 +78,7 @@ export async function radar(ownerId: string) {
 export async function story(ctx: Ctx, opts: { kind?: string; limit?: number } = {}) {
   const db = await getDb();
   return db
-    .select({ m: memories, by: people.displayName, bySlug: people.slug, byTheme: people.theme, sourceUrl: trends.sourceUrl, sourceName: trends.sourceName })
+    .select({ m: memories, by: people.displayName, byTheme: people.theme, sourceUrl: trends.sourceUrl, sourceName: trends.sourceName })
     .from(memories)
     .innerJoin(people, eq(people.id, memories.addedBy))
     .leftJoin(trends, eq(trends.id, memories.trendId))

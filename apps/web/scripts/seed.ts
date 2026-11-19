@@ -86,8 +86,8 @@ async function main() {
   await db
     .insert(coupleMembers)
     .values([
-      { coupleId: rel.id, personId: alex.id, slot: 1 },
-      { coupleId: rel.id, personId: sam.id, slot: 2 },
+      { coupleId: rel.id, personId: alex.id, slug: "alex", slot: 1 },
+      { coupleId: rel.id, personId: sam.id, slug: "sam", slot: 2 },
     ])
     .onConflictDoNothing();
   await db

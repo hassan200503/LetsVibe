@@ -28,17 +28,23 @@ export type MediaCard = {
   isNew: boolean;
 };
 
-type Row = typeof media.$inferSelect & { bySlug: string; byName: string; byTheme: string };
+type Row = typeof media.$inferSelect & { byName: string; byTheme: string };
 
 export async function toCards(ctx: Ctx, rows: Row[], full = true): Promise<MediaCard[]> {
   if (!rows.length) return [];
   const db = await getDb();
   const ids = rows.map((r) => r.id);
+  /**
+   * Slugs are couple-scoped (`couple_members.slug`), so they are resolved
+   * against this couple's members rather than read off a joined row. A person
+   * outside the couple can never produce one, and the account handle never
+   * reaches the browser.
+   */
+  const slugOf = (personId: string) => ctx.members.find((m) => m.id === personId)?.slug ?? "";
   const [reacts, counts, urls] = await Promise.all([
     db
-      .select({ mediaId: mediaReactions.mediaId, emoji: mediaReactions.emoji, slug: people.slug })
+      .select({ mediaId: mediaReactions.mediaId, emoji: mediaReactions.emoji, personId: mediaReactions.personId })
       .from(mediaReactions)
-      .innerJoin(people, eq(people.id, mediaReactions.personId))
       .where(inArray(mediaReactions.mediaId, ids)),
     db.select({ mediaId: mediaComments.mediaId, n: count() }).from(mediaComments).where(inArray(mediaComments.mediaId, ids)).groupBy(mediaComments.mediaId),
     viewUrls(rows.flatMap((r) => [r.thumbPath, full ? r.path : null])),
@@ -58,10 +64,10 @@ export async function toCards(ctx: Ctx, rows: Row[], full = true): Promise<Media
     height: r.height,
     durationSec: r.durationSec,
     mime: r.mime,
-    by: { slug: r.bySlug, name: r.byName, theme: r.byTheme },
+    by: { slug: slugOf(r.addedBy), name: r.byName, theme: r.byTheme },
     thumbUrl: r.youtubeId ? youtubeThumb(r.youtubeId) : ((r.thumbPath && urls.get(r.thumbPath)) || (r.kind === "photo" && r.path ? urls.get(r.path) : null) || null),
     url: r.path ? (urls.get(r.path) ?? null) : null,
-    reactions: Object.fromEntries(reacts.filter((x) => x.mediaId === r.id).map((x) => [x.slug, x.emoji])),
+    reactions: Object.fromEntries(reacts.filter((x) => x.mediaId === r.id && slugOf(x.personId)).map((x) => [slugOf(x.personId), x.emoji])),
     comments: counts.find((c) => c.mediaId === r.id)?.n ?? 0,
     isNew: r.addedBy !== ctx.me.id && r.createdAt.getTime() > seen,
   }));
@@ -86,7 +92,6 @@ const withPerson = {
   caption: media.caption,
   takenOn: media.takenOn,
   createdAt: media.createdAt,
-  bySlug: people.slug,
   byName: people.displayName,
   byTheme: people.theme,
 };
@@ -139,13 +144,14 @@ export async function mediaByIds(ctx: Ctx, ids: string[]): Promise<MediaCard[]> 
 
 export async function mediaComments_(ctx: Ctx, id: string) {
   const db = await getDb();
-  return db
-    .select({ id: mediaComments.id, body: mediaComments.body, createdAt: mediaComments.createdAt, slug: people.slug, name: people.displayName, personId: people.id })
+  const rows = await db
+    .select({ id: mediaComments.id, body: mediaComments.body, createdAt: mediaComments.createdAt, personId: mediaComments.personId, name: people.displayName })
     .from(mediaComments)
     .innerJoin(people, eq(people.id, mediaComments.personId))
     .innerJoin(media, eq(media.id, mediaComments.mediaId))
     .where(and(eq(mediaComments.mediaId, id), eq(media.coupleId, ctx.relationship.id)))
     .orderBy(mediaComments.createdAt);
+  return rows.map((r) => ({ ...r, slug: ctx.members.find((m) => m.id === r.personId)?.slug ?? "" }));
 }
 
 /** New posts from the other person since I last opened the gallery. */

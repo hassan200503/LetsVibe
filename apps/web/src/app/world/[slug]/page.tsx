@@ -30,8 +30,8 @@ export default async function WorldDashboard({ params }: PageProps<"/world/[slug
     journal(ctx, person.id, { limit: 20 }),
     person.features.includes("projects") ? projectList(ctx, person.id) : Promise.resolve([]),
     radar(person.id),
-    todaysDiscovery({ topics: topics.slice(0, 1), seed: `${person.slug}-world` }),
-    Promise.all(topics.map(async (t) => [t, await latestInTopic(t)] as const)),
+    todaysDiscovery(ctx.members, { topics: topics.slice(0, 1), seed: `${person.slug}-world` }),
+    Promise.all(topics.map(async (t) => [t, await latestInTopic(ctx.members, t)] as const)),
   ]);
   const goal = entries.find((e) => e.kind === "goal" && e.status !== "done");
   const recent = entries[0];

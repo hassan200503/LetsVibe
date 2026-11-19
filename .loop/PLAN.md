@@ -133,3 +133,7 @@ Nothing below can be substituted by code. Each already has an entry in `.loop/HU
 | # | Story | Status | Evidence |
 | --- | --- | --- | --- |
 | 1 | E1-017 Shared rituals | done | commit `7666c75`; 17/17 golden path, a11y 0 light+dark, motion 0, 4 gates green — see `.loop/progress.md` iteration 016 |
+| 2 | E2-001 couple_id tenancy | done | commit `b88ef90`; generated matrix foundation, 19 files / 225 tests — iteration 019 |
+| 3 | E2-004 session-only context | done | commit `d1507ca`; 10 context tests, cross-couple 404s — iteration 020 |
+| 4 | E2-003 cross-couple matrix | done | commit `17bec37`; 93 matrix + 10 storage + 6 route tests, 225 total — iteration 021 |
+| 5 | E2-005 visibility & public profile | done | couple-scoped slugs, opaque public handle, allowlisted reader, 234 tests — iteration 022 |

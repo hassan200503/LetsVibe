@@ -85,6 +85,13 @@
       "when": 1795003959948,
       "tag": "0011_drop_legacy_relationship",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1795077554547,
+      "tag": "0012_great_tombstone",
+      "breakpoints": true
     }
   ]
 }

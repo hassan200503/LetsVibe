@@ -98,7 +98,7 @@ const registry: Record<string, TableSpec> = {
     key: ["couple_id", "person_id"],
     touch: { column: "status", value: "left" },
     insert: async (w, side) => {
-      await db.insert(schema.coupleMembers).values({ coupleId: w[side].id, personId: w[side].me, slot: 1 });
+      await db.insert(schema.coupleMembers).values({ coupleId: w[side].id, personId: w[side].me, slug: `m-${uid()}`, slot: 1 });
       return { couple_id: w[side].id, person_id: w[side].me };
     },
   },

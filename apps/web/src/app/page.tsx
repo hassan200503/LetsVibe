@@ -138,9 +138,9 @@ export default async function Home() {
     recentMedia(ctx, 7).then((m) => m.filter((x) => x.thumbUrl)),
     galleryPage(ctx, { kind: "photo", limit: 18 }).then((p) => p.items.filter((x) => x.url || x.thumbUrl)),
     onThisDay(ctx, now),
-    todaysDiscovery({ topics: mainTopic(ctx.me.id) ? [mainTopic(ctx.me.id)!] : [], seed: ctx.me.slug }),
-    partner ? todaysDiscovery({ topics: mainTopic(partner.id) ? [mainTopic(partner.id)!] : [], seed: partner.slug }) : Promise.resolve(null),
-    todaysDiscovery({ topics: [], seed: "together", bridge: true }),
+    todaysDiscovery(members, { topics: mainTopic(ctx.me.id) ? [mainTopic(ctx.me.id)!] : [], seed: ctx.me.slug }),
+    partner ? todaysDiscovery(members, { topics: mainTopic(partner.id) ? [mainTopic(partner.id)!] : [], seed: partner.slug }) : Promise.resolve(null),
+    todaysDiscovery(members, { topics: [], seed: "together", bridge: true }),
     todaysQuestion(ctx, now),
     withSchema(() => unreadSummary(ctx)).catch(() => ({ unread: 0, latest: null })),
   ]);

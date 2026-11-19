@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { requireCtx } from "@/lib/context";
 import { getDb } from "@/lib/db/client";
 import { people, savedDiscoveries } from "@/lib/db/schema";
@@ -14,18 +14,19 @@ export default async function ItemPage({ params }: PageProps<"/discover/item/[id
   const ctx = await requireCtx();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const item = await getTrend(id);
+  const item = await getTrend(ctx.members, id);
   if (!item) notFound();
   const db = await getDb();
-  // Notes are shared inside the relationship only.
-  const memberIds = new Set(ctx.members.map((m) => m.id));
+  // Notes are shared inside the relationship only, so the query itself is
+  // narrowed to this couple's members rather than filtered after the fact.
+  const memberIds = ctx.members.map((m) => m.id);
   const notes = (
     await db
       .select({ note: savedDiscoveries.note, name: people.displayName, personId: people.id })
       .from(savedDiscoveries)
       .innerJoin(people, eq(people.id, savedDiscoveries.personId))
-      .where(and(eq(savedDiscoveries.trendId, id), eq(savedDiscoveries.kind, "save")))
-  ).filter((n) => n.note && memberIds.has(n.personId));
+      .where(and(eq(savedDiscoveries.trendId, id), eq(savedDiscoveries.kind, "save"), inArray(savedDiscoveries.personId, memberIds)))
+  ).filter((n) => n.note);
   const t = TOPICS[item.topic];
   return (
     <Container className="pt-8">

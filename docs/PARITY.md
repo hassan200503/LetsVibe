@@ -30,7 +30,7 @@ Legend: **Yes** = shipped today; **Partial** = exists with a single-couple or in
 | 24 | Things We Are Learning | apps/web, apps/mobile | Yes | Yes, export/delete | Yes | E1-008 | |
 | 25 | Research (Gemini + OpenAlex, threads, quiz, share) | packages/domain, apps/web | Yes (per-couple BYO key, monthly quota, token/cost metering) | Yes: per-couple quota/metering, BYO key, citations, moderation | Yes (read/share first) | E1-012, E7-003, E7-004 | Cost control is a launch blocker. |
 | 26 | Settings (dates, interests, sources, passcode, keys, push) | apps/web, apps/mobile | Yes (passcode, per-couple keys, plan, usage and cost) | Yes: auth, account, couple, notifications, privacy, data export/delete, entitlements | Yes | E1-007, E1-008, E1-009, E1-012, E10-004 | Keys and usage are server-side entitlements. |
-| 27 | Public profile | apps/web | Yes (skills/projects only, opt-in) | Yes: opt-in, per-couple names, no personal posts | Same (view) | E2-005, E1-013 | Slug collision fix. |
+| 27 | Public profile | apps/web | Yes (skills/projects only, opt-in, opaque handle; member slugs are couple-scoped) | Yes: opt-in, per-couple names, no personal posts | Same (view) | E2-005, E1-013 | Sign-in handle never appears in a URL. |
 | 28 | Web Push / app-icon badge | packages/api-client, Expo push | Yes | Yes; notification preferences; quiet hours | Yes via APNs/FCM | E3-005, E3-006, E4-002 | |
 | 29 | PWA install / native app | apps/mobile, apps/web (PWA) | Partial (Android install guidance) | PWA remains as fallback; native app is primary for calls/push | Yes | E8-001…E8-009 | |
 | 30 | Account export / download my data | packages/domain | No | Yes: JSON + media manifest, async email link | Same | E1-008 | GDPR-style baseline. |
