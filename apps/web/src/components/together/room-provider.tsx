@@ -9,6 +9,7 @@ import { useCall } from "@/components/call/call-provider";
 import { roomLive } from "@/lib/ui/room-live";
 import { IconPause, IconPlay, IconX } from "@/components/icons";
 import { FilePlayer, type PlayerHandle, Prefetch, warmYouTube, YouTubePlayer } from "./player";
+import { addSample, estimateClock, expectedPositionMs, planCorrection, toSeconds, type ClockSample, type PlaybackSnapshot } from "@letsvibe/sync-protocol";
 
 type State = NonNullable<RoomPayload["state"]>;
 type Ev = RoomPayload["events"][number];
@@ -106,12 +107,10 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
 
   // ── The server's clock, from the fastest of the last few round trips (the least delayed estimate).
   const offset = useRef(0);
-  const samples = useRef<{ rtt: number; offset: number }[]>([]);
+  const samples = useRef<ClockSample[]>([]);
   const clock = useCallback((serverNow: string, t0: number) => {
-    const t1 = Date.now();
-    const sample = { rtt: t1 - t0, offset: Date.parse(serverNow) - (t0 + t1) / 2 };
-    samples.current = [...samples.current, sample].slice(-12);
-    offset.current = samples.current.reduce((a, b) => (b.rtt < a.rtt ? b : a)).offset;
+    samples.current = addSample(samples.current, { sentClientMs: t0, receivedClientMs: Date.now(), serverTimeMs: Date.parse(serverNow) });
+    offset.current = estimateClock(samples.current).offsetMs;
   }, []);
 
   const absorb = useCallback(
@@ -209,8 +208,16 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
   const expected = useCallback(() => {
     const s = stateRef.current;
     if (!s) return 0;
-    if (!s.playing) return s.position;
-    return s.position + (Date.now() + offset.current - Date.parse(s.updatedAt)) / 1000;
+    const snapshot: PlaybackSnapshot = {
+      seq: 0,
+      authorId: "",
+      positionMs: s.position * 1000,
+      serverTimeMs: Date.parse(s.updatedAt),
+      playing: s.playing,
+      rate: 1,
+      sourceKey: null,
+    };
+    return toSeconds(expectedPositionMs(snapshot, Date.now() + offset.current));
   }, []);
 
   const key = keyOf(state);
@@ -281,7 +288,8 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
         if (Date.now() - settledSince.current < 1200) return;
         const drift = p.time() - want;
         const hard = p.setRate ? 1 : 1.6;
-        overCount.current = Math.abs(drift) > hard ? overCount.current + 1 : 0;
+        const plan = planCorrection(drift * 1000, { canRate: !!p.setRate, softMs: 150, hardMs: hard * 1000, catchingUp: Math.abs(drift) > hard });
+        overCount.current = plan.kind === "seek" ? overCount.current + 1 : 0;
         // Jump only where it won't stall: to audio already downloaded, or when far out (a slow line can't catch up otherwise).
         const canJump = !p.has || p.has(want) || Math.abs(drift) > 8;
         if (overCount.current >= 2 && canJump && (!d || want < d - 1) && Date.now() - lastSeek.current > (p.has?.(want) ? 1500 : seekGap.current)) {
@@ -294,10 +302,8 @@ export function RoomProvider({ children }: { children: React.ReactNode }) {
           // A stream needs a moment to resume after a jump; land a little ahead so it resumes in step.
           p.seek(Math.max(0, want + (p.setRate ? 0.05 : 0.4)));
         } else if (p.setRate) {
-          // Gaps close by playing a little faster or slower (pitch is kept), with no audible jump:
-          // up to 5% for small gaps, up to 10% while catching up after a stall.
-          const cap = Math.abs(drift) > hard ? 0.1 : 0.05;
-          p.setRate(Math.abs(drift) > 0.06 ? 1 - Math.max(-cap, Math.min(cap, drift * 0.1)) : 1);
+          // Gaps close by playing a little faster or slower (pitch is kept), with no audible jump.
+          p.setRate(plan.kind === "nudge" ? plan.rate : 1);
         }
         if (Math.abs(drift) < 0.3 && Date.now() - lastSeek.current > 30_000) seekGap.current = 2500;
         setInSync(Math.abs(drift) <= hard + 0.25);

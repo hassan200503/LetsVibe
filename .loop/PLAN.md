@@ -137,3 +137,4 @@ Nothing below can be substituted by code. Each already has an entry in `.loop/HU
 | 3 | E2-004 session-only context | done | commit `d1507ca`; 10 context tests, cross-couple 404s — iteration 020 |
 | 4 | E2-003 cross-couple matrix | done | commit `17bec37`; 93 matrix + 10 storage + 6 route tests, 225 total — iteration 021 |
 | 5 | E2-005 visibility & public profile | done | couple-scoped slugs, opaque public handle, allowlisted reader, 234 tests — iteration 022 |
+| 6 | E5-013 sync protocol & simulator | done | `@letsvibe/sync-protocol` 18 tests, p95 280-326 ms across wifi/mobile/poor, provider wired — iteration 023 |

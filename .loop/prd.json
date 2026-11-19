@@ -2569,9 +2569,9 @@
       "dependsOn": [
         "E0-002"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "Shipped as `@letsvibe/sync-protocol` (pure TS, no React/Date.now/Math.random) with `types.ts` (`PlaybackSnapshot` {seq, authorId, positionMs, serverTimeMs, playing, rate, sourceKey}, `SyncEvent`, `IDLE_SNAPSHOT`), `state.ts` (`applyEvent` ignores seq<=state.seq so replays are idempotent, clamps position, `expectedPositionMs`, `isStale`, `hasEnded`), `clock.ts` (samples, fastest-RTT `estimateClock`, rolling 12), `correction.ts` (`planCorrection`: hold <150 ms, seek >=1000 ms or when the player cannot rate-shift, otherwise a rate nudge capped at 5% / 10% while catching up; `heartbeatDue` 5 s), and `simulator.ts` (`NETWORK_PROFILES` wifi/mobile/poor, mulberry32 PRNG, 25 ms virtual time, two clients with skewed clocks and media-clock bias, bootstrap pings, polling, loss, control retry/dedupe, buffering stalls). Reorder is modelled by jitter on independent messages; snapshots are last-writer-wins by seq, so out-of-order delivery is harmless by construction rather than by queueing. Measured seed 7 over 95 s: wifi p50 13 / p95 295 / max 559 ms, mobile p95 280, poor p95 326, 33% loss p95 286 with delivery recovered; 18 tests (4 clock, 8 state/correction, 6 simulator). `apps/web/src/components/together/room-provider.tsx` now imports `addSample`/`estimateClock`/`expectedPositionMs`/`planCorrection`/`toSeconds` instead of carrying a second copy of the same math; the buffer/seek-backoff/canJump behaviour is unchanged. Gates: typecheck, lint, test 20 files / 234 web + 18 package, build 36 routes. Deliberate scope: server-issued `seq` already exists in `roomState.version`; the live API keeps its current payload shape and only the drift math is shared until E5-001's provider interface lands."
     },
     {
       "id": "E7-008",
