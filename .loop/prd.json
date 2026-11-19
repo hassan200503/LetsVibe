@@ -700,9 +700,9 @@
       "dependsOn": [
         "E6-001"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "Shipped ahead of E6-001 because the existing couple-scoped media pipeline already provides what the story needs: quota-checked uploads, local/blob storage, signed reads, and cleanup. A new `media.origin` (`gallery` | `chat`, migration 0013) keeps chat attachments out of gallery feeds, recents, unseen counts and by-id gallery reads. Photos are re-encoded to WebP plus a thumb; voice notes are MediaRecorder audio uploaded as `song` with duration and 48 waveform peaks stored in `messages.meta`. The send action validates that the attachment is in this couple, uploaded by the sender, of chat origin, unused and within the 5-minute limit; a retried clientId returns the stored message before validation, so a lost reply cannot turn into a duplicate send. Delete-for-everyone removes the stored meta and the media row and object; delete-for-me leaves the attachment for the partner. UI: inline waveform player with seek, 1x/1.5x/2x, one-note-at-a-time playback; photo lightbox; composer preview with progress and cancel; recording bar with live bars and a 5-minute cap. Tests: 7 PGlite integration tests (send, idempotent retry, reuse refusal, cross-couple and partner refusal, request schema, delete scopes, gallery exclusion) plus 6 waveform tests. Gates: typecheck 4 packages, lint, 22 files / 247 web tests + 18 package tests, build 36 routes."
     },
     {
       "id": "E3-008",
@@ -2861,6 +2861,87 @@
       "status": "done",
       "attempts": 1,
       "notes": "Shipped /together/rituals with rituals + ritual_checks tables (drizzle 0009), pure streak math (day/streak/shared-day), coupleDay from the first active member's zone, optimistic taps with rollback, and semantic success/danger tokens replacing hardcoded emerald. Gates: typegen, typecheck, lint, 13 files/89 tests, 36-route build; golden-path harness 17/17; a11y 0 violations light and dark; motion 0 findings."
+    },
+    {
+      "id": "E17-001",
+      "epic": "E17",
+      "title": "In-app guide agent (\"Ask Let’sVibe\")",
+      "description": "A help agent inside the app that answers questions about features, privacy rules and troubleshooting, and points to the right screen. Streams from Gemini through the existing research stream, safety fence and entitlement metering; without a key it falls back to deterministic search over the shipped guide.",
+      "acceptance": [
+        "A slide-over panel is reachable from every screen and works with keyboard and screen readers",
+        "Answers stream, cite the in-app route they refer to, and never include the couple’s private content in the prompt",
+        "Crisis or safety-relevant messages route to the external resources card before any model call",
+        "Reuses the research Gemini queue/cooling, safety guard and reserveAi/recordAi metering; no key means a useful static answer, not an error",
+        "Covered by tests for prompt privacy, no-key fallback, refusal handling and quota exhaustion"
+      ],
+      "priority": 50,
+      "dependsOn": [
+        "E7-003",
+        "E1-012"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E17-002",
+      "epic": "E17",
+      "title": "Code-review agent for the repository",
+      "description": "A maintenance command that gathers a branch diff and the latest gate output and asks Gemini to review it against this repository’s own rules (couple scoping, visibleTo, migrations, tests, a11y), returning severity-ranked findings with file and line references and suggested patches. It never writes, commits or pushes.",
+      "acceptance": [
+        "`pnpm review:agent` produces a readable report from the current diff and recent gate logs without network access to anything but Gemini",
+        "Findings name file and line, cite the rule they break, and include a concrete patch or repro command",
+        "The agent has no write access: output is a report file under .loop/ (git-ignored) and a non-zero exit only on critical findings",
+        "A heuristic offline mode still reports missing tests, cross-tenant queries and secret-looking strings when no key is configured",
+        "Tested with fixture diffs that should and should not produce findings"
+      ],
+      "priority": 44,
+      "dependsOn": [
+        "E7-003"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E17-003",
+      "epic": "E17",
+      "title": "Gate-failure triage and repair plans",
+      "description": "When typecheck, lint, tests, build or a11y fail, the agent reads the failure output, locates the failing files, and writes a ranked repair plan with the exact verification command. It stays advisory: applying the plan is a human (or a separately authorised) step.",
+      "acceptance": [
+        "Takes a saved gate log (or runs the gate) and identifies the failing package, file and rule",
+        "Produces a diagnosis plus ordered repair steps, each with the command that proves it",
+        "Never edits the working tree as part of triage; no commit, push or destructive command",
+        "Handles truncated logs and missing files without inventing a diagnosis",
+        "Covered by tests using recorded failure logs"
+      ],
+      "priority": 42,
+      "dependsOn": [
+        "E17-002"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
+    },
+    {
+      "id": "E17-004",
+      "epic": "E17",
+      "title": "Screen-aware help with allowlisted actions",
+      "description": "A later extension of the guide agent that can see which screen the person is on (route and UI labels only, never message or vault content) and offer guided actions such as opening a setting, starting a call, or explaining a field. Every action is allowlisted, confirmed by the person, and audited.",
+      "acceptance": [
+        "The agent receives only the route and visible labels; private content is structurally absent from its context",
+        "Actions are a fixed allowlist with confirmation, and every executed action is written to the audit log",
+        "Turning the feature off removes the panel and the context collection entirely",
+        "Accessibility and consent tests cover the panel and the confirmation step"
+      ],
+      "priority": 35,
+      "dependsOn": [
+        "E17-001",
+        "E2-006"
+      ],
+      "status": "todo",
+      "attempts": 0,
+      "notes": ""
     }
   ]
 }

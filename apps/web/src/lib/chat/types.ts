@@ -3,13 +3,27 @@ import type { CallView } from "@/lib/calls/types";
 
 export type ChatQuote = { id: number; slug: string; kind: string; body: string; deleted: boolean };
 
+/** A photo or voice note attached to one message, read through a signed URL. */
+export type ChatAttachment = {
+  id: string;
+  kind: "image" | "voice";
+  url: string | null;
+  thumbUrl: string | null;
+  width: number | null;
+  height: number | null;
+  durationSec: number | null;
+  /** Normalised recording peaks (0..1) for the voice-note waveform. */
+  peaks: number[];
+};
+
 export type ChatMessage = {
   id: number;
   clientId: string | null;
   /** Sender. */
   slug: string;
-  kind: "text" | "call";
+  kind: "text" | "call" | "media";
   body: string;
+  attachment: ChatAttachment | null;
   replyTo: ChatQuote | null;
   call: { callKind: "audio" | "video"; outcome: string; durationSec: number | null } | null;
   /** slug → emoji */
@@ -46,4 +60,7 @@ export type ChatSync = {
 /** Edits are allowed for a short while after sending, like other messengers. */
 export const EDIT_WINDOW_MS = 15 * 60_000;
 export const MAX_MESSAGE = 4000;
+/** A voice note is a message, not a podcast: five minutes is plenty. */
+export const MAX_VOICE_MS = 5 * 60_000;
+export const MAX_PEAKS = 48;
 export const QUICK_REACTIONS = ["❤️", "😂", "😮", "🥹", "🙏", "👍"] as const;

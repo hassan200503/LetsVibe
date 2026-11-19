@@ -10,7 +10,7 @@ Legend: **Yes** = shipped today; **Partial** = exists with a single-couple or in
 | 4 | Home / journey clock / verses | apps/web, apps/mobile | Yes | Yes, per couple (start date, names, memories) | Yes | E8-002, E1-013 | Keep visual identity. |
 | 5 | Question of the day | packages/domain | Yes | Yes, per-couple time zone, reveal only after both answer, archive | Yes | E1-014 | Today hardcoded Nairobi. |
 | 6 | Chat text (send/edit/delete) | packages/sync-protocol, apps/web, apps/mobile | Yes | Yes over realtime, idempotent, offline queue on mobile | Yes | E3-002, E3-004, E3-009 | Polling 1.5 s today. |
-| 7 | Chat media / voice notes | packages/api-client, Supabase Storage | Partial (chat uses gallery API paths) | Yes: images/voice notes uploaded to couple bucket, progress/retry | Yes | E3-007, E6-002 | |
+| 7 | Chat media / voice notes | apps/web media pipeline (`media.origin = chat`) | Yes: photos (WebP + thumb) and voice notes with waveform, seek and speed | Yes: images/voice notes uploaded to couple bucket, progress/retry | Yes | E3-007, E6-002 | Chat attachments use the same quota, signed reads and cleanup as the gallery but never appear in it. |
 | 8 | Replies, reactions, deleted-for-me/everyone, read/delivered, typing | packages/sync-protocol | Yes | Yes over broadcast; no writes on poll | Yes | E3-003, E3-004 | |
 | 9 | Voice/video 1:1 calls + ringing | packages/api-client, apps/mobile, TURN | Yes (P2P, polling signalling, Web Push) | Yes: realtime signalling, native ringing (CallKit/ConnectionService), TURN | Yes | E4-001, E4-002, E4-003 | OS-level ringing needs native modules; verify. |
 | 10 | Call history / missed calls | packages/domain | Partial (in-chat lines) | Yes: dedicated history, missed-call badge | Yes | E4-004 | |

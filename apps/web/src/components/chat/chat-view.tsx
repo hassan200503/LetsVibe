@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { EDIT_WINDOW_MS, QUICK_REACTIONS, type ChatMessage, type ChatQuote } from "@/lib/chat/types";
+import { EDIT_WINDOW_MS, MAX_VOICE_MS, QUICK_REACTIONS, type ChatMessage, type ChatQuote } from "@/lib/chat/types";
+import { uploadChatPhoto, uploadVoiceNote } from "@/lib/media/client-upload";
 import { Avatar } from "@/components/avatar";
 import { useCall } from "@/components/call/call-provider";
-import { IconArrowDown, IconChevronLeft, IconCopy, IconPencil, IconPhone, IconReply, IconSend, IconTrash, IconVideo, IconX } from "@/components/icons";
+import { IconArrowDown, IconChevronLeft, IconCopy, IconImage, IconMic, IconPencil, IconPhone, IconReply, IconSend, IconTrash, IconVideo, IconX } from "@/components/icons";
 import { useMe, useMembers } from "@/components/me-context";
 import { PushPrompt } from "@/components/push";
 import { Bubble, Quote, type Tick } from "./bubble";
+import { RecordingBar, VoiceNote, type VoiceDraft, useVoiceRecorder } from "./attachments";
 import { dayLabel, lastSeen, sameDay } from "./format";
 import { useChat, type OutboxItem } from "./use-chat";
 
@@ -17,7 +19,7 @@ type Menu = { message: ChatMessage; x: number; y: number; canEdit: boolean };
 const coarse = () => typeof window !== "undefined" && (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 640);
 
 function outboxAsMessage(o: OutboxItem, slug: string): ChatMessage {
-  return { id: -1, clientId: o.clientId, slug, kind: "text", body: o.body, replyTo: o.replyTo, call: null, reactions: {}, deleted: false, edited: false, createdAt: o.createdAt, updatedAt: o.createdAt };
+  return { id: -1, clientId: o.clientId, slug, kind: "text", body: o.body, attachment: null, replyTo: o.replyTo, call: null, reactions: {}, deleted: false, edited: false, createdAt: o.createdAt, updatedAt: o.createdAt };
 }
 
 /** Reactions, reply, copy, edit and delete for one message: a popover on desktop, a sheet on phones. */
@@ -58,7 +60,7 @@ function MessageMenu({ menu, mine, myReaction, onClose, onReact, onReply, onCopy
         style={sheet ? undefined : { left: pos?.left ?? menu.x, top: pos?.top ?? menu.y, visibility: pos ? "visible" : "hidden" }}
       >
         {sheet && <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-line" aria-hidden />}
-        {m.kind === "text" && (
+        {m.kind !== "call" && (
           <div className={`flex justify-between gap-1 ${sheet ? "mb-2 rounded-2xl bg-surface-2 p-2" : "mb-1 border-b border-line p-1.5 pb-2.5"}`}>
             {QUICK_REACTIONS.map((e) => (
               <button
@@ -150,9 +152,14 @@ export function ChatView({ variant = "page" }: { variant?: "page" | "panel" }) {
   const [atBottom, setAtBottom] = useState(true);
   const [unseen, setUnseen] = useState(0);
   const [vv, setVv] = useState<{ h: number; top: number } | null>(null);
+  /** A photo or voice note that finished uploading, waiting to be sent with an optional caption. */
+  const [draft, setDraft] = useState<{ id: string; kind: "image" | "voice"; previewUrl: string; peaks: number[]; durationSec: number | null; width: number | null; height: number | null } | null>(null);
+  const [upload, setUpload] = useState<{ pct: number; label: string } | null>(null);
+  const [sending, setSending] = useState(false);
 
   const scroller = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
+  const photoInput = useRef<HTMLInputElement>(null);
   const topSentinel = useRef<HTMLDivElement>(null);
   const didInitialScroll = useRef(false);
   const lastCount = useRef(0);
@@ -167,6 +174,53 @@ export function ChatView({ variant = "page" }: { variant?: "page" | "panel" }) {
     setToast(t);
     setTimeout(() => setToast(null), 2200);
   }, []);
+
+  const clearDraft = useCallback(() => {
+    setDraft((old) => {
+      if (old?.previewUrl.startsWith("blob:")) URL.revokeObjectURL(old.previewUrl);
+      return null;
+    });
+  }, []);
+
+  const uploadVoice = useCallback(
+    async (d: VoiceDraft) => {
+      setUpload({ pct: 0, label: "Uploading voice note" });
+      try {
+        const r = await uploadVoiceNote(d.blob, d.durationSec, (pct) => setUpload({ pct, label: "Uploading voice note" }));
+        if (d.previewUrl.startsWith("blob:")) URL.revokeObjectURL(d.previewUrl);
+        setDraft({ id: r.id, kind: "voice", previewUrl: r.previewUrl, peaks: d.peaks, durationSec: d.durationSec, width: null, height: null });
+      } catch (e) {
+        if (d.previewUrl.startsWith("blob:")) URL.revokeObjectURL(d.previewUrl);
+        say(e instanceof Error ? e.message : "Couldn't upload that voice note");
+      } finally {
+        setUpload(null);
+      }
+    },
+    [say],
+  );
+
+  const choosePhoto = useCallback(
+    async (file: File | undefined) => {
+      if (!file) return;
+      setUpload({ pct: 0, label: "Uploading photo" });
+      try {
+        const r = await uploadChatPhoto(file, (pct) => setUpload({ pct, label: "Uploading photo" }));
+        setDraft((old) => {
+          if (old?.previewUrl.startsWith("blob:")) URL.revokeObjectURL(old.previewUrl);
+          return { id: r.id, kind: "image", previewUrl: r.previewUrl, peaks: [], durationSec: null, width: r.width, height: r.height };
+        });
+      } catch (e) {
+        say(e instanceof Error ? e.message : "Couldn't upload that photo");
+      } finally {
+        setUpload(null);
+        if (photoInput.current) photoInput.current.value = "";
+      }
+    },
+    [say],
+  );
+
+  const voice = useVoiceRecorder((d) => void uploadVoice(d), MAX_VOICE_MS);
+
 
   // Phones: keep the composer above the on-screen keyboard.
   useEffect(() => {
@@ -265,7 +319,13 @@ export function ChatView({ variant = "page" }: { variant?: "page" | "panel" }) {
     setTimeout(() => setFlash(null), 1700);
   };
 
-  const quoteOf = (m: ChatMessage): ChatQuote => ({ id: m.id, slug: m.slug, kind: m.kind, body: m.kind === "call" ? "Call" : m.body.slice(0, 180), deleted: m.deleted });
+  const quoteOf = (m: ChatMessage): ChatQuote => ({
+    id: m.id,
+    slug: m.slug,
+    kind: m.kind,
+    body: m.kind === "call" ? "Call" : m.kind === "media" ? (m.attachment?.kind === "voice" ? "Voice note" : "Photo") : m.body.slice(0, 180),
+    deleted: m.deleted,
+  });
 
   const startReply = (m: ChatMessage) => {
     setEditing(null);
@@ -285,7 +345,24 @@ export function ChatView({ variant = "page" }: { variant?: "page" | "panel" }) {
     });
   };
 
+  const sendDraft = async () => {
+    if (!draft?.id || sending) return;
+    setSending(true);
+    const result = await chat.sendAttachment(draft.id, draft.kind === "voice" ? draft.peaks : null, text.trim(), replyTo);
+    setSending(false);
+    if (!result.ok) {
+      say(result.error ?? "Couldn't send that. Try again.");
+      return;
+    }
+    clearDraft();
+    setText("");
+    setReplyTo(null);
+    typing(false);
+    requestAnimationFrame(() => input.current?.focus());
+  };
+
   const submit = () => {
+    if (draft) return void sendDraft();
     const body = text.trim();
     if (!body) return;
     if (editing) {
@@ -486,14 +563,54 @@ export function ChatView({ variant = "page" }: { variant?: "page" | "panel" }) {
             </button>
           </div>
         )}
-        <form
-          className="flex items-end gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            submit();
-          }}
-        >
-          <textarea
+        {voice.recording ? (
+          <RecordingBar seconds={voice.seconds} live={voice.live} onCancel={voice.cancel} onStop={voice.stop} />
+        ) : (
+          <>
+            {draft && (
+              <div className="mb-2 flex items-center gap-2 rounded-2xl border border-line bg-surface px-2 py-2">
+                {draft.kind === "voice" ? (
+                  <VoiceNote a={{ id: draft.id, kind: "voice", url: draft.previewUrl, thumbUrl: null, width: null, height: null, durationSec: draft.durationSec, peaks: draft.peaks }} />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element -- local object URL, not yet sent
+                  <img src={draft.previewUrl} alt="Photo ready to send" className="size-16 rounded-xl bg-surface-2 object-cover" />
+                )}
+                <span className="ml-auto shrink-0 text-xs text-muted">{draft.kind === "voice" ? "Voice note" : "Photo"}</span>
+                <button type="button" onClick={clearDraft} className="grid size-9 shrink-0 place-items-center rounded-full text-muted hover:bg-surface-2" aria-label="Remove attachment">
+                  <IconX size={17} />
+                </button>
+              </div>
+            )}
+            {upload && (
+              <div className="mb-2 px-1" role="status">
+                <div className="flex items-center justify-between text-xs text-muted">
+                  <span>{upload.label}…</span>
+                  <span className="tabular-nums">{Math.round(upload.pct)}%</span>
+                </div>
+                <div className="mt-1 h-1 overflow-hidden rounded-full bg-surface-2">
+                  <div className="h-full rounded-full bg-accent transition-[width] duration-200" style={{ width: `${upload.pct}%` }} />
+                </div>
+              </div>
+            )}
+            <form
+              className="flex items-end gap-1.5"
+              onSubmit={(e) => {
+                e.preventDefault();
+                submit();
+              }}
+            >
+              <input ref={photoInput} type="file" accept="image/*" className="sr-only" tabIndex={-1} onChange={(e) => void choosePhoto(e.target.files?.[0])} />
+              <button
+                type="button"
+                onClick={() => photoInput.current?.click()}
+                disabled={!!upload || !!draft || voice.recording || !!editing}
+                className="grid size-11 shrink-0 place-items-center rounded-full text-muted transition enabled:hover:bg-surface-2 enabled:hover:text-ink disabled:opacity-40"
+                aria-label="Send a photo"
+                title="Send a photo"
+              >
+                <IconImage size={21} />
+              </button>
+              <textarea
             ref={input}
             rows={1}
             value={text}
@@ -516,20 +633,43 @@ export function ChatView({ variant = "page" }: { variant?: "page" | "panel" }) {
                 }
               }
             }}
-            placeholder={`Message ${first}`}
-            aria-label={`Message ${first}`}
+            placeholder={draft ? "Add a caption…" : `Message ${first}`}
+            aria-label={draft ? "Add a caption" : `Message ${first}`}
             className="max-h-38 min-h-[2.75rem] flex-1 resize-none rounded-[22px] border border-line bg-surface px-4 py-[0.7rem] text-[0.95rem] leading-snug outline-none transition focus:border-[color-mix(in_oklab,var(--accent)_45%,var(--line))] focus:shadow-[0_0_0_4px_color-mix(in_oklab,var(--accent)_12%,transparent)]"
           />
-          <button
-            type="submit"
-            disabled={!text.trim()}
-            className="grid size-11 shrink-0 place-items-center rounded-full bg-accent text-accent-ink shadow-md transition enabled:hover:brightness-110 enabled:active:scale-95 disabled:opacity-40"
-            aria-label={editing ? "Save edit" : "Send"}
-            data-world="us"
-          >
-            {editing ? <IconPencil size={18} /> : <IconSend size={19} />}
-          </button>
-        </form>
+              {!text.trim() && !draft ? (
+                <button
+                  type="button"
+                  onClick={() => void voice.start()}
+                  disabled={!!upload || !!editing}
+                  className="grid size-11 shrink-0 place-items-center rounded-full bg-accent text-accent-ink shadow-md transition enabled:hover:brightness-110 enabled:active:scale-95 disabled:opacity-40"
+                  aria-label="Record a voice note"
+                  title="Record a voice note"
+                >
+                  <IconMic size={19} />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={sending || !!upload}
+                  className="grid size-11 shrink-0 place-items-center rounded-full bg-accent text-accent-ink shadow-md transition enabled:hover:brightness-110 enabled:active:scale-95 disabled:opacity-40"
+                  aria-label={editing ? "Save edit" : "Send"}
+                  data-world="us"
+                >
+                  {editing ? <IconPencil size={18} /> : <IconSend size={19} />}
+                </button>
+              )}
+            </form>
+            {voice.error && (
+              <p role="alert" className="mt-1 flex items-center gap-1 px-2 text-xs text-danger">
+                {voice.error}
+                <button type="button" onClick={voice.clearError} className="ml-auto font-semibold underline" aria-label="Dismiss microphone error">
+                  Dismiss
+                </button>
+              </p>
+            )}
+          </>
+        )}
       </div>
 
       {menu && (

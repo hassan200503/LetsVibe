@@ -153,6 +153,22 @@ export function useChat(meSlug: string) {
     [deliver],
   );
 
+  /** A photo or voice note that is already uploaded: one message, with an optional caption. */
+  const sendAttachment = useCallback(
+    async (attachmentId: string, peaks: number[] | null, body: string, replyTo: ChatQuote | null): Promise<{ ok: boolean; error?: string }> => {
+      typingSentAt.current = 0;
+      try {
+        const r = await post({ type: "send", clientId: newId(), body, replyTo: replyTo?.id ?? null, attachmentId, peaks });
+        if (r.message) merge([r.message]);
+        poke.current();
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, error: e instanceof Error ? e.message : "Couldn't send that. Try again." };
+      }
+    },
+    [merge],
+  );
+
   const retry = useCallback(
     (clientId: string) => {
       const item = outbox.find((x) => x.clientId === clientId);
@@ -242,5 +258,27 @@ export function useChat(meSlug: string) {
 
   const messages = useMemo(() => [...byId.values()].sort((a, b) => a.id - b.id), [byId]);
 
-  return { messages, outbox, partner, call, hasMore, ready, error, firstUnread, baseline, loadingOlder, loadOlder, send, retry, discard, edit, remove, react, typing, markRead, refresh: () => poke.current() };
+  return {
+    messages,
+    outbox,
+    partner,
+    call,
+    hasMore,
+    ready,
+    error,
+    firstUnread,
+    baseline,
+    loadingOlder,
+    loadOlder,
+    send,
+    sendAttachment,
+    retry,
+    discard,
+    edit,
+    remove,
+    react,
+    typing,
+    markRead,
+    refresh: () => poke.current(),
+  };
 }

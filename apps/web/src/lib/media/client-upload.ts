@@ -154,6 +154,7 @@ export async function uploadToGallery(file: File, meta: UploadMeta, onProgress: 
   onProgress(97, "Saving");
   const res = await saveUploaded({
     kind,
+    origin: "gallery",
     path: prep.path,
     thumbPath: thumb ? prep.thumbPath : null,
     mime,
@@ -168,6 +169,53 @@ export async function uploadToGallery(file: File, meta: UploadMeta, onProgress: 
   if (!res.ok || !res.id) throw new Error(res.error ?? "Couldn't save");
   onProgress(100, "Done");
   return res.id;
+}
+
+export type ChatUpload = { id: string; width: number | null; height: number | null; durationSec: number | null; previewUrl: string };
+
+/**
+ * A photo for one chat message. It is stored like any other upload (same quota,
+ * signed reads, cleanup) but its row is marked `origin: "chat"` so it never
+ * appears in the shared gallery.
+ */
+export async function uploadChatPhoto(file: File, onProgress: (pct: number) => void, signal?: AbortSignal): Promise<ChatUpload> {
+  if (!file.type.startsWith("image/") && !/\.(heic|heif)$/i.test(file.name)) throw new Error("Choose a photo to send.");
+  onProgress(4);
+  const p = await processPhoto(file);
+  onProgress(12);
+  const prep = await prepareUpload("photo", p.full.blob.type, p.full.blob.size + p.thumb.blob.size, "chat");
+  if (!prep.ok) throw new Error(prep.error);
+  if (prep.thumbPath) await putObject(prep.mode, prep.thumbPath, p.thumb.blob, (v) => onProgress(12 + v * 0.08), signal);
+  await putObject(prep.mode, prep.path, p.full.blob, (v) => onProgress(20 + v * 0.75), signal);
+  onProgress(97);
+  const res = await saveUploaded({
+    kind: "photo",
+    origin: "chat",
+    path: prep.path,
+    thumbPath: prep.thumbPath,
+    mime: p.full.blob.type,
+    width: p.full.width,
+    height: p.full.height,
+    caption: null,
+    takenOn: null,
+  });
+  if (!res.ok || !res.id) throw new Error(res.error ?? "Couldn't send that photo");
+  onProgress(100);
+  return { id: res.id, width: p.full.width, height: p.full.height, durationSec: null, previewUrl: URL.createObjectURL(p.full.blob) };
+}
+
+/** A recorded voice note, uploaded as a chat-owned audio file. */
+export async function uploadVoiceNote(blob: Blob, durationSec: number, onProgress: (pct: number) => void, signal?: AbortSignal): Promise<ChatUpload> {
+  const mime = blob.type || "audio/webm";
+  if (!blob.size) throw new Error("That recording was empty. Try again.");
+  const prep = await prepareUpload("song", mime, blob.size, "chat");
+  if (!prep.ok) throw new Error(prep.error);
+  await putObject(prep.mode, prep.path, blob, (v) => onProgress(5 + v * 0.85), signal);
+  onProgress(96);
+  const res = await saveUploaded({ kind: "song", origin: "chat", path: prep.path, thumbPath: null, mime, durationSec, caption: null, takenOn: null });
+  if (!res.ok || !res.id) throw new Error(res.error ?? "Couldn't send that voice note");
+  onProgress(100);
+  return { id: res.id, width: null, height: null, durationSec, previewUrl: URL.createObjectURL(blob) };
 }
 
 /** A square, centred profile picture at 512px. */

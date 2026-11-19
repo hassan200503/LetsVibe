@@ -13,14 +13,20 @@ import { storageAvailable } from "@/lib/entitlements/server";
 export type Prepared = { ok: true; mode: Exclude<StorageMode, "none">; path: string; thumbPath: string | null } | { ok: false; error: string };
 
 const KIND = z.enum(["photo", "video", "song", "avatar"]);
+const ORIGIN = z.enum(["gallery", "chat"]);
 
-/** Step 1 of an upload: the server picks the object path and checks type and size. */
-export async function prepareUpload(kind: string, mime: string, size: number): Promise<Prepared> {
+/**
+ * Step 1 of an upload: the server picks the object path and checks type and
+ * size. `origin` decides whether the row belongs in the shared gallery or is
+ * owned by one chat message.
+ */
+export async function prepareUpload(kind: string, mime: string, size: number, origin: "gallery" | "chat" = "gallery"): Promise<Prepared> {
   const ctx = await requireCtx();
   const mode = storageMode();
   if (mode === "none") return { ok: false, error: "Photo & video storage isn't switched on yet. Connect it in Vercel → Storage → Blob." };
   const k = KIND.safeParse(kind);
   if (!k.success) return { ok: false, error: "Unknown kind" };
+  if (!ORIGIN.safeParse(origin).success) return { ok: false, error: "Unknown origin" };
   if (!ALLOWED_TYPES.includes(mime)) return { ok: false, error: `${mime || "This file type"} isn't supported. Use a photo, MP4/MOV/WebM video, or MP3/M4A/WAV audio.` };
   const max = k.data === "avatar" ? LIMITS.thumb : LIMITS[k.data];
   if (size > max) return { ok: false, error: `Too large: the limit for ${k.data}s is ${Math.round(max / 1024 / 1024)} MB.` };
@@ -38,6 +44,7 @@ export async function prepareUpload(kind: string, mime: string, size: number): P
 
 const saved = z.object({
   kind: z.enum(["photo", "video", "song"]),
+  origin: ORIGIN.default("gallery"),
   path: z.string(),
   thumbPath: z.string().nullable().optional(),
   mime: z.string().max(80),
@@ -74,6 +81,7 @@ export async function saveUploaded(input: z.infer<typeof saved>): Promise<{ ok: 
       addedBy: ctx.me.id,
       kind: d.kind,
       source: "upload",
+      origin: d.origin,
       path: d.path,
       thumbPath: thumbInfo ? d.thumbPath : null,
       mime: info.contentType ?? d.mime,
@@ -87,7 +95,7 @@ export async function saveUploaded(input: z.infer<typeof saved>): Promise<{ ok: 
       takenOn: d.takenOn ?? null,
     })
     .returning({ id: media.id });
-  revalidatePath("/gallery");
+  if (d.origin === "gallery") revalidatePath("/gallery");
   return { ok: true, id: row.id };
 }
 

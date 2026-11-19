@@ -138,3 +138,4 @@ Nothing below can be substituted by code. Each already has an entry in `.loop/HU
 | 4 | E2-003 cross-couple matrix | done | commit `17bec37`; 93 matrix + 10 storage + 6 route tests, 225 total — iteration 021 |
 | 5 | E2-005 visibility & public profile | done | couple-scoped slugs, opaque public handle, allowlisted reader, 234 tests — iteration 022 |
 | 6 | E5-013 sync protocol & simulator | done | `@letsvibe/sync-protocol` 18 tests, p95 280-326 ms across wifi/mobile/poor, provider wired — iteration 023 |
+| 7 | E3-007 chat photos & voice notes | done | `media.origin` split, 7 attachment integration tests + 6 waveform tests, 247 web tests — iteration 024 |

@@ -79,6 +79,7 @@ const withPerson = {
   addedBy: media.addedBy,
   kind: media.kind,
   source: media.source,
+  origin: media.origin,
   path: media.path,
   thumbPath: media.thumbPath,
   youtubeId: media.youtubeId,
@@ -114,6 +115,7 @@ export async function galleryPage(ctx: Ctx, opts: { kind?: string | null; by?: s
   const by = opts.by ? ctx.members.find((m) => m.slug === opts.by) : null;
   const filters: (SQL | undefined)[] = [
     eq(media.coupleId, ctx.relationship.id),
+    eq(media.origin, "gallery"),
     opts.kind && ["photo", "video", "song"].includes(opts.kind) ? eq(media.kind, opts.kind) : undefined,
     by ? eq(media.addedBy, by.id) : undefined,
     c ? sql`(${media.createdAt}, ${media.id}) < (${c[0]}::timestamptz, ${c[1]}::uuid)` : undefined,
@@ -137,7 +139,7 @@ export async function mediaByIds(ctx: Ctx, ids: string[]): Promise<MediaCard[]> 
     .select(withPerson)
     .from(media)
     .innerJoin(people, eq(people.id, media.addedBy))
-    .where(and(eq(media.coupleId, ctx.relationship.id), inArray(media.id, ids)));
+    .where(and(eq(media.coupleId, ctx.relationship.id), eq(media.origin, "gallery"), inArray(media.id, ids)));
   const cards = await toCards(ctx, rows);
   return ids.map((id) => cards.find((c) => c.id === id)).filter((c): c is MediaCard => !!c);
 }
@@ -163,6 +165,7 @@ export async function unseenCount(ctx: Ctx): Promise<number> {
     .where(
       and(
         eq(media.coupleId, ctx.relationship.id),
+        eq(media.origin, "gallery"),
         ne(media.addedBy, ctx.me.id),
         ctx.me.gallerySeenAt ? gt(media.createdAt, new Date(ctx.me.gallerySeenAt)) : undefined,
       ),

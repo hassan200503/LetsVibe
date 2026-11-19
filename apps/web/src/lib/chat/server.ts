@@ -4,8 +4,9 @@ import { after } from "next/server";
 import { z } from "zod";
 import type { Ctx } from "@/lib/context";
 import { getDb, withSchema } from "@/lib/db/client";
-import { chatState, messages, presence } from "@/lib/db/schema";
-import { EDIT_WINDOW_MS, MAX_MESSAGE, type ChatMessage, type ChatPartner, type ChatQuote, type ChatSync } from "./types";
+import { chatState, media, messages, presence } from "@/lib/db/schema";
+import { remove, viewUrls } from "@/lib/media/storage";
+import { EDIT_WINDOW_MS, MAX_MESSAGE, MAX_PEAKS, MAX_VOICE_MS, type ChatAttachment, type ChatMessage, type ChatPartner, type ChatQuote, type ChatSync } from "./types";
 
 type Row = typeof messages.$inferSelect;
 
@@ -15,7 +16,32 @@ const PAGE = 60;
 const OVERLAP_MS = 5_000;
 
 const notHiddenFor = (personId: string) => sql`not (${personId}::uuid = any(${messages.hiddenFor}))`;
-const snippet = (r: Pick<Row, "body" | "kind" | "deletedAt">) => (r.deletedAt ? "" : r.kind === "call" ? "Call" : r.body.slice(0, 180));
+const snippet = (r: Pick<Row, "body" | "kind" | "deletedAt" | "meta">) =>
+  r.deletedAt ? "" : r.kind === "call" ? "Call" : r.kind === "media" ? (r.meta?.attachmentKind === "voice" ? "Voice note" : "Photo") : r.body.slice(0, 180);
+
+/** Attachment rows for a page of messages, read through the couple's own tenant. */
+async function attachmentsFor(coupleId: string, rows: Row[]): Promise<Map<string, ChatAttachment>> {
+  const ids = [...new Set(rows.map((r) => r.meta?.attachmentId).filter((id): id is string => !!id))];
+  if (!ids.length) return new Map();
+  const db = await getDb();
+  const found = await db.select().from(media).where(and(eq(media.coupleId, coupleId), inArray(media.id, ids)));
+  const urls = await viewUrls(found.flatMap((m) => [m.path, m.thumbPath]));
+  const out = new Map<string, ChatAttachment>();
+  for (const m of found) {
+    const meta = rows.find((r) => r.meta?.attachmentId === m.id)?.meta;
+    out.set(m.id, {
+      id: m.id,
+      kind: m.kind === "song" ? "voice" : "image",
+      url: m.path ? (urls.get(m.path) ?? null) : null,
+      thumbUrl: m.thumbPath ? (urls.get(m.thumbPath) ?? null) : null,
+      width: m.width,
+      height: m.height,
+      durationSec: m.durationSec,
+      peaks: (meta?.peaks ?? []).slice(0, MAX_PEAKS),
+    });
+  }
+  return out;
+}
 
 async function toMessages(ctx: Ctx, rows: Row[]): Promise<ChatMessage[]> {
   if (!rows.length) return [];
@@ -27,12 +53,14 @@ async function toMessages(ctx: Ctx, rows: Row[]): Promise<ChatMessage[]> {
     const q = id ? quoted.find((x) => x.id === id) : null;
     return q ? { id: q.id, slug: slug(q.senderId), kind: q.kind, body: snippet(q), deleted: !!q.deletedAt } : null;
   };
+  const attachments = await attachmentsFor(ctx.relationship.id, rows);
   return rows.map((r) => ({
     id: r.id,
     clientId: r.clientId,
     slug: slug(r.senderId),
-    kind: r.kind === "call" ? "call" : "text",
+    kind: r.kind === "call" ? "call" : r.kind === "media" ? "media" : "text",
     body: r.deletedAt ? "" : r.body,
+    attachment: r.deletedAt || !r.meta?.attachmentId ? null : (attachments.get(r.meta.attachmentId) ?? null),
     replyTo: r.deletedAt ? null : quote(r.replyToId),
     call:
       r.kind === "call" && r.meta
@@ -120,7 +148,17 @@ export function syncChat(ctx: Ctx, opts: { since?: string | null; before?: numbe
 }
 
 export const chatAction = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("send"), clientId: z.string().min(8).max(64), body: z.string().trim().min(1).max(MAX_MESSAGE), replyTo: z.number().int().positive().nullish() }),
+  z
+    .object({
+      type: z.literal("send"),
+      clientId: z.string().min(8).max(64),
+      body: z.string().trim().max(MAX_MESSAGE).default(""),
+      replyTo: z.number().int().positive().nullish(),
+      /** A media row created by an upload in this chat (origin "chat"), owned by the sender. */
+      attachmentId: z.uuid().nullish(),
+      peaks: z.array(z.number().min(0).max(1)).max(MAX_PEAKS).nullish(),
+    })
+    .refine((a) => a.body.length > 0 || !!a.attachmentId, { message: "Write something or attach a photo or voice note." }),
   z.object({ type: z.literal("edit"), id: z.number().int().positive(), body: z.string().trim().min(1).max(MAX_MESSAGE) }),
   z.object({ type: z.literal("delete"), id: z.number().int().positive(), scope: z.enum(["me", "everyone"]) }),
   z.object({ type: z.literal("react"), id: z.number().int().positive(), emoji: z.string().min(1).max(16).nullable() }),
@@ -151,10 +189,41 @@ export function applyChat(ctx: Ctx, a: ChatAction): Promise<ChatActionResult> {
     const now = new Date();
     switch (a.type) {
       case "send": {
+        // A retry after a lost reply is the same message, not a second send.
+        const [already] = await db
+          .select()
+          .from(messages)
+          .where(and(eq(messages.coupleId, ctx.relationship.id), eq(messages.clientId, a.clientId)))
+          .limit(1);
+        if (already) return { ok: true, message: (await toMessages(ctx, [already]))[0] };
         const reply = a.replyTo ? await own(ctx, a.replyTo) : null;
+        let meta: Row["meta"] = null;
+        if (a.attachmentId) {
+          const [file] = await db
+            .select()
+            .from(media)
+            .where(and(eq(media.id, a.attachmentId), eq(media.coupleId, ctx.relationship.id), eq(media.origin, "chat"), eq(media.addedBy, ctx.me.id)));
+          if (!file) return { ok: false, error: "That attachment is no longer available. Try sending it again." };
+          const [used] = await db
+            .select({ id: messages.id })
+            .from(messages)
+            .where(and(eq(messages.coupleId, ctx.relationship.id), sql`${messages.meta}->>'attachmentId' = ${file.id}`))
+            .limit(1);
+          if (used) return { ok: false, error: "That attachment was already sent." };
+          if (file.durationSec && file.durationSec * 1000 > MAX_VOICE_MS + 1_000) return { ok: false, error: "Voice notes can be up to five minutes." };
+          meta = { attachmentId: file.id, attachmentKind: file.kind === "song" ? "voice" : "image", peaks: (a.peaks ?? []).slice(0, MAX_PEAKS) };
+        }
         const [created] = await db
           .insert(messages)
-          .values({ coupleId: ctx.relationship.id, senderId: ctx.me.id, clientId: a.clientId, body: a.body, replyToId: reply && !reply.deletedAt ? reply.id : null })
+          .values({
+            coupleId: ctx.relationship.id,
+            senderId: ctx.me.id,
+            clientId: a.clientId,
+            kind: a.attachmentId ? "media" : "text",
+            body: a.body,
+            replyToId: reply && !reply.deletedAt ? reply.id : null,
+            meta,
+          })
           .onConflictDoNothing({ target: [messages.coupleId, messages.clientId] })
           .returning();
         // A retry of a send that already landed returns the stored message.
@@ -183,7 +252,18 @@ export function applyChat(ctx: Ctx, a: ChatAction): Promise<ChatActionResult> {
         if (!row) return { ok: false, error: "That message is gone." };
         if (a.scope === "everyone") {
           if (row.senderId !== ctx.me.id) return { ok: false, error: "Only the sender can delete a message for everyone." };
-          await db.update(messages).set({ deletedAt: now, body: "", reactions: {}, updatedAt: now }).where(eq(messages.id, row.id));
+          await db.update(messages).set({ deletedAt: now, body: "", reactions: {}, meta: null, updatedAt: now }).where(eq(messages.id, row.id));
+          // A deleted attachment stops existing for both people: drop the row and its object.
+          if (row.meta?.attachmentId) {
+            const [file] = await db
+              .select()
+              .from(media)
+              .where(and(eq(media.id, row.meta.attachmentId), eq(media.coupleId, ctx.relationship.id), eq(media.origin, "chat")));
+            if (file) {
+              await db.delete(media).where(eq(media.id, file.id));
+              await remove([file.path, file.thumbPath]).catch(() => {});
+            }
+          }
         } else if (!row.hiddenFor.includes(ctx.me.id)) {
           await db
             .update(messages)
@@ -230,7 +310,8 @@ export async function unreadSummary(ctx: Ctx): Promise<{ unread: number; latest:
     db.select().from(messages).where(where).orderBy(desc(messages.id)).limit(1),
   ]);
   const slug = latest ? (ctx.members.find((m) => m.id === latest.senderId)?.slug ?? "") : "";
-  return { unread: n, latest: latest ? { id: latest.id, slug, body: latest.kind === "call" ? "📞 Call" : latest.body.slice(0, 140) } : null };
+  const preview = latest ? (latest.kind === "call" ? "📞 Call" : latest.kind === "media" ? (latest.meta?.attachmentKind === "voice" ? "🎤 Voice note" : "📷 Photo") : latest.body.slice(0, 140)) : "";
+  return { unread: n, latest: latest ? { id: latest.id, slug, body: preview } : null };
 }
 
 /** Writes a call's outcome into the chat, once per call. */
@@ -267,7 +348,8 @@ async function notifyPartner(ctx: Ctx, m: ChatMessage) {
       .where(and(eq(messages.coupleId, ctx.relationship.id), eq(messages.senderId, ctx.me.id), gt(messages.id, state?.lastReadId ?? 0), sql`${messages.deletedAt} is null`, notHiddenFor(partner.id)));
     const first = ctx.me.displayName.split(" ")[0];
     const { pushTo } = await import("@/lib/push/server");
-    await pushTo([partner.id], { type: "message", title: n > 1 ? `${first} · ${n} new messages` : first, body: m.body.slice(0, 180), url: "/together/chat", tag: "chat", unread: n });
+    const preview = m.kind === "media" ? (m.attachment?.kind === "voice" ? "🎤 Voice note" : "📷 Photo") : m.body.slice(0, 180);
+    await pushTo([partner.id], { type: "message", title: n > 1 ? `${first} · ${n} new messages` : first, body: preview, url: "/together/chat", tag: "chat", unread: n });
   } catch {
     /* notifications are best-effort */
   }

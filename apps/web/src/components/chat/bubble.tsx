@@ -5,6 +5,7 @@ import type { ChatMessage, ChatQuote } from "@/lib/chat/types";
 import { IconArrowDownLeft, IconArrowUpRight, IconCheck, IconChecks, IconChevronDown, IconClock, IconPhone, IconReply, IconVideo } from "@/components/icons";
 import { clock, duration, isEmojiOnly, linkify } from "./format";
 import { buzz } from "@/lib/ui/buzz";
+import { PhotoNote, VoiceNote } from "./attachments";
 
 export type Tick = "pending" | "failed" | "sent" | "delivered" | "read";
 
@@ -159,15 +160,9 @@ export function Bubble({ message: m, mine, first, tick, names, themeOf, highligh
     setDx(0);
   };
 
-  const body = m.deleted ? (
-    <span className="inline-flex items-center gap-1.5 italic text-muted">
-      <span aria-hidden>⊘</span> {mine ? "You deleted this message" : "This message was deleted"}
-    </span>
-  ) : m.kind === "call" ? (
-    <CallLine m={m} mine={mine} onCallBack={onCallBack} />
-  ) : (
-    <span className={`whitespace-pre-wrap break-words [overflow-wrap:anywhere] ${big ? "text-[2.6rem] leading-tight" : ""}`}>
-      {linkify(m.body).map((p, i) =>
+  const rich = (text: string) => (
+    <span className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+      {linkify(text).map((p, i) =>
         p.href ? (
           <a key={i} href={p.href} target="_blank" rel="noopener noreferrer" className="text-link underline decoration-link/40 underline-offset-2" onClick={(e) => e.stopPropagation()}>
             {p.t}
@@ -177,6 +172,22 @@ export function Bubble({ message: m, mine, first, tick, names, themeOf, highligh
         ),
       )}
     </span>
+  );
+
+  const hasImage = !m.deleted && m.attachment?.kind === "image";
+  const body = m.deleted ? (
+    <span className="inline-flex items-center gap-1.5 italic text-muted">
+      <span aria-hidden>⊘</span> {mine ? "You deleted this message" : "This message was deleted"}
+    </span>
+  ) : m.kind === "call" ? (
+    <CallLine m={m} mine={mine} onCallBack={onCallBack} />
+  ) : m.attachment ? (
+    <span className="block">
+      {m.attachment.kind === "voice" ? <VoiceNote a={m.attachment} /> : <PhotoNote a={m.attachment} />}
+      {m.body && <span className={`block whitespace-normal pt-1.5 ${hasImage ? "px-1.5" : ""}`}>{rich(m.body)}</span>}
+    </span>
+  ) : (
+    <span className={big ? "text-[2.6rem] leading-tight" : ""}>{rich(m.body)}</span>
   );
 
   return (
@@ -193,7 +204,7 @@ export function Bubble({ message: m, mine, first, tick, names, themeOf, highligh
         e.preventDefault();
         if (!g.current?.long) onMenu({ x: e.clientX, y: e.clientY });
       }}
-      onDoubleClick={() => !m.deleted && m.kind === "text" && onDoubleTap?.()}
+      onDoubleClick={() => !m.deleted && m.kind !== "call" && onDoubleTap?.()}
     >
       {/* The reply arrow that appears as you swipe. */}
       <span
@@ -238,13 +249,19 @@ export function Bubble({ message: m, mine, first, tick, names, themeOf, highligh
         )}
         <div
           className={`relative flow-root text-[0.95rem] leading-[1.38] text-ink select-none [-webkit-touch-callout:none] [@media(hover:hover)]:select-text ${
-            big ? "px-1" : `rounded-[18px] px-3 pb-1.5 pt-1.5 shadow-[0_1px_1px_rgb(0_0_0/0.06)] ${mine ? "bubble-mine" : "bubble-theirs"} ${first ? (mine ? "rounded-tr-[6px]" : "rounded-tl-[6px]") : ""}`
+            big
+              ? "px-1"
+              : `rounded-[18px] shadow-[0_1px_1px_rgb(0_0_0/0.06)] ${mine ? "bubble-mine" : "bubble-theirs"} ${first ? (mine ? "rounded-tr-[6px]" : "rounded-tl-[6px]") : ""} ${hasImage ? "p-1" : "px-3 pb-1.5 pt-1.5"}`
           }`}
         >
           {m.replyTo && !m.deleted && <Quote q={m.replyTo} names={names} themeOf={themeOf} mine={mine} onTap={() => onQuoteTap(m.replyTo!.id)} />}
           {body}
           {/* Time and ticks sit in the bubble's bottom-right corner, floated so text wraps around them. */}
-          <span className={`float-right ml-2.5 mt-1.5 flex translate-y-0.5 select-none items-center gap-1 text-[0.68rem] leading-none text-muted ${big ? "rounded-full bg-surface/80 px-1.5 py-1" : ""}`}>
+          <span
+            className={`float-right ml-2.5 mt-1.5 flex translate-y-0.5 select-none items-center gap-1 text-[0.68rem] leading-none text-muted ${
+              big ? "rounded-full bg-surface/80 px-1.5 py-1" : hasImage ? "w-full justify-end pr-1 pb-0.5" : ""
+            }`}
+          >
             {m.edited && <span className="italic">edited</span>}
             <span suppressHydrationWarning>{clock(m.createdAt)}</span>
             {tick && <Ticks tick={tick} />}
