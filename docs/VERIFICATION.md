@@ -4,9 +4,9 @@ Last updated: 2026-11-19. Rule: a claim is VERIFIED only if it was read from an 
 
 ## Environment of record
 
-- Windows (PowerShell 5.1), git 2.53.0, Node v24.16.0, npm 11.13.0, pnpm 12.21.0 via a corepack user shim (`%LOCALAPPDATA%\corepack`, not on the default PATH).
-- Local checkout of the `Lovora` repository, branch `autonomous/couples-v2`, based on `main` @ `ebd08c4`.
-- No production access, no deployments, no mobile builds and no device tests were performed.
+- Windows, git 2.53.0, Node v24.16.0, npm 11.13.0, pnpm 12.21.0 via a corepack user shim (`%LOCALAPPDATA%\corepack`, not on the default PATH).
+- Local checkout of the `Lovora` repository at `C:\Users\kkc36\Projects\Lovora`; branch `autonomous/couples-v2`, merged into protected `main` at `855739f` on 2026-11-19.
+- No production database, no Vercel account access and no successful production deployment were available. The Vercel project (`our-universe`) still needs its root directory and environment configured by its owner (see `DEPLOY.md`).
 
 ## External claims
 
@@ -54,6 +54,26 @@ Dependency audit: critical `next@16.3.6` (fix `next@16.4.6`); high `@vercel/blob
 - `zod` is overridden to 4.6.7 in `pnpm-workspace.yaml` (pnpm 12 no longer reads `pnpm.overrides` in `package.json`) to replace the 4.1.11 pin under `@vercel/cli-config` (GHSA-mrhx-c7xc-m3w5).
 
 Current tests cover: trends engine, visibility/clock/verse logic, push key derivation, research parsing. No tests cover auth, chat, calls, room sync, gallery, storage or tenancy.
+
+## Release gates (2026-11-19, Lovora)
+
+Run from the repo root after the multiuser auth and rebrand commit `146c376`; CI then repeated the same gates on the merge commit.
+
+| Command | Result | Recorded detail |
+| --- | --- | --- |
+| `pnpm typegen` | PASS | Next route types generated. |
+| `pnpm typecheck` | PASS | 4 packages (`web`, `domain`, `sync-protocol`, `ui-tokens`). |
+| `pnpm lint` | PASS | ESLint, no findings. |
+| `pnpm test` | PASS | 27 files; 302 tests at `146c376`, plus the new `rotateRecovery` case (focused auth suite 16 passing; full suite re-run green after the fix). Windows needed `maxWorkers: 2` in `vitest.config.mts` because the PGlite WASM worker pool crashed under the default per-CPU setting. |
+| `pnpm build` | PASS | Next 16 production build; `/recover` and `/api/health` present. |
+| `pnpm audit:deps` | PASS | `scope=prod threshold=high`, 0 advisories among 193 dependencies. A first run failed to parse a transient audit response; the rerun succeeded. |
+| Local production server | PASS | `next start` + `SESSION_SECRET`; `/api/health` returned 200 `{status:"ok",database:"up"}`; unauthenticated `/` and `/settings` redirected to `/login`. |
+| Browser smoke (Playwright) | PASS | Logged-out redirect, recovery page, demo sign-in, settings account display and generic wrong-password error all passed against the production build. |
+| GitHub Actions | PASS | CI `44607315982`, Security `44607315903`, post-merge CI `44607519222` and Security `44607519056` succeeded. |
+| Repository protection | PASS | `main` requires the `check` status, a pull request, conversation resolution, and blocks force pushes/deletions for admins too. PR #6 merged at `855739f`. |
+| Repository identity | PASS | GitHub repo renamed to `hassan200503/Lovora`; local folder renamed to `Projects\Lovora`; origin updated. |
+
+Not verified tonight: a live production deployment, production database migrations/seed, TURN/Gemini/push delivery, and email verification/password reset (no transactional email provider). The Vercel build currently fails because the project has no root directory or `DATABASE_URL`; both are owner-account settings.
 
 ## Secret scan
 

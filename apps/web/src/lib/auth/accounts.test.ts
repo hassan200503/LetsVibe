@@ -23,9 +23,11 @@ import {
   recoverAccount,
   registerCouple,
   revokeOtherSessions,
+  rotateRecovery,
   THROTTLED,
   verifyPassword,
 } from "@/lib/auth/accounts";
+import { newRecoveryCode } from "@/lib/auth/recovery";
 import { consumeInvitation, createInvitation, findInvitation, revokeInvitations } from "@/lib/auth/invite";
 import { ctxFor } from "@/lib/context";
 
@@ -164,6 +166,15 @@ describe("recovery", () => {
     const missing = await recoverAccount(appDb, { email: "nobody@example.com", code: "AAAAA-AAAAA-AAAAA-AAAAA", newPassword: "another password here", ip: "6.6.6.6" });
     expect(wrong).toEqual({ ok: false, error: "That email or recovery code isn't right." });
     expect(missing).toEqual(wrong);
+  });
+
+  it("only re-issues a recovery code after the current password", async () => {
+    const created = await register();
+    expect(await rotateRecovery(appDb, created.personId, "not the current password", newRecoveryCode())).toBe(false);
+    const code = newRecoveryCode();
+    expect(await rotateRecovery(appDb, created.personId, SIGNUP.password, code)).toBe(true);
+    const recovered = await recoverAccount(appDb, { email: SIGNUP.email, code, newPassword: "another password here", ip: "7.7.7.7" });
+    expect(recovered.ok).toBe(true);
   });
 
   it("resets the password, rotates the code and revokes old sessions", async () => {

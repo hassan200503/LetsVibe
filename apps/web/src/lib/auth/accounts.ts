@@ -283,6 +283,14 @@ export async function changePassword(db: Db, personId: string, current: string, 
   return { ok: true, sessionVersion: updated.version };
 }
 
+/** Issues a new one-time recovery code after re-checking the current password. */
+export async function rotateRecovery(db: Db, personId: string, current: string, code: string): Promise<boolean> {
+  const [person] = await db.select({ hash: people.passwordHash }).from(people).where(eq(people.id, personId));
+  if (!person || !(await verifyPassword(current, person.hash))) return false;
+  await db.update(people).set({ recoveryHash: hashRecoveryCode(code) }).where(eq(people.id, personId));
+  return true;
+}
+
 /** Revokes every other device. */
 export async function revokeOtherSessions(db: Db, personId: string): Promise<number> {
   const [updated] = await db
