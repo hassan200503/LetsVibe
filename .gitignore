@@ -48,6 +48,9 @@ next-env.d.ts
 # plain passcodes for handing over — never commit
 PASSCODES*.md
 
+# code-review agent reports
+.loop/reviews/
+
 # Netlify CLI link state and local deploy notes
 .netlify/
 DEPLOYED.local.md

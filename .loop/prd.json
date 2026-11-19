@@ -2899,9 +2899,9 @@
       "dependsOn": [
         "E7-003"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "`pnpm review:agent` diffs base...HEAD plus working tree/staged, picks up the newest `.loop/logs/*.log` gate output, and writes `.loop/reviews/agent-review-<stamp>.md` + `latest.md`. Heuristic pass (`apps/web/src/lib/agent/review.ts`, no network): secrets in the diff with values redacted, unsafe execution, sensitive logging, credential leaks, image alt, clickable divs, destructive migrations, nondeterministic sync, unscoped cross-tenant queries and source changes without tests. Optional Gemini pass fences the diff/gate output as untrusted, caps sizes, sanitises fenced JSON, caps at 50 findings and falls back to heuristics. No write path outside `.loop/`; non-zero exit only for critical findings. 19 fixture tests; branch run reports 220 files, 0 findings. `gitleaks` unavailable here, so the diff secret rule is the recorded substitute."
     },
     {
       "id": "E17-003",

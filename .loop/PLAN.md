@@ -139,3 +139,4 @@ Nothing below can be substituted by code. Each already has an entry in `.loop/HU
 | 5 | E2-005 visibility & public profile | done | couple-scoped slugs, opaque public handle, allowlisted reader, 234 tests — iteration 022 |
 | 6 | E5-013 sync protocol & simulator | done | `@letsvibe/sync-protocol` 18 tests, p95 280-326 ms across wifi/mobile/poor, provider wired — iteration 023 |
 | 7 | E3-007 chat photos & voice notes | done | `media.origin` split, 7 attachment integration tests + 6 waveform tests, 247 web tests — iteration 024 |
+| 8 | E17-002 repository review agent | done | `pnpm review:agent`, 19 fixture tests, 0 findings on a 220-file branch diff, 266 web tests — iteration 025 |

@@ -115,7 +115,7 @@ Turborepo runs each gate across `apps/web` and `packages/*`. Integration tests b
 - **Data:** Drizzle ORM over Postgres (embedded PGlite locally and in tests, node-postgres/Neon in production). Every couple-owned table carries `couple_id`, and the context is resolved from the verified session — never from a URL or request parameter.
 - **Privacy by construction:** one `visibleTo()` rule decides private / shared / public, a 21-table generated matrix proves another couple's rows can't be read or written, and the public profile is served by a single reader with a column allowlist at an opaque handle.
 - **Realtime:** polling with server-assigned versions for chat and room state, WebRTC for calls, Web Push for rings and messages. No shared socket required, so it works on any host that runs Node.
-- **AI:** Gemini research with citations and grounded search, keys sealed at rest; next, an in-app agent for guidance and automatic code review.
+- **AI:** Gemini research with citations and grounded search, keys sealed at rest; a repository review agent (`pnpm review:agent`) reads the branch diff and latest gate log, reports severity-ranked findings with file and line references, and runs a secret scan even offline. Next, an in-app guide agent.
 - **Status:** the web app is production-grade and shippable as a PWA. A native Expo shell is planned and gated on store accounts and device testing, not on a rewrite — the domain and sync logic are already framework-free.
 
 ## Deploy for free (no card)
