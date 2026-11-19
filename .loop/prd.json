@@ -472,9 +472,9 @@
       "dependsOn": [
         "E2-002"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "The suite does not use pgTAP: the project runs one Postgres engine everywhere (PGlite in tests and local dev, node-postgres/Neon in production), so the regression tests are Vitest modules over the real migrated schema, which keeps them in the same `pnpm test` gate CI already runs. src/lib/db/tenancy-matrix.test.ts holds a registry of the 21 couple-owned tables (the coverage test compares it to information_schema, so a new table with couple_id fails CI until it is registered) and generates, per table, two couples and then four proofs: select (the other couple's row is unreachable even when its key is known), insert (a row carries exactly the couple that wrote it), update and delete (a write pinned to the wrong tenant matches zero rows and leaves the other couple's row byte-identical). Five child tables additionally prove the composite foreign key refuses a parent from the other couple. Coverage also asserts the tenant column is NOT NULL, that no relationship_id survives, and that every couple-owned table has a real FK to couples. src/lib/media/storage.test.ts proves ownsPath rejects another couple's folder, traversal, absolute and unprintable paths, that newPath never leaves rel/<coupleId>/, and that a blob signature is bound to exactly the one path handed to it. src/app/api/media/file/[...path]/route.test.ts writes a real file for each of two couples and shows the route serves only its own, refusing the other couple's existing file with 404 (then serving it when that couple asks), plus traversal and the signed-out 401. E2-002 (RLS) is not a prerequisite for these: they assert the application and schema guarantees that survive whatever the database policies become, and the storage half covers the bucket-path rule E2-002 must enforce server-side. Commit 17bec37."
     },
     {
       "id": "E2-004",
