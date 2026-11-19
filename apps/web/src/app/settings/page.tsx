@@ -21,6 +21,7 @@ import { Container, PageHeader } from "@/components/ui/page-header";
 import { THEME_OPTIONS, coerceTheme } from "@letsvibe/domain";
 import { UsageMeter } from "@/components/ui/usage";
 import { planUsage } from "@/lib/entitlements/server";
+import { flagFor } from "@/lib/flags/server";
 import { formatCost, formatTokens, resetLabel } from "@/lib/entitlements/format";
 
 export const metadata = { title: "Settings" };
@@ -34,6 +35,7 @@ export default async function SettingsPage() {
   const followed = SOURCES.filter((s) => topics.includes(s.topic));
   const categories = topics.flatMap((t) => [...TOPICS[t].categories.map((c) => c.name), TOPICS[t].fallbackCategory]);
   const plan = await planUsage(ctx.relationship.id);
+  const paywall = await flagFor(ctx.relationship.id, "paywall");
   const [gemini, relay] = await Promise.all([
     process.env.GEMINI_API_KEY ? ({ source: "env" } as const) : describeSecret(geminiSecret(ctx.relationship.id)).then((d) => ({ ...d, source: d.set ? ("saved" as const) : ("none" as const) })),
     relaySource() ? ({ source: "env" } as const) : describeSecret(SECRET_RELAY).then((d) => ({ ...d, source: d.set ? ("saved" as const) : ("none" as const) })),
@@ -98,6 +100,11 @@ export default async function SettingsPage() {
             Read from Gemini&apos;s own usage report for every answer and quiz, at the model&apos;s published rate. Your key, your bill — we never mark usage up.
           </p>
           <p className="mt-3 text-xs text-muted">No ads, and no selling your data. Premium plans aren&apos;t for sale yet — if your plans ever change, support can adjust your limits and the change is audited.</p>
+          {paywall && (
+            <p className="mt-3 text-sm">
+              <Link href="/premium" className="text-accent underline underline-offset-4">Compare Free and Premium</Link>
+            </p>
+          )}
         </section>
         <div className="grid gap-8 lg:grid-cols-2">
           <section className="card p-5">
