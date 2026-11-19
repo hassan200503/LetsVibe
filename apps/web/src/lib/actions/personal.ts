@@ -4,7 +4,7 @@ import { and, eq, max } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { THEME_KEYS } from "@lovora/domain";
-import { changePassword as applyPasswordChange, hashRecoveryCode, newRecoveryCode, revokeOtherSessions, verifyPassword } from "@/lib/auth/accounts";
+import { changePassword as applyPasswordChange, newRecoveryCode, revokeOtherSessions, rotateRecovery } from "@/lib/auth/accounts";
 import { createInvitation, revokeInvitations } from "@/lib/auth/invite";
 import { createSession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/client";
@@ -328,10 +328,8 @@ export async function changePassword(_: ActionState, fd: FormData): Promise<Acti
 export async function rotateRecoveryCode(_: ActionState, fd: FormData): Promise<ActionState> {
   const { db, personId } = await me();
   const current = String(fd.get("current") ?? "");
-  const [person] = await db.select({ hash: people.passwordHash }).from(people).where(eq(people.id, personId));
-  if (!person || !(await verifyPassword(current, person.hash))) return { error: "Your current password isn't right." };
   const code = newRecoveryCode();
-  await db.update(people).set({ recoveryHash: hashRecoveryCode(code) }).where(eq(people.id, personId));
+  if (!(await rotateRecovery(db, personId, current, code))) return { error: "Your current password isn't right." };
   return { ok: true, recoveryCode: code };
 }
 
