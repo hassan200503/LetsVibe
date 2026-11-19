@@ -1,6 +1,6 @@
 # Let'sVibe
 
-A private shared world for two: messages, calls, synchronised listening and watching, memories, and live discoveries from the real world.
+A private shared world for two: messages, encrypted calls, synchronised listening and watching, memories, and live discoveries from the real world. Web today, one shared TypeScript codebase, and a tested sync protocol underneath the room.
 
 Requires Node.js 24+ and pnpm 12.21.0 (`corepack enable pnpm` once, or use any Node version manager). No database setup is needed.
 
@@ -37,7 +37,7 @@ Requires Node.js 24+ and pnpm 12.21.0 (`corepack enable pnpm` once, or use any N
 | Weekly digest (any past week) | `/digest` |
 | Global search | `/search` |
 | Personalisation: interests, favourite topics, muted/starred sources, hidden categories and keywords | `/settings` |
-| Opt-in public profile (public skills and projects only) | `/p/[slug]` |
+| Opt-in public profile (public skills and projects only, at an opaque link) | `/p/[handle]` |
 | Source health | `/discover/sources` |
 
 ### Start fresh or use demo data
@@ -67,7 +67,8 @@ Everything personal has a visibility: 🔒 **private** (owner only), 💞 **shar
 ## Listening together
 
 - **One player for the whole site.** The room's player lives in the root layout (`apps/web/src/components/together/room-provider.tsx`), so opening Messages, taking a call or visiting any page never stops the music: outside the room it becomes a mini-player (play/pause for both, back to the room, stop on this device). During a call the music drops to 20% volume.
-- **Staying in step.** The server keeps `{playing, position, updatedAt}`; play/pause/seek carry the moment they happened, so request travel time doesn't put anyone behind. Each phone estimates the server clock from its fastest recent round trips, never lets an older reply undo a newer state, and closes gaps by playing up to 5–10% faster or slower. It jumps only for large gaps, never while buffering, only into audio already downloaded (unless far behind), and backs off on slow connections. "Ended" names the state version it judged, so a stale report can't stop a track that was just restarted.
+- **Staying in step.** The server keeps `{playing, position, updatedAt}`; play/pause/seek carry the moment they happened, so request travel time doesn't put anyone behind. Each device estimates the server clock from its fastest recent round trips, never lets an older reply undo a newer state, and closes gaps by playing up to 5–10% faster or slower. It jumps only for large gaps, never while buffering, only into audio already downloaded (unless far behind), and backs off on slow connections. "Ended" names the state version it judged, so a stale report can't stop a track that was just restarted.
+- **Measured, not asserted.** Those rules live in `packages/sync-protocol` — pure TypeScript with no React, clock or random source — together with a deterministic simulator that runs two skewed clients over latency, jitter, packet loss and buffering stalls in virtual time. Seed 7 of the default 95-second scenario measures **p95 drift of 295 ms on wifi, 280 ms on mobile and 326 ms on poor networks**, and 286 ms with 33% packet loss, against a 500 ms target. The same rules drive the room provider, so what CI measures is what ships.
 
 ## The Live Trends Engine
 
@@ -97,10 +98,24 @@ pnpm dev
 No database setup is needed: without `DATABASE_URL`, an embedded Postgres (PGlite) lives in `apps/web/.data/`. It allows one process at a time, so stop `pnpm dev` before running `seed`, `ingest` or `retag`. The generated demo passcodes are in `apps/web/.env.local` (git-ignored); `pnpm passcodes` writes a handover file.
 
 ```bash
-pnpm test          # brand, engine, visibility, journey clock, verse rotation and chat formatting tests
+pnpm test          # unit + integration over a real migrated PGlite schema, including the
+                   # 21-table cross-couple tenancy matrix and the sync simulator
 pnpm typecheck
 pnpm lint
+pnpm build
+pnpm a11y          # axe-core WCAG 2.2 AA, light and dark
 ```
+
+Turborepo runs each gate across `apps/web` and `packages/*`. Integration tests boot an embedded Postgres and apply the same Drizzle migrations production gets, so tenant isolation is tested against the real schema rather than mocks.
+
+## How it's built
+
+- **Monorepo:** pnpm workspaces + Turborepo. `apps/web` is Next.js (App Router, React Server Components, server actions) on React 19; `packages/domain`, `packages/sync-protocol` and `packages/ui-tokens` are shared, typed and independently tested.
+- **Data:** Drizzle ORM over Postgres (embedded PGlite locally and in tests, node-postgres/Neon in production). Every couple-owned table carries `couple_id`, and the context is resolved from the verified session — never from a URL or request parameter.
+- **Privacy by construction:** one `visibleTo()` rule decides private / shared / public, a 21-table generated matrix proves another couple's rows can't be read or written, and the public profile is served by a single reader with a column allowlist at an opaque handle.
+- **Realtime:** polling with server-assigned versions for chat and room state, WebRTC for calls, Web Push for rings and messages. No shared socket required, so it works on any host that runs Node.
+- **AI:** Gemini research with citations and grounded search, keys sealed at rest; next, an in-app agent for guidance and automatic code review.
+- **Status:** the web app is production-grade and shippable as a PWA. A native Expo shell is planned and gated on store accounts and device testing, not on a rewrite — the domain and sync logic are already framework-free.
 
 ## Deploy for free (no card)
 
