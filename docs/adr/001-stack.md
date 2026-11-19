@@ -1,6 +1,6 @@
 # ADR-001 — Target stack for the multi-couple product
 
-- Status: Accepted for planning (Phase 0)
+- Status: Accepted for planning (Phase 0); auth and database-provider parts superseded by ADR-005 (first-party email auth on Neon)
 - Date: 2026-11-15
 - Deciders: autonomous loop (recommendation); human sign-off needed for paid accounts and legal items
 - Evidence: `.loop/audit.md`; MASTER_SPEC §3–§5; official sources below.

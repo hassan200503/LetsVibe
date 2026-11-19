@@ -8,8 +8,8 @@ import { CallProvider } from "@/components/call/call-provider";
 import { RoomProvider } from "@/components/together/room-provider";
 import { ReachPrompt, ServiceWorker } from "@/components/push";
 import { getCtx } from "@/lib/context";
-import { BRAND } from "@letsvibe/domain";
-import { baseDark, baseLight } from "@letsvibe/ui-tokens";
+import { BRAND } from "@lovora/domain";
+import { baseDark, baseLight } from "@lovora/ui-tokens";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });

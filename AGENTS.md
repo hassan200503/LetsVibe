@@ -8,7 +8,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-# Let'sVibe — agent guide
+# Lovora — agent guide
 
 A private shared world for couples: messages, calls, rooms, memories, gallery, daily questions, learning and research. Becoming multi-tenant (thousands of couples) on web + iOS/Android. Read `MASTER_SPEC.md`, `PROMPT.md`, `docs/PRODUCT.md`, `docs/ARCHITECTURE.md`, `.loop/audit.md` and `.loop/prd.json` before starting.
 
@@ -56,7 +56,7 @@ A change is done only when typegen, typecheck, lint, test, build and the product
 
 1. **Tenancy:** every couple-owned table has `couple_id`. Derive the couple from the verified session, never from request input. RLS is default-deny; a query without explicit couple scope is a bug. New tables require policies plus a cross-couple test (E12-004). Never trust a client-supplied relationship/couple id.
 2. **Visibility:** use the single `visibleTo()` gate for personal content. Public profiles are opt-in and expose only allowed fields.
-3. **Secrets:** only `.env.example` may be committed. Never print, commit or log keys, tokens, passcodes or personal content. Never touch production, never `git push`, never rewrite history.
+3. **Secrets:** only `.env.example` may be committed. Never print, commit or log keys, tokens, passwords, recovery codes or personal content. Never touch production, never `git push`, never rewrite history.
 4. **Time:** use the couple's time zone, not Nairobi or server-local time. Dates on the wire are UTC.
 5. **Media:** couple-scoped paths (`<couple_id>/…`); signed URLs only; validate MIME and size server-side; strip EXIF. No YouTube downloads, no DRM workarounds, no offline caching of streamed content.
 6. **Realtime:** durable write first, then broadcast. Never add a new poll that writes on every tick. Keep a polling fallback while migrating.

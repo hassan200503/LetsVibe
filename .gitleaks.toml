@@ -11,7 +11,7 @@
 #    request, so a commit that adds a key fails the build rather than being
 #    noticed later.
 
-title = "Let'sVibe"
+title = "Lovora"
 
 [extend]
 useDefault = true

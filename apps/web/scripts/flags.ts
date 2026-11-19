@@ -1,10 +1,10 @@
 /**
  * Break-glass flag administration.
  *
- *   FLAGS_ADMIN=1 pnpm --filter @letsvibe/web flags -- --list
- *   FLAGS_ADMIN=1 pnpm --filter @letsvibe/web flags -- --couple=<id|exact name> --show
- *   FLAGS_ADMIN=1 pnpm --filter @letsvibe/web flags -- --couple=<id> --flag=paywall --on --reason="staging trial"
- *   FLAGS_ADMIN=1 pnpm --filter @letsvibe/web flags -- --couple=<id> --flag=paywall --clear
+ *   FLAGS_ADMIN=1 pnpm --filter @lovora/web flags -- --list
+ *   FLAGS_ADMIN=1 pnpm --filter @lovora/web flags -- --couple=<id|exact name> --show
+ *   FLAGS_ADMIN=1 pnpm --filter @lovora/web flags -- --couple=<id> --flag=paywall --on --reason="staging trial"
+ *   FLAGS_ADMIN=1 pnpm --filter @lovora/web flags -- --couple=<id> --flag=paywall --clear
  *
  * A flag normally comes from FEATURE_FLAGS in the environment and needs a
  * deploy. This tool is for the one couple you want to try something with first:

@@ -1,10 +1,12 @@
 "use server";
 
-import bcrypt from "bcryptjs";
 import { and, eq, max } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { THEME_KEYS } from "@letsvibe/domain";
+import { THEME_KEYS } from "@lovora/domain";
+import { changePassword as applyPasswordChange, hashRecoveryCode, newRecoveryCode, revokeOtherSessions, verifyPassword } from "@/lib/auth/accounts";
+import { createInvitation, revokeInvitations } from "@/lib/auth/invite";
+import { createSession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/client";
 import { couples, interests, knowledgeEntries, learningRecords, people, preferences, projects, radarItems, radarLanes, skills } from "@/lib/db/schema";
 import { requireCtx } from "@/lib/context";
@@ -309,17 +311,37 @@ export async function savePreferences(_: ActionState, fd: FormData): Promise<Act
 
 // ─── Account & relationship ───────────────────────────────────────────────
 
-export async function changePasscode(_: ActionState, fd: FormData): Promise<ActionState> {
-  const { db, personId } = await me();
+export async function changePassword(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { db, personId, slug } = await me();
   const current = String(fd.get("current") ?? "");
   const next = String(fd.get("next") ?? "");
   const confirm = String(fd.get("confirm") ?? "");
-  if (next.length < 8) return { error: "Use at least 8 characters" };
-  if (next !== confirm) return { error: "The new passcodes don't match" };
-  const [row] = await db.select({ hash: people.passwordHash }).from(people).where(eq(people.id, personId));
-  if (!row || !(await bcrypt.compare(current, row.hash))) return { error: "Your current passcode isn't right" };
-  await db.update(people).set({ passwordHash: await bcrypt.hash(next, 12) }).where(eq(people.id, personId));
-  return { ok: true, message: "Passcode changed" };
+  if (next !== confirm) return { error: "The new passwords don't match" };
+  const result = await applyPasswordChange(db, personId, current, next);
+  if (!result.ok) return { error: result.error };
+  await createSession({ personId, slug, version: result.sessionVersion });
+  revalidatePath("/", "layout");
+  return { ok: true, message: "Password changed. Other devices were signed out." };
+}
+
+/** Issues a replacement recovery code, shown once. The old code stops working immediately. */
+export async function rotateRecoveryCode(_: ActionState, fd: FormData): Promise<ActionState> {
+  const { db, personId } = await me();
+  const current = String(fd.get("current") ?? "");
+  const [person] = await db.select({ hash: people.passwordHash }).from(people).where(eq(people.id, personId));
+  if (!person || !(await verifyPassword(current, person.hash))) return { error: "Your current password isn't right." };
+  const code = newRecoveryCode();
+  await db.update(people).set({ recoveryHash: hashRecoveryCode(code) }).where(eq(people.id, personId));
+  return { ok: true, recoveryCode: code };
+}
+
+/** Invalidates every session token except the one this request refreshes. */
+export async function signOutEverywhere(): Promise<ActionState> {
+  const { db, personId, slug } = await me();
+  const version = await revokeOtherSessions(db, personId);
+  await createSession({ personId, slug, version });
+  revalidatePath("/", "layout");
+  return { ok: true, message: "Every other device is signed out." };
 }
 
 const FEATURES = ["projects", "thinking"] as const;
@@ -340,3 +362,21 @@ export async function saveRelationship(_: ActionState, fd: FormData): Promise<Ac
   revalidatePath("/", "layout");
   return { ok: true, message: "Saved ❤️" };
 }
+
+/**
+ * Mints one fresh partner invitation and revokes any older pending one. The raw
+ * token is returned to the sender only; only its hash is stored, and it works once.
+ */
+export async function createPartnerInvite(): Promise<ActionState> {
+  const { ctx, db, personId } = await me();
+  if (ctx.partners.length > 0) return { error: "Your world already has two people." };
+  const token = await createInvitation(db, ctx.relationship.id, personId);
+  return { ok: true, invitePath: `/join/${token}`, message: "Invitation ready" };
+}
+
+export async function revokePartnerInvite(): Promise<ActionState> {
+  const { ctx, db } = await me();
+  await revokeInvitations(db, ctx.relationship.id);
+  return { ok: true, message: "Invitation revoked" };
+}
+

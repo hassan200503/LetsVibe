@@ -1,5 +1,5 @@
 {
-  "name": "letsvibe",
+  "name": "lovora",
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@12.21.0",
@@ -7,28 +7,28 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "corepack pnpm --filter @letsvibe/web dev",
+    "dev": "corepack pnpm --filter @lovora/web dev",
     "build": "turbo run build",
-    "typegen": "corepack pnpm --filter @letsvibe/web typegen",
+    "typegen": "corepack pnpm --filter @lovora/web typegen",
     "typecheck": "corepack pnpm typegen && turbo run typecheck",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "a11y": "corepack pnpm --filter @letsvibe/web a11y",
-    "motion": "corepack pnpm --filter @letsvibe/web motion",
-    "entitlements": "corepack pnpm --filter @letsvibe/web entitlements",
+    "a11y": "corepack pnpm --filter @lovora/web a11y",
+    "motion": "corepack pnpm --filter @lovora/web motion",
+    "entitlements": "corepack pnpm --filter @lovora/web entitlements",
     "setup": "corepack pnpm install && corepack pnpm typegen && corepack pnpm seed",
     "reset": "node apps/web/scripts/reset.mjs",
     "check": "corepack pnpm typecheck && corepack pnpm lint && corepack pnpm test && corepack pnpm build",
     "audit:deps": "node scripts/audit-deps.mjs",
     "review:agent": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/agent-review.mts",
     "triage:agent": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/agent-triage.mts",
-    "db:generate": "corepack pnpm --filter @letsvibe/web db:generate",
-    "db:migrate": "corepack pnpm --filter @letsvibe/web db:migrate",
-    "seed": "corepack pnpm --filter @letsvibe/web seed",
-    "ingest": "corepack pnpm --filter @letsvibe/web ingest",
-    "retag": "corepack pnpm --filter @letsvibe/web retag",
-    "passcodes": "corepack pnpm --filter @letsvibe/web passcodes",
-    "go-live": "corepack pnpm --filter @letsvibe/web go-live"
+    "db:generate": "corepack pnpm --filter @lovora/web db:generate",
+    "db:migrate": "corepack pnpm --filter @lovora/web db:migrate",
+    "seed": "corepack pnpm --filter @lovora/web seed",
+    "ingest": "corepack pnpm --filter @lovora/web ingest",
+    "retag": "corepack pnpm --filter @lovora/web retag",
+    "passwords": "corepack pnpm --filter @lovora/web passwords",
+    "go-live": "corepack pnpm --filter @lovora/web go-live"
   },
   "devDependencies": {
     "turbo": "^2.11.11"

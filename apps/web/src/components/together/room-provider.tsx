@@ -9,7 +9,7 @@ import { useCall } from "@/components/call/call-provider";
 import { roomLive } from "@/lib/ui/room-live";
 import { IconPause, IconPlay, IconX } from "@/components/icons";
 import { FilePlayer, type PlayerHandle, Prefetch, warmYouTube, YouTubePlayer } from "./player";
-import { addSample, estimateClock, expectedPositionMs, planCorrection, toSeconds, type ClockSample, type PlaybackSnapshot } from "@letsvibe/sync-protocol";
+import { addSample, estimateClock, expectedPositionMs, planCorrection, toSeconds, type ClockSample, type PlaybackSnapshot } from "@lovora/sync-protocol";
 
 type State = NonNullable<RoomPayload["state"]>;
 type Ev = RoomPayload["events"][number];

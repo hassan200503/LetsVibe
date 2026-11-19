@@ -4,7 +4,7 @@ Status: active foundation from E0-009. The token values preserve the current vis
 
 ## North star
 
-Let'sVibe should feel like a private, beautifully made object rather than a feed. The interaction clarity and polish bar meets or exceeds Instagram, Facebook and X; the emotional register is quieter, more editorial and more intentional. The product bar is equally high: every surface must be genuinely useful, unmistakably unique, valuable enough to return to and easy to love. "Expensive" means restraint, not decoration:
+Lovora should feel like a private, beautifully made object rather than a feed. The interaction clarity and polish bar meets or exceeds Instagram, Facebook and X; the emotional register is quieter, more editorial and more intentional. The product bar is equally high: every surface must be genuinely useful, unmistakably unique, valuable enough to return to and easy to love. "Expensive" means restraint, not decoration:
 
 - One clear primary action and one accent per view.
 - Generous breathing room, crisp typography and precise alignment.
@@ -32,10 +32,10 @@ We do not copy engagement mechanics that make a social app feel cheap: infinite 
 `packages/ui-tokens/src/tokens.ts` is the source of truth. It holds the light/dark palette, world accents, type, spacing, radii, elevation and motion. `packages/ui-tokens/src/css.ts` renders the CSS custom properties, and `tokens.css` is generated and committed. Web imports it once from `globals.css`:
 
 ```css
-@import "@letsvibe/ui-tokens/tokens.css";
+@import "@lovora/ui-tokens/tokens.css";
 ```
 
-Use CSS variables in component CSS and Tailwind arbitrary values only when a utility cannot express the token. Native will import the typed values from `@letsvibe/ui-tokens`; it must not maintain a second palette.
+Use CSS variables in component CSS and Tailwind arbitrary values only when a utility cannot express the token. Native will import the typed values from `@lovora/ui-tokens`; it must not maintain a second palette.
 
 Core semantic groups:
 

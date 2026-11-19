@@ -45,8 +45,9 @@ next-env.d.ts
 # local embedded database
 .data/
 
-# plain passcodes for handing over — never commit
+# plaintext credential handover files — never commit
 PASSCODES*.md
+PASSWORDS*.md
 
 # code-review agent reports
 .loop/reviews/

@@ -1,11 +1,11 @@
-# Let'sVibe
+# Lovora
 
 A private shared world for two: messages, encrypted calls, synchronised listening and watching, memories, and live discoveries from the real world. Web today, one shared TypeScript codebase, and a tested sync protocol underneath the room.
 
 Requires Node.js 24+ and pnpm 12.21.0 (`corepack enable pnpm` once, or use any Node version manager). No database setup is needed.
 
 ```
-                  LET'SVIBE
+                  LOVORA
                       │
         ┌─────────────┼─────────────┐
      YOU           OUR STORY      PARTNER
@@ -42,9 +42,9 @@ Requires Node.js 24+ and pnpm 12.21.0 (`corepack enable pnpm` once, or use any N
 
 ### Start fresh or use demo data
 
-To begin with your own world, run `pnpm reset`, start `pnpm dev`, and open `/welcome`. The first person creates the world, picks interests and gets a private 24-hour invitation link for their partner. No demo accounts are created.
+To begin with your own world, run `pnpm reset`, start `pnpm dev`, and open `/welcome`. The first person creates their account with an email and password, picks interests and gets a single-use invitation link (7 days) for their partner. No demo accounts are created.
 
-`pnpm run setup` instead creates a generic demo couple, **Alex** and **Sam**, with a few interests, skills and projects. Change names and profiles in Settings; `pnpm reset` clears the local world and seed passcodes.
+`pnpm run setup` instead creates a generic demo couple, **Alex** and **Sam**, with a few interests, skills and projects. Change names and profiles in Settings; `pnpm reset` clears the local world; the generated demo sign-in details are in `apps/web/.env.local` (git-ignored).
 
 ### Privacy
 
@@ -96,7 +96,7 @@ pnpm ingest --force    # optional: fetch the first live discoveries
 pnpm dev
 ```
 
-No database setup is needed: without `DATABASE_URL`, an embedded Postgres (PGlite) lives in `apps/web/.data/`. It allows one process at a time, so stop `pnpm dev` before running `seed`, `ingest` or `retag`. The generated demo passcodes are in `apps/web/.env.local` (git-ignored); `pnpm passcodes` writes a handover file.
+No database setup is needed: without `DATABASE_URL`, an embedded Postgres (PGlite) lives in `apps/web/.data/`. It allows one process at a time, so stop `pnpm dev` before running `seed`, `ingest` or `retag`. The generated demo emails and passwords are in `apps/web/.env.local` (git-ignored); `pnpm passwords` rotates every password and writes a handover file (`PASSWORDS.local.md`).
 
 ```bash
 pnpm test          # unit + integration over a real migrated PGlite schema, including the
@@ -117,6 +117,7 @@ Turborepo runs each gate across `apps/web` and `packages/*`. Integration tests b
 - **Realtime:** polling with server-assigned versions for chat and room state, WebRTC for calls, Web Push for rings and messages. No shared socket required, so it works on any host that runs Node.
 - **AI:** Gemini research with citations and grounded search, keys sealed at rest; a repository review agent (`pnpm review:agent`) reads the branch diff and latest gate log, reports severity-ranked findings with file and line references, and runs a secret scan even offline; a gate-triage agent (`pnpm triage:agent`) turns a failed typecheck/lint/test/build/a11y log into a ranked repair plan with a proof command per step, writing reports under `.loop/` only and never editing the tree. Next, an in-app guide agent.
 - **Plans:** limits belong to the couple and are enforced on the server; Settings shows live usage. A comparison screen at `/premium` sits behind the `paywall` flag, reads the same entitlement row, shows no invented price and has purchases disabled (ADR-003).
+- **Accounts:** first-party email and password sign-up. Emails are unique (case-insensitive), passwords are bcrypt (cost 12), login errors never reveal whether an account exists, and per-IP/per-account attempt buckets live in Postgres. Sessions are 30-day httpOnly JWTs carrying a `sessionVersion`; changing a password, recovering an account or signing out everywhere invalidates every older token. Partner invitations are single-use, stored as SHA-256 hashes, expire in 7 days and are consumed inside a transaction that locks the couple row. A one-time recovery code is shown at sign-up and can be regenerated from Settings.
 - **Status:** the web app is production-grade and shippable as a PWA. A native Expo shell is planned and gated on store accounts and device testing, not on a rewrite — the domain and sync logic are already framework-free.
 
 ## Deploy for free (no card)

@@ -5,8 +5,8 @@
  *   pnpm go-live   (from the repository root)
  *
  * You paste the Neon connection string once (hidden as you type). The script:
- *   1. migrates and seeds the Neon database, applies the passcodes already in
- *      PASSCODES.local.md, and loads the first live discoveries;
+ *   1. migrates and seeds the Neon database, applies the passwords already in
+ *      PASSWORDS.local.md, and loads the first live discoveries;
  *   2. stores DATABASE_URL as a GitHub Actions secret (for the scheduled refresh);
  *   3. logs in to Netlify (your browser opens; you approve), creates the site,
  *      sets DATABASE_URL, SESSION_SECRET and CRON_SECRET, and deploys.
@@ -105,18 +105,14 @@ step("Creating tables");
 run("corepack", ["pnpm", "db:migrate"], db);
 
 step("Adding the demo couple and your worlds");
-// Seed with the passcodes you already have, so none are generated and discarded.
-const codes = Object.fromEntries(
-  [...(existsSync("PASSCODES.local.md") ? readFileSync("PASSCODES.local.md", "utf8") : "").matchAll(/^\| (\w+) \| [^|]+ \| `([^`]+)` \|$/gm)].map((m) => [`SEED_${m[1].toUpperCase()}_PASSCODE`, m[2]]),
-);
-run("corepack", ["pnpm", "seed"], { ...db, ...codes });
+run("corepack", ["pnpm", "seed"], db);
 
-step("Applying your passcodes from PASSCODES.local.md");
-if (!existsSync("PASSCODES.local.md")) {
-  console.error("PASSCODES.local.md is missing — run `pnpm passcodes` first (with the dev server stopped).");
+step("Applying your passwords from PASSWORDS.local.md");
+if (!existsSync("PASSWORDS.local.md")) {
+  console.error("PASSWORDS.local.md is missing — run `pnpm passwords` first (with the dev server stopped).");
   process.exit(1);
 }
-run("corepack", ["pnpm", "passcodes", "--reuse"], db);
+run("corepack", ["pnpm", "passwords", "--reuse"], db);
 
 step("Fetching the first live discoveries (about a minute)");
 run("corepack", ["pnpm", "ingest", "--force"], db);
@@ -131,7 +127,7 @@ if (status.status !== 0 || /Not logged in/i.test(status.stdout ?? "")) run("npx"
 
 step("Netlify site");
 if (!existsSync(".netlify/state.json")) {
-  const name = `letsvibe-${randomBytes(3).toString("hex")}`;
+  const name = `lovora-${randomBytes(3).toString("hex")}`;
   console.log(`Creating ${name}.netlify.app — if asked, pick your own team.`);
   run("npx", [...netlify, "sites:create", "--name", name]);
 }
@@ -151,7 +147,7 @@ try {
 } catch {
   url = deploy.stdout.match(/https:\/\/[a-z0-9-]+\.netlify\.app/)?.[0] ?? null;
 }
-if (url) writeFileSync("DEPLOYED.local.md", `# Let'sVibe is live\n\n${url}\n`);
+if (url) writeFileSync("DEPLOYED.local.md", `# Lovora is live\n\n${url}\n`);
 
-console.log(`\n\x1b[35m❤ Let'sVibe is live: ${url ?? "(see the Netlify output above)"}\x1b[0m`);
-console.log("Sign in with the passcodes in PASSCODES.local.md.");
+console.log(`\n\x1b[35m❤ Lovora is live: ${url ?? "(see the Netlify output above)"}\x1b[0m`);
+console.log("Sign in with the email and password in PASSWORDS.local.md.");

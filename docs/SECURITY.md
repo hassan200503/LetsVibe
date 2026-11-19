@@ -95,7 +95,7 @@ Actors: two members of a couple; anonymous internet; abusive authenticated users
 
 ## Dependency audit policy (E0-003)
 
-- The production audit runs through `pnpm run audit:deps` → [scripts/audit-deps.mjs](file:///C:/Users/kkc36/projects/our-universe/scripts/audit-deps.mjs), which reads [security/audit-allowlist.json](file:///C:/Users/kkc36/projects/our-universe/security/audit-allowlist.json). Threshold and scope live in that file so a waiver is a reviewed change, not a flag added to a workflow step.
+- The production audit runs through `pnpm run audit:deps` → [scripts/audit-deps.mjs](file:///C:/Users/kkc36/Projects/Lovora/scripts/audit-deps.mjs), which reads [security/audit-allowlist.json](file:///C:/Users/kkc36/Projects/Lovora/security/audit-allowlist.json). Threshold and scope live in that file so a waiver is a reviewed change, not a flag added to a workflow step.
 - Policy: `scope: "prod"` (a dev-only finding is never laundered into the production result); `threshold: "high"` (any finding at or above it fails the build unless waived); every waiver names an advisory id, reason, owner and **expiry** — an expired waiver stops suppressing, so it gets re-reviewed instead of becoming permanent.
 - The script fails loudly if `pnpm audit` output cannot be parsed or returns no advisories map, so an output-shape change can never be mistaken for "clean".
 - Current result (2026-11-18): `pnpm audit --prod` reports **0 advisories** among 193 production dependencies; the allowlist is empty.

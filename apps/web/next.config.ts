@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   // The web app lives inside a pnpm workspace; the lockfile and packages sit
   // two levels up, so Turbopack must treat the repo root as its root.
   turbopack: { root: path.resolve(process.cwd(), "../..") },
-  transpilePackages: ["@letsvibe/domain", "@letsvibe/sync-protocol"],
+  transpilePackages: ["@lovora/domain", "@lovora/sync-protocol"],
   // PGlite ships WASM and data files that must be loaded from node_modules, not bundled;
   // web-push relies on Node's crypto and https modules, so it runs as-is from node_modules too.
   serverExternalPackages: ["@electric-sql/pglite", "web-push"],

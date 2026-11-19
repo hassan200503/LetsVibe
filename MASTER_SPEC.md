@@ -1,4 +1,4 @@
-# MASTER_SPEC — Let'sVibe (formerly Our Universe), multi-couple edition
+# MASTER_SPEC — Lovora (formerly Our Universe), multi-couple edition
 
 Read fully in Phase 0. After that, open only the section a story points to.
 Research date: 2026-11-15. Items marked **VERIFY** must be re-checked from the official source before you rely on them; record URL + date in the relevant ADR/doc. Items marked **ASSUMPTION** are targets chosen without data; tune them with measurements.

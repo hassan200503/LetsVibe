@@ -1,6 +1,7 @@
 # Phase 0 audit — Our Universe
 
 - Date: 2026-11-15
+- **Historical snapshot of the pre-implementation codebase.** Rows describing slug/passcode auth, seed-only accounts and Supabase plans are superseded by the current implementation; see `docs/adr/004-lovora.md`, `docs/adr/005-first-party-auth.md` and `docs/SECURITY.md`.
 - Branch: `autonomous/couples-v2` (branched from `main` at `ebd08c4`)
 - Audited checkout: clean working tree before this bootstrap.
 - Method: read source; ran install, typecheck, lint, tests and build; scanned git history manually (gitleaks not installed).
@@ -100,7 +101,7 @@ Tenancy today is application-level, not database-enforced:
 - Production target: Vercel Hobby (explicitly personal, non-commercial in `DEPLOY.md`), Neon free Postgres, GitHub Actions ingest every 2 hours, Vercel Blob (free 1 GB).
 - Local: zero setup; PGlite database in `.data/`, auto-migrated on first use. PGlite permits one process at a time.
 - Migrations run during Vercel build (`npm run vercel-build`); a runtime `withSchema()` retries once after applying pending migrations when a table/column is missing.
-- Auth: custom HS256 JWT (`ou_session`) in an httpOnly, SameSite=Lax cookie for 60 days; bcrypt cost 12; 5 attempts per IP+slug for 5 minutes held in a process-local `Map` that resets on redeploy and does not span serverless instances. No MFA, no session list, no revocation, no recovery.
+- Auth: first-party email + password. HS256 JWT (`lovora_session`, 30 days) in an httpOnly, SameSite=Lax, Secure-in-production cookie; bcrypt cost 12; generic login errors with a dummy-hash timing path; DB-backed per-IP and per-account attempt buckets (15-minute windows); one-time SHA-256 recovery codes; `session_version` revokes every earlier token on password change, recovery or "sign out everywhere". No MFA yet; email delivery/verification is a human task (H4).
 - Nothing is deployed by this iteration; no production access was used.
 
 ## 7. Third-party services and keys

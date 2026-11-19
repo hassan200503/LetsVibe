@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import manifest from "@/app/manifest";
-import { BRAND } from "@letsvibe/domain";
+import { BRAND } from "@lovora/domain";
 
 describe("brand", () => {
   it("uses the canonical public name and technical slug", () => {
-    expect(BRAND.name).toBe("Let'sVibe");
-    expect(BRAND.slug).toBe("letsvibe");
+    expect(BRAND.name).toBe("Lovora");
+    expect(BRAND.slug).toBe("lovora");
     expect(BRAND.name).not.toContain("Universe");
   });
 

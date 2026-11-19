@@ -1,8 +1,8 @@
 /**
  * Break-glass plan administration.
  *
- *   ENTITLEMENTS_ADMIN=1 pnpm --filter @letsvibe/web entitlements -- --couple=<id|exact name> --show
- *   ENTITLEMENTS_ADMIN=1 pnpm --filter @letsvibe/web entitlements -- --couple=<id|exact name> --plan=premium --reason="Support ticket 123"
+ *   ENTITLEMENTS_ADMIN=1 pnpm --filter @lovora/web entitlements -- --couple=<id|exact name> --show
+ *   ENTITLEMENTS_ADMIN=1 pnpm --filter @lovora/web entitlements -- --couple=<id|exact name> --plan=premium --reason="Support ticket 123"
  *
  * Every change goes through applyEntitlementOverride, which appends the before
  * and after values to the append-only audit log. No secret or user content is

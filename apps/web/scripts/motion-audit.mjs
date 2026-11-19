@@ -26,13 +26,18 @@ const routes = (process.env.MOTION_ROUTES ?? "/,/research,/together/chat,/togeth
   .map((route) => route.trim())
   .filter(Boolean);
 
-function readPasscode() {
-  if (process.env.SEED_ALEX_PASSCODE) return process.env.SEED_ALEX_PASSCODE.trim();
+function readEnv(name) {
+  if (process.env[name]) return process.env[name].trim();
   const envFile = path.resolve(import.meta.dirname, "../.env.local");
-  if (!fs.existsSync(envFile)) throw new Error("Set SEED_ALEX_PASSCODE or run pnpm seed to create apps/web/.env.local");
-  const match = fs.readFileSync(envFile, "utf8").match(/^SEED_ALEX_PASSCODE=(.+)$/m);
-  if (!match) throw new Error("SEED_ALEX_PASSCODE is missing from apps/web/.env.local");
-  return match[1].trim();
+  if (!fs.existsSync(envFile)) throw new Error(`Set ${name} or run pnpm seed to create apps/web/.env.local`);
+  const match = fs.readFileSync(envFile, "utf8").match(new RegExp(`^${name}=(.+)$`, "m"));
+  return match ? match[1].trim() : null;
+}
+
+function readPassword() {
+  const password = readEnv("SEED_ALEX_PASSWORD");
+  if (!password) throw new Error("SEED_ALEX_PASSWORD is missing from apps/web/.env.local");
+  return password;
 }
 
 function chromeExecutable() {
@@ -49,9 +54,9 @@ function chromeExecutable() {
     .find((candidate) => fs.existsSync(candidate));
 }
 
-async function signIn(page, passcode) {
-  await page.getByRole("radio").first().click();
-  await page.locator("#passcode").fill(passcode);
+async function signIn(page) {
+  await page.locator("#email").fill(readEnv("SEED_ALEX_EMAIL") ?? "alex@example.com");
+  await page.locator("#password").fill(readPassword());
   await page.getByRole("button", { name: /Enter/ }).click();
   await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 120000 });
 }
@@ -141,7 +146,7 @@ try {
       locale: "en-US",
     });
     const page = await context.newPage();
-    const passcode = readPasscode();
+    
     await page.goto(`${baseUrl}/login`, { waitUntil: "load", timeout: 120000 });
     await page.waitForTimeout(800);
     for (const route of ["/login", ...routes]) {
@@ -156,7 +161,7 @@ try {
       console.log(`${route}: ${results.reducedMotion[route].length} reduced-motion finding${results.reducedMotion[route].length === 1 ? "" : "s"}`);
       for (const finding of results.reducedMotion[route].slice(0, 5)) console.log(`  ${finding.rule} ${finding.selector} ${finding.seconds ?? ""}`);
     }
-    await signIn(page, passcode).catch(async (error) => {
+    await signIn(page).catch(async (error) => {
       console.log(`sign-in after reduced-motion login audit failed: ${error.message}`);
     });
     await context.close();
@@ -170,7 +175,7 @@ try {
       locale: "en-US",
     });
     const page = await context.newPage();
-    const passcode = readPasscode();
+    
     await page.goto(`${baseUrl}/login`, { waitUntil: "load", timeout: 120000 });
     await page.waitForTimeout(800);
     results.flashing["/login"] = await page.evaluate(flashingFindings);
@@ -178,7 +183,7 @@ try {
     console.log(`/login: ${results.flashing["/login"].length} fast flash source${results.flashing["/login"].length === 1 ? "" : "s"}`);
     for (const finding of results.flashing["/login"].slice(0, 5)) console.log(`  ${finding.animation} ${finding.durationMs}ms`);
 
-    await signIn(page, passcode);
+    await signIn(page);
     for (const route of routes) {
       await page.goto(`${baseUrl}${route}`, { waitUntil: "load", timeout: 120000 });
       await page.waitForTimeout(800);
@@ -200,7 +205,7 @@ try {
       locale: "en-US",
     });
     const page = await context.newPage();
-    const passcode = readPasscode();
+    
     await page.goto(`${baseUrl}/login`, { waitUntil: "load", timeout: 120000 });
 
     const runForcedRoute = async (route) => {
@@ -254,7 +259,7 @@ try {
     };
 
     await runForcedRoute("/login");
-    await signIn(page, passcode);
+    await signIn(page);
     for (const route of routes) {
       await page.goto(`${baseUrl}${route}`, { waitUntil: "load", timeout: 120000 });
       await runForcedRoute(route);
@@ -265,7 +270,7 @@ try {
   await browser.close();
 }
 
-const output = process.env.MOTION_OUT ?? path.join(os.tmpdir(), "letsvibe-motion.json");
+const output = process.env.MOTION_OUT ?? path.join(os.tmpdir(), "lovora-motion.json");
 fs.writeFileSync(output, `${JSON.stringify(results, null, 2)}\n`);
 console.log(`\n${failures === 0 ? "PASS" : "FAIL"}: ${failures} finding${failures === 1 ? "" : "s"}`);
 console.log(`Report: ${output}`);

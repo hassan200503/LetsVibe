@@ -187,13 +187,13 @@ importers:
       '@electric-sql/pglite':
         specifier: ^0.5.8
         version: 0.5.16
-      '@letsvibe/domain':
+      '@lovora/domain':
         specifier: workspace:*
         version: link:../../packages/domain
-      '@letsvibe/sync-protocol':
+      '@lovora/sync-protocol':
         specifier: workspace:*
         version: link:../../packages/sync-protocol
-      '@letsvibe/ui-tokens':
+      '@lovora/ui-tokens':
         specifier: workspace:*
         version: link:../../packages/ui-tokens
       '@neondatabase/serverless':

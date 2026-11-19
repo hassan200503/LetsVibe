@@ -63,8 +63,8 @@ export const VOWS = [
   "Our journey has no last page.",
 ] as const;
 
-export const VERSE_COOKIE = "ou_verses";
-export const VOW_COOKIE = "ou_vows";
+export const VERSE_COOKIE = "lovora_verses";
+export const VOW_COOKIE = "lovora_vows";
 
 /** Picks a line not seen recently. Returns it plus the updated memory of recent picks for the cookie. */
 export function pick<T extends readonly string[]>(deck: T, recent: string | undefined): { index: number; text: T[number]; remember: string } {

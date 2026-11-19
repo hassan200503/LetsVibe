@@ -12,7 +12,7 @@ import { kv } from "@/lib/db/schema";
  */
 function sealKey(): Buffer {
   const base = process.env.SESSION_SECRET && process.env.SESSION_SECRET.length >= 32 ? process.env.SESSION_SECRET : (process.env.DATABASE_URL ?? "dev-only-secret-not-for-production-use-000");
-  return createHmac("sha256", base).update("our-universe/settings-seal-v1").digest();
+  return createHmac("sha256", base).update("lovora/settings-seal-v1").digest();
 }
 
 export function seal(value: unknown): string {

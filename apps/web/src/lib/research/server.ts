@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { and, asc, desc, eq, or } from "drizzle-orm";
 import { z } from "zod";
 import type { Ctx } from "@/lib/context";
-import { BRAND } from "@letsvibe/domain";
+import { BRAND } from "@lovora/domain";
 import { getDb, withSchema } from "@/lib/db/client";
 import { researchMessages, researchThreads, sharedLearning, type ResearchSource } from "@/lib/db/schema";
 import { QuotaExceededError } from "@/lib/entitlements/core";

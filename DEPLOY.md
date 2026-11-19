@@ -1,4 +1,4 @@
-# Deploying Let'sVibe for free (no credit card)
+# Deploying Lovora for free (no credit card)
 
 Hosting: **Neon** (Postgres), **Vercel Hobby** (the website — free, no card, personal non-commercial use) and **GitHub Actions** (the scheduled trend refresh). Netlify works too (netlify.toml is included), but the Netlify team used for RentManager had run out of free credits in September 2026, which pauses production deploys.
 
@@ -49,17 +49,17 @@ Nothing to configure: push keys are derived from `DATABASE_URL` (or `SESSION_SEC
 
 1. Sign up at neon.tech with GitHub (no card).
 2. Create a project, then copy the **pooled** connection string (`…-pooler…/neondb?sslmode=require`).
-3. From your machine, run the migrations, seed, passcodes and first ingest against it:
+3. From your machine, run the migrations, seed, passwords and first ingest against it:
 
    ```bash
    export DATABASE_URL="postgres://…"
    pnpm db:migrate
    pnpm seed
-   pnpm passcodes --reuse   # applies the passcodes already in PASSCODES.local.md
+   pnpm passwords --reuse   # applies the passwords already in PASSWORDS.local.md
    pnpm ingest --force
    ```
 
-   `PASSCODES.local.md` (git-ignored) holds each person's passcode. Leave out `--reuse` to issue fresh ones. Give your partner theirs privately; either of you can change your own passcode later in Settings → Passcode.
+   `PASSWORDS.local.md` (git-ignored) holds each person's email and password. Leave out `--reuse` to issue fresh ones. Give your partner theirs privately; either of you can change your own password later in Settings → Account.
 
 Neon's free compute scales to zero when idle, so the first visit after a quiet spell takes a second or two longer. Unlike Render's free Postgres, your data is not deleted.
 

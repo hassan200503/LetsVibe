@@ -1,7 +1,7 @@
 "use client";
 
 import type { CallSignal, CallSync, CallView } from "@/lib/calls/types";
-import { BRAND } from "@letsvibe/domain";
+import { BRAND } from "@lovora/domain";
 import { connectTone, hangupTone, ringback, ringtone } from "./tones";
 import { buzz } from "@/lib/ui/buzz";
 

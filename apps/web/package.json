@@ -1,5 +1,5 @@
 {
-  "name": "@letsvibe/web",
+  "name": "@lovora/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -18,16 +18,16 @@
     "a11y": "node scripts/a11y-audit.mjs",
     "motion": "node scripts/motion-audit.mjs",
     "retag": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/retag.ts",
-    "passcodes": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/passcodes.ts",
+    "passwords": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/passwords.ts",
     "entitlements": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/entitlements.ts",
     "flags": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/flags.ts",
     "go-live": "node scripts/go-live.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",
-    "@letsvibe/domain": "workspace:*",
-    "@letsvibe/sync-protocol": "workspace:*",
-    "@letsvibe/ui-tokens": "workspace:*",
+    "@lovora/domain": "workspace:*",
+    "@lovora/sync-protocol": "workspace:*",
+    "@lovora/ui-tokens": "workspace:*",
     "@neondatabase/serverless": "^1.1.0",
     "@tanstack/react-query": "^5.104.0",
     "@vercel/blob": "^2.8.0",

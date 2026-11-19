@@ -21,7 +21,7 @@
       "cache": false,
       "persistent": true
     },
-    "@letsvibe/ui-tokens#build": {
+    "@lovora/ui-tokens#build": {
       "outputs": []
     }
   }

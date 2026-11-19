@@ -1,158 +1,145 @@
 "use server";
 
-import bcrypt from "bcryptjs";
-import { and, count, eq } from "drizzle-orm";
-import { redirect } from "next/navigation";
+import { and, eq } from "drizzle-orm";
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { THEME_KEYS, type ThemeKey } from "@letsvibe/domain";
+import { THEME_KEYS } from "@lovora/domain";
 import { createSession } from "@/lib/auth/session";
-import { readInvite } from "@/lib/auth/invite";
+import { consumeInvitation, findInvitation } from "@/lib/auth/invite";
+import {
+  consumeAttempt,
+  displayNameProblem,
+  emailProblem,
+  hashPassword,
+  hashRecoveryCode,
+  insertCoupleMember,
+  newRecoveryCode,
+  normalizeEmail,
+  passwordProblem,
+  registerCouple,
+} from "@/lib/auth/accounts";
 import { getDb } from "@/lib/db/client";
-import { coupleMembers, couples, interests, people, preferences, profiles } from "@/lib/db/schema";
+import { coupleMembers, couples } from "@/lib/db/schema";
 import { getCtx } from "@/lib/context";
 import { isTopicKey, type TopicKey } from "@/lib/trends/topics";
 import { ActionState, formObject, isoDate, reqText } from "./util";
 import { z } from "zod";
 
-type Db = Awaited<ReturnType<typeof getDb>>;
-type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
-
-const personInput = z.object({
-  displayName: reqText(80),
-  passcode: z.string().min(8, "Use at least 8 characters").max(128),
-  confirm: z.string(),
-  theme: z.enum(THEME_KEYS),
-});
-
 function chosenTopics(fd: FormData): TopicKey[] {
   return [...new Set(fd.getAll("topic").map(String).filter(isTopicKey))];
 }
 
-function baseSlug(name: string): string {
+function clientIp(requestHeaders: Headers): string {
+  return requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() || requestHeaders.get("x-real-ip")?.trim() || "local";
+}
+
+const personInput = z.object({
+  email: reqText(200),
+  displayName: reqText(80),
+  theme: z.enum(THEME_KEYS),
+});
+
+function personProblem(fd: FormData, data: z.infer<typeof personInput>, password: string, confirm: string): string | null {
+  if (password !== confirm) return "The passwords do not match.";
   return (
-    name
-      .normalize("NFKD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 32) || "me"
+    emailProblem(data.email) ??
+    passwordProblem(password) ??
+    displayNameProblem(data.displayName) ??
+    (chosenTopics(fd).length ? null : "Pick at least one interest.")
   );
 }
 
-async function uniqueAccountSlug(db: Db, name: string): Promise<string> {
-  const base = baseSlug(name);
-  for (let n = 1; n < 1000; n++) {
-    const candidate = n === 1 ? base : `${base}-${n}`;
-    const [found] = await db.select({ id: people.id }).from(people).where(eq(people.slug, candidate)).limit(1);
-    if (!found) return candidate;
-  }
-  return `${base}-${Date.now().toString(36)}`;
-}
-
-/**
- * A slug that is free inside one couple's world. The couple is the namespace,
- * so two worlds can both have an "alex"; the account handle above stays global
- * because it is what signs you in.
- */
-async function uniqueMemberSlug(tx: Tx, coupleId: string, name: string): Promise<string> {
-  const base = baseSlug(name);
-  for (let n = 1; n < 1000; n++) {
-    const candidate = n === 1 ? base : `${base}-${n}`;
-    const [found] = await tx
-      .select({ id: coupleMembers.personId })
-      .from(coupleMembers)
-      .where(and(eq(coupleMembers.coupleId, coupleId), eq(coupleMembers.slug, candidate)))
-      .limit(1);
-    if (!found) return candidate;
-  }
-  return `${base}-${Date.now().toString(36)}`;
-}
-
-async function addPerson(fd: FormData, coupleId: string, slot: 1 | 2, theme: ThemeKey, displayName: string, passcode: string) {
-  const db = await getDb();
-  const slug = await uniqueAccountSlug(db, displayName);
-  const passwordHash = await bcrypt.hash(passcode, 12);
-  const topics = chosenTopics(fd);
-
-  return db.transaction(async (tx) => {
-    const [person] = await tx
-      .insert(people)
-      .values({
-        slug,
-        displayName,
-        theme,
-        passwordHash,
-        journalTitle: "Learning Journal",
-        radarTitle: "Curiosity Radar",
-        features: [],
-      })
-      .returning();
-    await tx.insert(coupleMembers).values({ coupleId, personId: person.id, slug: await uniqueMemberSlug(tx, coupleId, displayName), slot });
-    if (topics.length) {
-      await tx.insert(interests).values(topics.map((topic, position) => ({ personId: person.id, topic, position })));
-    }
-    await tx.insert(preferences).values({ personId: person.id });
-    await tx.insert(profiles).values({ personId: person.id, onboardingCompletedAt: new Date() });
-    return person;
-  });
-}
-
+/** Self-serve signup: every visitor can create their own couple and first account. */
 export async function startWorld(_: ActionState, fd: FormData): Promise<ActionState> {
-  const db = await getDb();
-  const [{ n }] = await db.select({ n: count() }).from(people);
-  if (Number(n) > 0) return { error: "This world is already set up. Sign in instead." };
-
-  const world = z.object({
-    relationshipName: reqText(60),
-    startedOn: isoDate.optional(),
-  });
+  if (await getCtx()) return { error: "You are already signed in." };
   const parsedPerson = personInput.safeParse(formObject(fd));
-  const parsedWorld = world.safeParse(formObject(fd));
+  const parsedWorld = z
+    .object({ relationshipName: reqText(60), startedOn: isoDate.optional() })
+    .safeParse(formObject(fd));
   if (!parsedPerson.success) return { error: parsedPerson.error.issues[0]?.message ?? "Check your details" };
   if (!parsedWorld.success) return { error: parsedWorld.error.issues[0]?.message ?? "Check your world details" };
-  if (parsedPerson.data.passcode !== parsedPerson.data.confirm) return { error: "The passcodes do not match" };
-  if (!chosenTopics(fd).length) return { error: "Pick at least one interest" };
-
-  const [couple] = await db
-    .insert(couples)
-    .values({ name: parsedWorld.data.relationshipName, startedOn: parsedWorld.data.startedOn ?? null })
-    .returning();
-  const person = await addPerson(fd, couple.id, 1, parsedPerson.data.theme, parsedPerson.data.displayName, parsedPerson.data.passcode);
-
-  await createSession({ personId: person.id, slug: person.slug });
-  revalidatePath("/", "layout");
-  redirect("/settings#invite");
-}
-
-export async function joinWorld(_: ActionState, fd: FormData): Promise<ActionState> {
-  if (await getCtx()) return { error: "You are already signed in." };
-  const invite = readInvite(String(fd.get("token") ?? ""));
-  if (!invite) return { error: "This invitation is invalid or has expired. Ask your partner for a new link." };
-
-  const parsedPerson = personInput.safeParse(formObject(fd));
-  if (!parsedPerson.success) return { error: parsedPerson.error.issues[0]?.message ?? "Check your details" };
-  if (parsedPerson.data.passcode !== parsedPerson.data.confirm) return { error: "The passcodes do not match" };
-  if (!chosenTopics(fd).length) return { error: "Pick at least one interest" };
+  const password = String(fd.get("password") ?? "");
+  const confirm = String(fd.get("confirm") ?? "");
+  const problem = personProblem(fd, parsedPerson.data, password, confirm);
+  if (problem) return { error: problem };
 
   const db = await getDb();
-  const [couple] = await db.select().from(couples).where(eq(couples.id, invite.coupleId)).limit(1);
-  if (!couple) return { error: "This world no longer exists." };
-  const [{ n }] = await db
-    .select({ n: count() })
-    .from(coupleMembers)
-    .where(and(eq(coupleMembers.coupleId, couple.id), eq(coupleMembers.status, "active")));
-  if (Number(n) >= 2) return { error: "This invitation has already been used." };
-
-  let person;
-  try {
-    person = await addPerson(fd, couple.id, Number(n) === 0 ? 1 : 2, parsedPerson.data.theme, parsedPerson.data.displayName, parsedPerson.data.passcode);
-  } catch (e) {
-    const code = (e as { code?: string }).code ?? (e as { cause?: { code?: string } }).cause?.code;
-    if (code === "23505") return { error: "This invitation has already been used." };
-    throw e;
+  const ip = clientIp(await headers());
+  if (!(await consumeAttempt(db, "ip", `signup:${ip}`, 10, 60 * 60_000))) {
+    return { error: "Too many sign-ups from this connection. Try again later." };
   }
-  await createSession({ personId: person.id, slug: person.slug });
+
+  const registered = await registerCouple(db, {
+    email: parsedPerson.data.email,
+    password,
+    displayName: parsedPerson.data.displayName,
+    theme: parsedPerson.data.theme,
+    worldName: parsedWorld.data.relationshipName,
+    startedOn: parsedWorld.data.startedOn ?? null,
+    topics: chosenTopics(fd),
+  });
+  if (!registered.ok) return { error: registered.error };
+
+  await createSession({ personId: registered.personId, slug: registered.slug, version: registered.sessionVersion });
   revalidatePath("/", "layout");
-  redirect("/");
+  return { ok: true, recoveryCode: registered.recoveryCode };
+}
+
+/** Joins an existing couple through a single-use, hashed invitation. */
+export async function joinWorld(_: ActionState, fd: FormData): Promise<ActionState> {
+  if (await getCtx()) return { error: "You are already signed in." };
+  const token = String(fd.get("token") ?? "");
+  const parsedPerson = personInput.safeParse(formObject(fd));
+  if (!parsedPerson.success) return { error: parsedPerson.error.issues[0]?.message ?? "Check your details" };
+  const password = String(fd.get("password") ?? "");
+  const confirm = String(fd.get("confirm") ?? "");
+  const problem = personProblem(fd, parsedPerson.data, password, confirm);
+  if (problem) return { error: problem };
+
+  const db = await getDb();
+  const ip = clientIp(await headers());
+  if (!(await consumeAttempt(db, "ip", `join:${ip}`, 20, 15 * 60_000))) return { error: "Too many attempts. Try again in a few minutes." };
+
+  const invite = await findInvitation(db, token);
+  if (!invite) return { error: "This invitation is invalid, used or expired. Ask your partner for a new link." };
+
+  const recoveryCode = newRecoveryCode();
+  const email = normalizeEmail(parsedPerson.data.email);
+  const passwordHash = await hashPassword(password);
+  const topics = chosenTopics(fd);
+
+  let joined: { id: string; slug: string; sessionVersion: number };
+  try {
+    joined = await db.transaction(async (tx) => {
+      // One lock per couple serialises two partners racing for the second slot.
+      await tx.select({ id: couples.id }).from(couples).where(eq(couples.id, invite.coupleId)).for("update");
+      const active = await tx
+        .select({ personId: coupleMembers.personId, slot: coupleMembers.slot })
+        .from(coupleMembers)
+        .where(and(eq(coupleMembers.coupleId, invite.coupleId), eq(coupleMembers.status, "active")));
+      if (active.length >= 2) throw new Error("full");
+      const slot = active.some((member) => member.slot === 1) ? 2 : 1;
+
+      const created = await insertCoupleMember(tx, invite.coupleId, slot, {
+        displayName: parsedPerson.data.displayName.trim(),
+        email,
+        passwordHash,
+        recoveryHash: hashRecoveryCode(recoveryCode),
+        theme: parsedPerson.data.theme,
+        topics,
+      });
+      if (!(await consumeInvitation(tx, invite.id, created.id))) throw new Error("used");
+      return created;
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (message === "full" || message === "used") return { error: "This invitation has already been used." };
+    const code = (error as { code?: string }).code ?? (error as { cause?: { code?: string } }).cause?.code;
+    if (code === "23505") return { error: "An account with this email already exists, or the invitation was just used." };
+    throw error;
+  }
+
+  await createSession({ personId: joined.id, slug: joined.slug, version: joined.sessionVersion });
+  revalidatePath("/", "layout");
+  return { ok: true, recoveryCode };
 }

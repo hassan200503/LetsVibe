@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { sendNudge } from "@/lib/actions/together";
-import { BRAND } from "@letsvibe/domain";
+import { BRAND } from "@lovora/domain";
 import { ago } from "@/lib/ui/time";
 import { Avatar } from "./avatar";
 import { useCall } from "./call/call-provider";

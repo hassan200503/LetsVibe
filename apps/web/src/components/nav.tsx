@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getCtx } from "@/lib/context";
-import { BRAND } from "@letsvibe/domain";
+import { BRAND } from "@lovora/domain";
 import { Avatar } from "./avatar";
 import { BottomNav } from "./bottom-nav";
 import { IconSearch, Monogram } from "./icons";

@@ -26,7 +26,7 @@
       "description": "Move the Next.js app to apps/web and add the foundation workspace packages: packages/domain (shared product/domain code) and packages/config (shared TypeScript base). Defer api-client, sync-protocol, ui-tokens and i18n until their owning stories have real code; do not create empty shells.",
       "acceptance": [
         "pnpm install --frozen-lockfile and pnpm typecheck pass; web builds from apps/web",
-        "Workspace packages have no app-specific imports; @letsvibe/domain is consumed by apps/web",
+        "Workspace packages have no app-specific imports; @lovora/domain is consumed by apps/web",
         "CI paths, Vercel root directory and docs updated",
         "No behavioural change; existing tests pass"
       ],
@@ -36,7 +36,7 @@
       ],
       "status": "done",
       "attempts": 1,
-      "notes": "Delivered apps/web, @letsvibe/domain and @letsvibe/config in one mechanical change. Deferred empty api-client/sync-protocol/ui-tokens/i18n packages to the stories that first consume them. Gates: frozen-lockfile install, typegen, typecheck (domain + web), lint, vitest 5 files/44 tests, Next build 33 pages. Local Windows needs a user-writable corepack shim on PATH for Turborepo."
+      "notes": "Delivered apps/web, @lovora/domain and @lovora/config in one mechanical change. Deferred empty api-client/sync-protocol/ui-tokens/i18n packages to the stories that first consume them. Gates: frozen-lockfile install, typegen, typecheck (domain + web), lint, vitest 5 files/44 tests, Next build 33 pages. Local Windows needs a user-writable corepack shim on PATH for Turborepo."
     },
     {
       "id": "E0-003",
@@ -193,21 +193,21 @@
     {
       "id": "E1-003",
       "epic": "E1",
-      "title": "Supabase Auth: email OTP sign-in, sessions, claim flow",
-      "description": "Replace slug/passcode login with Supabase Auth for the web app, including server session verification, middleware and a one-time claim for the two existing accounts.",
+      "title": "First-party email auth: sign-up, sign-in, sessions, recovery",
+      "description": "Replace slug/passcode login with first-party email+password auth on Neon: bcrypt(12), case-insensitive unique email, JWT httpOnly session with sessionVersion revocation, throttling, single-use hashed invitations and one-time recovery codes.",
       "acceptance": [
-        "Sign-in email OTP works end to end; session is httpOnly/refresh-safe",
-        "Existing couple can claim accounts without losing data",
-        "Passcode login removed only after claim is verified on staging",
-        "Auth flows have tests and middleware coverage; no redirect loops"
+        "Email+password registration, login, logout and join work end to end",
+        "Sessions are httpOnly and revoked via sessionVersion on password/recovery change",
+        "Passcode login removed; demo accounts migrated to email credentials",
+        "Auth and invitation flows covered by tests against the real schema"
       ],
       "priority": 20,
       "dependsOn": [
         "E1-001"
       ],
-      "status": "todo",
-      "attempts": 0,
-      "notes": ""
+      "status": "done",
+      "attempts": 1,
+      "notes": "Implemented under apps/web/src/lib/auth. Supabase Auth not adopted: Neon already hosts data and first-party auth avoids a second identity vendor. See docs/adr/004-lovora.md and docs/SECURITY.md."
     },
     {
       "id": "E1-004",
@@ -2571,7 +2571,7 @@
       ],
       "status": "done",
       "attempts": 1,
-      "notes": "Shipped as `@letsvibe/sync-protocol` (pure TS, no React/Date.now/Math.random) with `types.ts` (`PlaybackSnapshot` {seq, authorId, positionMs, serverTimeMs, playing, rate, sourceKey}, `SyncEvent`, `IDLE_SNAPSHOT`), `state.ts` (`applyEvent` ignores seq<=state.seq so replays are idempotent, clamps position, `expectedPositionMs`, `isStale`, `hasEnded`), `clock.ts` (samples, fastest-RTT `estimateClock`, rolling 12), `correction.ts` (`planCorrection`: hold <150 ms, seek >=1000 ms or when the player cannot rate-shift, otherwise a rate nudge capped at 5% / 10% while catching up; `heartbeatDue` 5 s), and `simulator.ts` (`NETWORK_PROFILES` wifi/mobile/poor, mulberry32 PRNG, 25 ms virtual time, two clients with skewed clocks and media-clock bias, bootstrap pings, polling, loss, control retry/dedupe, buffering stalls). Reorder is modelled by jitter on independent messages; snapshots are last-writer-wins by seq, so out-of-order delivery is harmless by construction rather than by queueing. Measured seed 7 over 95 s: wifi p50 13 / p95 295 / max 559 ms, mobile p95 280, poor p95 326, 33% loss p95 286 with delivery recovered; 18 tests (4 clock, 8 state/correction, 6 simulator). `apps/web/src/components/together/room-provider.tsx` now imports `addSample`/`estimateClock`/`expectedPositionMs`/`planCorrection`/`toSeconds` instead of carrying a second copy of the same math; the buffer/seek-backoff/canJump behaviour is unchanged. Gates: typecheck, lint, test 20 files / 234 web + 18 package, build 36 routes. Deliberate scope: server-issued `seq` already exists in `roomState.version`; the live API keeps its current payload shape and only the drift math is shared until E5-001's provider interface lands."
+      "notes": "Shipped as `@lovora/sync-protocol` (pure TS, no React/Date.now/Math.random) with `types.ts` (`PlaybackSnapshot` {seq, authorId, positionMs, serverTimeMs, playing, rate, sourceKey}, `SyncEvent`, `IDLE_SNAPSHOT`), `state.ts` (`applyEvent` ignores seq<=state.seq so replays are idempotent, clamps position, `expectedPositionMs`, `isStale`, `hasEnded`), `clock.ts` (samples, fastest-RTT `estimateClock`, rolling 12), `correction.ts` (`planCorrection`: hold <150 ms, seek >=1000 ms or when the player cannot rate-shift, otherwise a rate nudge capped at 5% / 10% while catching up; `heartbeatDue` 5 s), and `simulator.ts` (`NETWORK_PROFILES` wifi/mobile/poor, mulberry32 PRNG, 25 ms virtual time, two clients with skewed clocks and media-clock bias, bootstrap pings, polling, loss, control retry/dedupe, buffering stalls). Reorder is modelled by jitter on independent messages; snapshots are last-writer-wins by seq, so out-of-order delivery is harmless by construction rather than by queueing. Measured seed 7 over 95 s: wifi p50 13 / p95 295 / max 559 ms, mobile p95 280, poor p95 326, 33% loss p95 286 with delivery recovered; 18 tests (4 clock, 8 state/correction, 6 simulator). `apps/web/src/components/together/room-provider.tsx` now imports `addSample`/`estimateClock`/`expectedPositionMs`/`planCorrection`/`toSeconds` instead of carrying a second copy of the same math; the buffer/seek-backoff/canJump behaviour is unchanged. Gates: typecheck, lint, test 20 files / 234 web + 18 package, build 36 routes. Deliberate scope: server-issued `seq` already exists in `roomState.version`; the live API keeps its current payload shape and only the drift math is shared until E5-001's provider interface lands."
     },
     {
       "id": "E7-008",
@@ -2826,12 +2826,12 @@
     {
       "id": "E0-011",
       "epic": "E0",
-      "title": "Rebrand to Let'sVibe with compatibility",
-      "description": "Apply the approved brand rename from Our Universe to Let'sVibe (technical slug letsvibe) across metadata, visible UI, documentation, package identity and scripts while preserving session/encryption compatibility and historical evidence.",
+      "title": "Rebrand to Lovora with compatibility",
+      "description": "Apply the approved brand rename from Our Universe to Lovora (technical slug lovora) across metadata, visible UI, documentation, package identity and scripts while preserving session/encryption compatibility and historical evidence.",
       "acceptance": [
         "Brand source of truth exists and metadata/manifest/UI use it",
         "No user-facing Our Universe remains outside historical notes and the unchanged GitHub remote",
-        "Technical identifiers use letsvibe; cookies/crypto keys stay stable for compatibility and are documented",
+        "Technical identifiers use lovora; cookies/crypto keys stay stable for compatibility and are documented",
         "Gates pass and ADR-002 records naming rules, legal/handle risks and rollout"
       ],
       "priority": 10,
@@ -2840,7 +2840,7 @@
       ],
       "status": "done",
       "attempts": 1,
-      "notes": "Rebranded visible UI, metadata, package identity, scripts and docs to Let'sVibe/letsvibe. Compatibility identifiers frozen per ADR-002: ou_session, ou_verses, ou_vows, ou:* storage/events, ou-q:, and our-universe/* crypto labels. GitHub remote unchanged. Gates: next typegen, typecheck, lint, 5 files/44 tests, build (33 pages) all pass."
+      "notes": "Rebranded visible UI, metadata, package identity, scripts and docs to Lovora/lovora. Compatibility identifiers frozen per ADR-002: ou_session, ou_verses, ou_vows, ou:* storage/events, ou-q:, and our-universe/* crypto labels. GitHub remote unchanged. Gates: next typegen, typecheck, lint, 5 files/44 tests, build (33 pages) all pass."
     },
     {
       "id": "E1-017",

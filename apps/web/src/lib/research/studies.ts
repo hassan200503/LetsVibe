@@ -7,7 +7,8 @@ import "server-only";
  * papers (title, authors, year, journal, DOI) rather than a model's memory.
  */
 const BASE = process.env.OPENALEX_BASE_URL || "https://api.openalex.org";
-const MAILTO = "our-universe@users.noreply.github.com"; // OpenAlex's "polite pool": faster, more reliable
+/** OpenAlex invites a contact address for its faster "polite pool"; optional. */
+const MAILTO = process.env.OPENALEX_MAILTO?.trim();
 
 export type Study = { n: number; title: string; year: number | null; authors: string; venue: string | null; url: string; doi: string | null; citations: number; abstract: string };
 
@@ -53,7 +54,8 @@ export function toStudy(w: Work, n: number): Study | null {
 
 async function search(query: string, filter: string, perPage: number): Promise<Work[]> {
   const select = "id,title,display_name,publication_year,doi,cited_by_count,authorships,primary_location,open_access,abstract_inverted_index";
-  const url = `${BASE}/works?search=${encodeURIComponent(query)}&filter=${filter}&per-page=${perPage}&select=${select}&mailto=${MAILTO}`;
+  const contact = MAILTO ? `&mailto=${encodeURIComponent(MAILTO)}` : "";
+  const url = `${BASE}/works?search=${encodeURIComponent(query)}&filter=${filter}&per-page=${perPage}&select=${select}${contact}`;
   const res = await fetch(url, { signal: AbortSignal.timeout(7000), headers: { Accept: "application/json" } });
   if (!res.ok) return [];
   return ((await res.json()) as { results?: Work[] }).results ?? [];

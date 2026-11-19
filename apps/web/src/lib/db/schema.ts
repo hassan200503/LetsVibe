@@ -20,7 +20,7 @@ import {
 import { sql } from "drizzle-orm";
 
 /**
- * Data model for "Let'sVibe".
+ * Data model for "Lovora".
  *
  * People are not hard-coded: every personal area hangs off `people.id`. A
  * couple has at most two active members (slots 1 and 2).
@@ -61,7 +61,7 @@ export const people = pgTable(
     focus: text("focus"),
     intro: text("intro"),
     motto: text("motto"),
-    /** Visual identity key: one of THEME_KEYS in @letsvibe/domain. */
+    /** Visual identity key: one of THEME_KEYS in @lovora/domain. */
     theme: text("theme").notNull(),
     /** Label used for the person's learning journal, e.g. "Engineering Journey". */
     journalTitle: text("journal_title").notNull().default("Learning Journey"),
@@ -80,13 +80,43 @@ export const people = pgTable(
     birthday: date("birthday"),
     /** When this person last opened the gallery: drives the "new" badge. */
     gallerySeenAt: timestamp("gallery_seen_at", { withTimezone: true }),
+    /**
+     * Sign-in address. Stored trimmed and lower-cased; unique case-insensitively.
+     * Nullable only for accounts created before self-serve signup.
+     */
+    email: text("email"),
     passwordHash: text("password_hash").notNull(),
+    /** SHA-256 of a one-time recovery code. The code itself is never stored. */
+    recoveryHash: text("recovery_hash"),
+    /**
+     * Bumped on password change, recovery and "sign out everywhere". A session
+     * token carries the version it was issued with, so old tokens stop working
+     * without a session table lookup on every request.
+     */
+    sessionVersion: integer("session_version").notNull().default(0),
     createdAt: createdAt(),
   },
   (t) => [
     uniqueIndex("people_public_handle").on(t.publicHandle),
+    uniqueIndex("people_email_lower").on(sql`lower(${t.email})`).where(sql`${t.email} is not null`),
     check("people_public_handle_check", sql`${t.publicProfile} = false or ${t.publicHandle} is not null`),
   ],
+);
+
+/**
+ * Failed sign-in counters, keyed by a hashed scope ("ip:…" or "account:…").
+ * Kept in Postgres rather than process memory because serverless instances are
+ * many and short-lived. Emails and IPs are hashed before they reach this table.
+ */
+export const authAttempts = pgTable(
+  "auth_attempts",
+  {
+    key: text("key").primaryKey(),
+    count: integer("count").notNull().default(0),
+    resetAt: timestamp("reset_at", { withTimezone: true }).notNull(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("auth_attempts_reset").on(t.resetAt)],
 );
 
 export const couples = pgTable("couples", {

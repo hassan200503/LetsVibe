@@ -65,8 +65,10 @@ jobs:
         # A baseline, not yet a blocking gate: it reports and uploads so findings
         # become visible and countable before they start failing builds. Adding
         # `--error` (and publishing to code scanning) is the follow-up once the
-        # baseline is triaged.
-        run: semgrep scan --config auto --sarif --output semgrep.sarif --metrics=off
+        # baseline is triaged. `--config auto` requires Semgrep's registry
+        # telemetry (rule IDs and file paths, never source); the scan cannot run
+        # with metrics disabled.
+        run: semgrep scan --config auto --sarif --output semgrep.sarif
 
       - name: Upload the SARIF report
         if: always()

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { requireCtx, type PublicPerson } from "@/lib/context";
-import { BRAND } from "@letsvibe/domain";
+import { BRAND } from "@lovora/domain";
 import { birthdayInfo, daysUntil, onThisDay, story, together } from "@/lib/data";
 import { galleryPage, recentMedia } from "@/lib/media/queries";
 import { todaysQuestion } from "@/lib/together/daily";

@@ -46,10 +46,12 @@ function soleActiveLink<T>(personId: string, links: T[]): T | null {
 }
 
 /** Someone's context by id: their relationship and partner. Only for trusted server code. */
-export async function ctxFor(personId: string): Promise<Ctx | null> {
+export async function ctxFor(personId: string, sessionVersion?: number): Promise<Ctx | null> {
   const db = await getDb();
   const [me] = await db.select().from(people).where(eq(people.id, personId));
   if (!me) return null;
+  // A token issued before a password change or "sign out everywhere" is dead.
+  if (sessionVersion !== undefined && me.sessionVersion !== sessionVersion) return null;
   const links = await db
     .select({ r: couples, slug: coupleMembers.slug })
     .from(coupleMembers)
@@ -71,7 +73,7 @@ export async function ctxFor(personId: string): Promise<Ctx | null> {
 /** The signed-in person and their relationship, or null. Cached per request. */
 export const getCtx = cache(async (): Promise<Ctx | null> => {
   const session = await readSession();
-  return session ? ctxFor(session.personId) : null;
+  return session ? ctxFor(session.personId, session.version) : null;
 });
 
 /** For pages and actions: the context, or a redirect to sign in. */

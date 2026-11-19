@@ -1,21 +1,16 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { count } from "drizzle-orm";
-import { BRAND, THEME_OPTIONS } from "@letsvibe/domain";
+import { BRAND, THEME_OPTIONS } from "@lovora/domain";
 import { getCtx } from "@/lib/context";
-import { getDb } from "@/lib/db/client";
-import { people } from "@/lib/db/schema";
 import { startWorld } from "@/lib/actions/onboarding";
 import { TOPICS, TOPIC_KEYS } from "@/lib/trends/topics";
-import { ActionForm, Field } from "@/components/ui/forms";
+import { Field, RecoveryForm } from "@/components/ui/forms";
 import { Starfield } from "@/components/home/sky";
 
 export const metadata = { title: "Begin" };
 
 export default async function WelcomePage() {
   if (await getCtx()) redirect("/");
-  const db = await getDb();
-  const [{ n }] = await db.select({ n: count() }).from(people);
-  if (Number(n) > 0) redirect("/login");
 
   return (
     <div className="min-h-dvh bg-[#07060a] p-0 text-[#f7efe1] sm:p-4">
@@ -33,12 +28,22 @@ export default async function WelcomePage() {
               <li>Invite your partner with a private link.</li>
               <li>Your shared world stays yours: no public feed, no ads.</li>
             </ul>
+            <p className="mt-8 text-sm text-white/55">
+              Already have a world?{" "}
+              <Link href="/login" className="text-[#e2c794] underline underline-offset-4">
+                Sign in
+              </Link>
+            </p>
           </div>
 
           <div className="rounded-[28px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_40px_100px_-40px_rgb(0_0_0/0.8)] backdrop-blur-2xl sm:p-8">
-            <ActionForm action={startWorld} submit="Create our world" className="space-y-5">
+            <RecoveryForm action={startWorld} submit="Create our world" className="space-y-5">
               <Field label="Your name" name="displayName">
                 <input id="displayName" name="displayName" required autoComplete="name" placeholder="What should we call you?" className="field" />
+              </Field>
+
+              <Field label="Email" name="email" hint="(used to sign in)">
+                <input id="email" name="email" type="email" required autoComplete="email" inputMode="email" className="field" />
               </Field>
 
               <Field label="What do you call your shared world?" name="relationshipName">
@@ -84,18 +89,18 @@ export default async function WelcomePage() {
               </fieldset>
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Passcode" name="passcode" hint="(8+ characters)">
-                  <input id="passcode" name="passcode" type="password" required minLength={8} autoComplete="new-password" className="field" />
+                <Field label="Password" name="password" hint={`(${10}+ characters)`}>
+                  <input id="password" name="password" type="password" required minLength={10} autoComplete="new-password" className="field" />
                 </Field>
-                <Field label="Confirm passcode" name="confirm">
-                  <input id="confirm" name="confirm" type="password" required minLength={8} autoComplete="new-password" className="field" />
+                <Field label="Confirm password" name="confirm">
+                  <input id="confirm" name="confirm" type="password" required minLength={10} autoComplete="new-password" className="field" />
                 </Field>
               </div>
 
               <p className="text-xs leading-relaxed text-white/40">
                 Next you&apos;ll get a private invitation link for your partner. They choose their own name, colour and interests.
               </p>
-            </ActionForm>
+            </RecoveryForm>
           </div>
         </div>
       </div>

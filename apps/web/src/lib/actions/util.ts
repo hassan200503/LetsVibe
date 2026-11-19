@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 
-export type ActionState = { ok?: boolean; error?: string; message?: string } | null;
+export type ActionState = { ok?: boolean; error?: string; message?: string; recoveryCode?: string; invitePath?: string } | null;
 
 /** Reads a FormData into a plain object, turning "" into undefined. */
 export function formObject(fd: FormData): Record<string, string | undefined> {

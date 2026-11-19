@@ -3,9 +3,9 @@ import { CSP_REPORT_PATH, contentSecurityPolicy, newNonce } from "@/lib/security
 
 export function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  const publicPage = path === "/login" || path === "/welcome" || path.startsWith("/join/") || path.startsWith("/p/");
+  const publicPage = path === "/login" || path === "/welcome" || path === "/recover" || path.startsWith("/join/") || path.startsWith("/p/");
 
-  if (!publicPage && !request.cookies.has("ou_session")) {
+  if (!publicPage && !request.cookies.has("lovora_session")) {
     const url = new URL("/login", request.url);
     if (path !== "/") url.searchParams.set("next", path + request.nextUrl.search);
     return NextResponse.redirect(url);

@@ -1,25 +1,19 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { asc } from "drizzle-orm";
-import { getDb } from "@/lib/db/client";
-import { people } from "@/lib/db/schema";
 import { getCtx } from "@/lib/context";
-import { BRAND } from "@letsvibe/domain";
+import { BRAND } from "@lovora/domain";
 import { pick, parseVerse, VERSE_COOKIE, VERSES } from "@/lib/journey/verses";
-import { Orbit, Starfield } from "@/components/home/sky";
+import { Starfield } from "@/components/home/sky";
 import { RememberLines } from "@/components/home/remember";
 import { Monogram } from "@/components/icons";
 import { LoginForm } from "./login-form";
 
-export const metadata = { title: BRAND.name };
+export const metadata = { title: `Sign in · ${BRAND.name}` };
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   if (await getCtx()) redirect("/");
   const { next } = await searchParams;
-  const db = await getDb();
-  const everyone = await db.select({ slug: people.slug, displayName: people.displayName, theme: people.theme }).from(people).orderBy(asc(people.createdAt));
-  if (!everyone.length) redirect("/welcome");
-  const names = everyone.map((p) => p.displayName.split(" ")[0]);
   const verse = pick(VERSES, (await cookies()).get(VERSE_COOKIE)?.value);
   let i = 0;
   return (
@@ -32,9 +26,6 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           <span />
         </div>
         <Starfield count={180} />
-        <div className="pointer-events-none absolute -right-40 top-1/2 w-[760px] -translate-y-1/2 opacity-30 lg:-right-24 lg:opacity-45" aria-hidden>
-          <Orbit left={names[0] ?? ""} right={names[1] ?? ""} className="h-auto w-full" />
-        </div>
         <div className="relative z-[3] mx-auto grid w-full max-w-6xl items-center gap-12 px-6 py-14 sm:px-10 lg:grid-cols-[1.25fr_1fr]">
           <div>
             <div className="fade-late flex items-center gap-3" style={{ "--d": "0ms" } as React.CSSProperties}>
@@ -54,15 +45,19 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
                 ),
               )}
             </h1>
-            {names.length > 1 && (
-              <div className="fade-late mt-9 flex items-center gap-4" style={{ "--d": "1000ms" } as React.CSSProperties}>
-                <span className="rule-gold w-14" aria-hidden />
-                <p className="text-[0.72rem] uppercase tracking-[0.3em] text-white/60">{names.join(" & ")}</p>
-              </div>
-            )}
+            <p className="mt-6 max-w-md text-sm leading-relaxed text-white/55">{BRAND.tagline} No public feed. No ads. Just the two of you.</p>
+            <div className="fade-late mt-8 flex flex-wrap items-center gap-4 text-sm text-white/55" style={{ "--d": "800ms" } as React.CSSProperties}>
+              <Link href="/welcome" className="text-[#e2c794] underline underline-offset-4">
+                Create your private world
+              </Link>
+              <span aria-hidden>·</span>
+              <Link href="/recover" className="underline underline-offset-4 hover:text-white">
+                Recover an account
+              </Link>
+            </div>
           </div>
           <div className="fade-late" style={{ "--d": "600ms" } as React.CSSProperties}>
-            <LoginForm people={everyone} next={typeof next === "string" ? next : "/"} />
+            <LoginForm next={typeof next === "string" ? next : "/"} />
           </div>
         </div>
       </div>

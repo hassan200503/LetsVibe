@@ -1,6 +1,7 @@
 # ADR-002 — Rebrand to Let'sVibe
 
-- Status: Accepted by product owner (instruction, 2026-11-15); trademark/domain clearance still required
+- Status: Superseded by ADR-004 (rebrand to Lovora, 2026-11-19)
+- Original status: Accepted by product owner (instruction, 2026-11-15); trademark/domain clearance still required
 - Date: 2026-11-15
 - Supersedes: the product name "Our Universe" in current product docs (the repository and remote keep their existing name until a human renames them)
 - Related: ADR-001 (stack), E0-011, H5, H24

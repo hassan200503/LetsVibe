@@ -6,8 +6,8 @@ import { preferences } from "@/lib/db/schema";
 import { personTopics } from "@/lib/trends/query";
 import { SOURCES } from "@/lib/trends/sources";
 import { TOPICS, TOPIC_KEYS } from "@/lib/trends/topics";
-import { changePasscode, saveFeatures, saveInterests, savePreferences, saveProfile, saveRelationship } from "@/lib/actions/personal";
-import { ActionForm, Field } from "@/components/ui/forms";
+import { changePassword, rotateRecoveryCode, saveFeatures, saveInterests, savePreferences, saveProfile, saveRelationship, signOutEverywhere } from "@/lib/actions/personal";
+import { ActionForm, Field, RecoveryForm } from "@/components/ui/forms";
 import { AvatarPicker } from "@/components/avatar-picker";
 import { AlertsSetting } from "@/components/push";
 import { storageMode } from "@/lib/media/storage";
@@ -15,10 +15,9 @@ import { logout } from "@/lib/actions/auth";
 import { AiKeySetting, RelaySetting } from "@/components/settings/secrets";
 import { describeSecret, geminiSecret, SECRET_RELAY } from "@/lib/settings";
 import { relaySource } from "@/lib/calls/ice";
-import { inviteToken } from "@/lib/auth/invite";
 import { InvitePartner } from "@/components/invite-partner";
 import { Container, PageHeader } from "@/components/ui/page-header";
-import { THEME_OPTIONS, coerceTheme } from "@letsvibe/domain";
+import { THEME_OPTIONS, coerceTheme } from "@lovora/domain";
 import { UsageMeter } from "@/components/ui/usage";
 import { planUsage } from "@/lib/entitlements/server";
 import { flagFor } from "@/lib/flags/server";
@@ -54,8 +53,8 @@ export default async function SettingsPage() {
           <section id="invite" className="card mb-8 p-5">
             <p className="eyebrow">One more step</p>
             <h2 className="font-display mt-1 text-xl font-semibold">Invite your partner</h2>
-            <p className="mt-2 text-sm text-muted">Send them this private link. They&apos;ll choose their own name, colour and interests.</p>
-            <InvitePartner path={`/join/${inviteToken(ctx.relationship.id)}`} />
+            <p className="mt-2 text-sm text-muted">Make a private link for your partner. It works once, expires after 7 days, and is replaced whenever you make a new one.</p>
+            <InvitePartner />
           </section>
         )}
         <section id="plan" className="card mb-8 scroll-mt-20 p-5">
@@ -237,18 +236,37 @@ export default async function SettingsPage() {
             </section>
 
             <section className="card p-5">
-              <h2 className="font-display text-xl font-semibold">Passcode</h2>
-              <ActionForm action={changePasscode} submit="Change passcode" className="mt-3 space-y-3">
-                <Field label="Current passcode" name="current">
+              <h2 className="font-display text-xl font-semibold">Account</h2>
+              <p className="mt-1 text-sm text-muted">
+                You sign in as <span className="font-semibold text-ink">{me.email}</span>.
+              </p>
+              <ActionForm action={changePassword} submit="Change password" className="mt-3 space-y-3">
+                <Field label="Current password" name="current">
                   <input id="current" name="current" type="password" autoComplete="current-password" required className="field" />
                 </Field>
-                <Field label="New passcode" name="next" hint="(8+ characters)">
-                  <input id="next" name="next" type="password" autoComplete="new-password" minLength={8} required className="field" />
+                <Field label="New password" name="next" hint="(10+ characters)">
+                  <input id="next" name="next" type="password" autoComplete="new-password" minLength={10} required className="field" />
                 </Field>
-                <Field label="New passcode again" name="confirm">
-                  <input id="confirm" name="confirm" type="password" autoComplete="new-password" minLength={8} required className="field" />
+                <Field label="New password again" name="confirm">
+                  <input id="confirm" name="confirm" type="password" autoComplete="new-password" minLength={10} required className="field" />
                 </Field>
               </ActionForm>
+              <div className="mt-5 border-t border-line/70 pt-4">
+                <p className="text-sm font-semibold">Recovery code</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted">
+                  If you forget your password, this code is the only way back in. Make a fresh one and store it in your password manager; the previous code stops working.
+                </p>
+                <RecoveryForm action={rotateRecoveryCode} submit="Generate a new code" continueHref="/settings" title="Your new recovery code" className="mt-3 space-y-3">
+                  <Field label="Current password" name="current-recovery">
+                    <input id="current-recovery" name="current" type="password" autoComplete="current-password" required className="field" />
+                  </Field>
+                </RecoveryForm>
+              </div>
+              <div className="mt-5 border-t border-line/70 pt-4">
+                <p className="text-sm font-semibold">Sign out everywhere else</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted">Use this if you left a device signed in. This phone or computer stays signed in; every other session ends now.</p>
+                <ActionForm action={signOutEverywhere} submit="Sign out other devices" resetOnSuccess={false} className="mt-3" />
+              </div>
             </section>
 
             <section id="personalise" className="card scroll-mt-20 p-5">

@@ -10,7 +10,7 @@ const check = process.argv.includes("--check");
 
 if (check) {
   if (!existsSync(target) || readFileSync(target, "utf8") !== expected) {
-    console.error("tokens.css is out of date. Run `pnpm --filter @letsvibe/ui-tokens tokens`.");
+    console.error("tokens.css is out of date. Run `pnpm --filter @lovora/ui-tokens tokens`.");
     process.exitCode = 1;
   } else {
     console.log("tokens.css up to date");

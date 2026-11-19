@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
-import { BRAND } from "@letsvibe/domain";
-import { baseDark } from "@letsvibe/ui-tokens";
+import { BRAND } from "@lovora/domain";
+import { baseDark } from "@lovora/ui-tokens";
 
 /** Installable on phones (Add to Home Screen), which is also what lets iPhones receive call alerts. */
 export default function manifest(): MetadataRoute.Manifest {

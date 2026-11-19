@@ -1,40 +1,52 @@
 "use server";
 
-import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db/client";
-import { people } from "@/lib/db/schema";
 import { createSession, destroySession } from "@/lib/auth/session";
+import { authenticate, normalizeEmail, recoverAccount } from "@/lib/auth/accounts";
 import type { ActionState } from "./util";
 
-// Slows guessing from one address. Resets on redeploy, which is fine: bcrypt
-// (cost 12) is the real brake on brute force.
-const attempts = new Map<string, { n: number; until: number }>();
+function clientIp(requestHeaders: Headers): string {
+  return requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() || requestHeaders.get("x-real-ip")?.trim() || "local";
+}
+
+function safeNext(value: string): string {
+  return value.startsWith("/") && !value.startsWith("//") ? value : "/";
+}
 
 export async function login(_: ActionState, fd: FormData): Promise<ActionState> {
-  const slug = String(fd.get("slug") ?? "");
-  const passcode = String(fd.get("passcode") ?? "");
-  const next = String(fd.get("next") ?? "/");
-  const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
-  const key = `${ip}:${slug}`;
-  const a = attempts.get(key);
-  if (a && a.n >= 5 && a.until > Date.now()) {
-    return { error: `Too many tries. Wait ${Math.ceil((a.until - Date.now()) / 60000)} minute(s).` };
-  }
+  const email = normalizeEmail(String(fd.get("email") ?? ""));
+  const password = String(fd.get("password") ?? "");
+  const next = safeNext(String(fd.get("next") ?? "/"));
+  if (!email || !password) return { error: "Enter your email and password." };
 
   const db = await getDb();
-  const [person] = await db.select().from(people).where(eq(people.slug, slug));
-  const ok = person ? await bcrypt.compare(passcode, person.passwordHash) : false;
-  if (!ok || !person) {
-    const n = (a?.n ?? 0) + 1;
-    attempts.set(key, { n, until: Date.now() + 5 * 60_000 });
-    return { error: "That passcode doesn't match." };
-  }
-  attempts.delete(key);
-  await createSession({ personId: person.id, slug: person.slug });
-  redirect(next.startsWith("/") && !next.startsWith("//") ? next : "/");
+  const result = await authenticate(db, { email, password, ip: clientIp(await headers()) });
+  if (!result.ok) return { error: result.error };
+
+  await createSession({ personId: result.personId, slug: result.slug, version: result.sessionVersion });
+  revalidatePath("/", "layout");
+  redirect(next);
+}
+
+/** Recovers an account with the one-time code issued at signup, then issues a new code. */
+export async function recoverPassword(_: ActionState, fd: FormData): Promise<ActionState> {
+  const email = String(fd.get("email") ?? "");
+  const code = String(fd.get("code") ?? "");
+  const next = String(fd.get("password") ?? "");
+  const confirm = String(fd.get("confirm") ?? "");
+  if (!email || !code) return { error: "Enter your email and recovery code." };
+  if (next !== confirm) return { error: "The passwords do not match." };
+
+  const db = await getDb();
+  const result = await recoverAccount(db, { email, code, newPassword: next, ip: clientIp(await headers()) });
+  if (!result.ok) return { error: result.error };
+
+  await createSession({ personId: result.personId, slug: result.slug, version: result.sessionVersion });
+  revalidatePath("/", "layout");
+  return { ok: true, recoveryCode: result.recoveryCode };
 }
 
 export async function logout() {

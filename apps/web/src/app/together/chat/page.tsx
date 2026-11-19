@@ -1,5 +1,5 @@
 import { requireCtx } from "@/lib/context";
-import { BRAND } from "@letsvibe/domain";
+import { BRAND } from "@lovora/domain";
 import { ChatView } from "@/components/chat/chat-view";
 import { TogetherTabs } from "@/components/together/tabs";
 

@@ -1,4 +1,4 @@
-# PLAN — Let'sVibe to production (web + mobile)
+# PLAN — Lovora to production (web + mobile)
 
 Written 2026-11-18 on `autonomous/couples-v2` at `7666c75`. This is the plan of record for the
 remaining work. `.loop/prd.json` stays the backlog of record; this file adds the **phase, order,
@@ -137,7 +137,7 @@ Nothing below can be substituted by code. Each already has an entry in `.loop/HU
 | 3 | E2-004 session-only context | done | commit `d1507ca`; 10 context tests, cross-couple 404s — iteration 020 |
 | 4 | E2-003 cross-couple matrix | done | commit `17bec37`; 93 matrix + 10 storage + 6 route tests, 225 total — iteration 021 |
 | 5 | E2-005 visibility & public profile | done | couple-scoped slugs, opaque public handle, allowlisted reader, 234 tests — iteration 022 |
-| 6 | E5-013 sync protocol & simulator | done | `@letsvibe/sync-protocol` 18 tests, p95 280-326 ms across wifi/mobile/poor, provider wired — iteration 023 |
+| 6 | E5-013 sync protocol & simulator | done | `@lovora/sync-protocol` 18 tests, p95 280-326 ms across wifi/mobile/poor, provider wired — iteration 023 |
 | 7 | E3-007 chat photos & voice notes | done | `media.origin` split, 7 attachment integration tests + 6 waveform tests, 247 web tests — iteration 024 |
 | 8 | E17-002 repository review agent | done | `pnpm review:agent`, 19 fixture tests, 0 findings on a 220-file branch diff, 266 web tests — iteration 025 |
 | 9 | E1-016 flag-gated paywall | done | `/premium` 404s behind the `paywall` flag, entitlement-driven comparison, disabled CTA, ADR-003, 6 tests, 273 web tests — iteration 026 |

@@ -13,13 +13,19 @@ const routes = (process.env.A11Y_ROUTES ?? "/,/together/chat,/together,/together
   .map((route) => route.trim())
   .filter(Boolean);
 
-function readPasscode() {
-  if (process.env.SEED_ALEX_PASSCODE) return process.env.SEED_ALEX_PASSCODE.trim();
+function readEnv(name) {
+  if (process.env[name]) return process.env[name].trim();
   const envFile = path.resolve(import.meta.dirname, "../.env.local");
-  if (!fs.existsSync(envFile)) throw new Error("Set SEED_ALEX_PASSCODE or run pnpm seed to create apps/web/.env.local");
-  const match = fs.readFileSync(envFile, "utf8").match(/^SEED_ALEX_PASSCODE=(.+)$/m);
-  if (!match) throw new Error("SEED_ALEX_PASSCODE is missing from apps/web/.env.local");
-  return match[1].trim();
+  if (!fs.existsSync(envFile)) throw new Error(`Set ${name} or run pnpm seed to create apps/web/.env.local`);
+  const match = fs.readFileSync(envFile, "utf8").match(new RegExp(`^${name}=(.+)$`, "m"));
+  return match ? match[1].trim() : null;
+}
+
+function readCredentials() {
+  const email = readEnv("SEED_ALEX_EMAIL") ?? "alex@example.com";
+  const password = readEnv("SEED_ALEX_PASSWORD");
+  if (!password) throw new Error("SEED_ALEX_PASSWORD is missing from apps/web/.env.local");
+  return { email, password };
 }
 
 function chromeExecutable() {
@@ -53,8 +59,9 @@ try {
   const page = await context.newPage();
 
   await page.goto(`${baseUrl}/login`, { waitUntil: "load" });
-  await page.getByRole("radio").first().click();
-  await page.locator("#passcode").fill(readPasscode());
+  const { email, password } = readCredentials();
+  await page.locator("#email").fill(email);
+  await page.locator("#password").fill(password);
   await page.getByRole("button", { name: /Enter/ }).click();
   await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 30000 });
 
@@ -87,7 +94,7 @@ try {
     }
   }
 
-  const output = process.env.A11Y_OUT ?? path.join(os.tmpdir(), `letsvibe-a11y-${colorScheme}.json`);
+  const output = process.env.A11Y_OUT ?? path.join(os.tmpdir(), `lovora-a11y-${colorScheme}.json`);
   fs.writeFileSync(output, JSON.stringify(results, null, 2));
   console.log(`\nReport: ${output}`);
   if (failures > 0) process.exitCode = 1;

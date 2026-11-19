@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { and, count, eq } from "drizzle-orm";
-import { BRAND, THEME_OPTIONS, coerceTheme } from "@letsvibe/domain";
+import { BRAND, THEME_OPTIONS, coerceTheme } from "@lovora/domain";
 import { getCtx } from "@/lib/context";
 import { getDb } from "@/lib/db/client";
 import { coupleMembers, couples, people } from "@/lib/db/schema";
-import { readInvite } from "@/lib/auth/invite";
+import { findInvitation } from "@/lib/auth/invite";
 import { joinWorld } from "@/lib/actions/onboarding";
 import { TOPICS, TOPIC_KEYS } from "@/lib/trends/topics";
-import { ActionForm, Field } from "@/components/ui/forms";
+import { Field, RecoveryForm } from "@/components/ui/forms";
 import { Starfield } from "@/components/home/sky";
 
 export const metadata = { title: "Join" };
@@ -21,9 +21,9 @@ type Invite = {
 };
 
 async function lookup(token: string): Promise<Invite | null> {
-  const invite = readInvite(token);
-  if (!invite) return null;
   const db = await getDb();
+  const invite = await findInvitation(db, token);
+  if (!invite) return null;
   const [couple] = await db.select().from(couples).where(eq(couples.id, invite.coupleId)).limit(1);
   if (!couple) return null;
   const active = and(eq(coupleMembers.coupleId, couple.id), eq(coupleMembers.status, "active"));
@@ -73,7 +73,7 @@ export default async function JoinPage({ params }: PageProps<"/join/[token]">) {
 
           {invite && !invite.full && (
             <div className="rounded-[28px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_40px_100px_-40px_rgb(0_0_0/0.8)] backdrop-blur-2xl sm:p-8">
-              <ActionForm action={joinWorld} submit={`Join ${invite.relationshipName}`} className="space-y-5">
+              <RecoveryForm action={joinWorld} submit={`Join ${invite.relationshipName}`} className="space-y-5">
                 <input type="hidden" name="token" value={token} />
                 <Field label="Your name" name="displayName">
                   <input id="displayName" name="displayName" required autoComplete="name" placeholder="What should we call you?" className="field" />
@@ -113,15 +113,19 @@ export default async function JoinPage({ params }: PageProps<"/join/[token]">) {
                   </div>
                 </fieldset>
 
+                <Field label="Email" name="email" hint="(used to sign in)">
+                  <input id="email" name="email" type="email" required autoComplete="email" inputMode="email" className="field" />
+                </Field>
+
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label="Passcode" name="passcode" hint="(8+ characters)">
-                    <input id="passcode" name="passcode" type="password" required minLength={8} autoComplete="new-password" className="field" />
+                  <Field label="Password" name="password" hint="(10+ characters)">
+                    <input id="password" name="password" type="password" required minLength={10} autoComplete="new-password" className="field" />
                   </Field>
-                  <Field label="Confirm passcode" name="confirm">
-                    <input id="confirm" name="confirm" type="password" required minLength={8} autoComplete="new-password" className="field" />
+                  <Field label="Confirm password" name="confirm">
+                    <input id="confirm" name="confirm" type="password" required minLength={10} autoComplete="new-password" className="field" />
                   </Field>
                 </div>
-              </ActionForm>
+              </RecoveryForm>
             </div>
           )}
 

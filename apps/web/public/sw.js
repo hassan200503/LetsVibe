@@ -1,5 +1,5 @@
 /*
- * Let'sVibe service worker: push only. It never intercepts page loads,
+ * Lovora service worker: push only. It never intercepts page loads,
  * so the site always behaves exactly as it does without it.
  *
  * Alerts reach this device whether or not anyone is signed in on it, and
@@ -60,7 +60,7 @@ self.addEventListener("push", (event) => {
           return;
         }
         // Every push must show something while the site is closed: say it briefly and silently, then clear it.
-        await self.registration.showNotification(data.title || "Let'sVibe", {
+        await self.registration.showNotification(data.title || "Lovora", {
           body: data.reason === "answered" ? "Answered on another device" : "Call declined",
           tag,
           silent: true,
@@ -73,7 +73,7 @@ self.addEventListener("push", (event) => {
       }
       if (data.type === "call") {
         if (open) return;
-        await self.registration.showNotification(data.title || "Let'sVibe", {
+        await self.registration.showNotification(data.title || "Lovora", {
           body: data.body || "Incoming call",
           tag: `call-${data.callId}`,
           renotify: true,
@@ -93,7 +93,7 @@ self.addEventListener("push", (event) => {
       if (data.type === "message") {
         await badge(data.unread || 0);
         if (open) return;
-        await self.registration.showNotification(data.title || "Let'sVibe", {
+        await self.registration.showNotification(data.title || "Lovora", {
           body: data.body || "New message",
           tag: data.tag || "chat",
           renotify: true,

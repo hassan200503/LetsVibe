@@ -16,7 +16,7 @@ try {
   const env = await readFile(envPath, "utf8");
   const kept = env
     .split(/\r?\n/)
-    .filter((line) => !/^SEED_[A-Z0-9_]*_PASSCODE=/.test(line.trim()))
+    .filter((line) => !/^SEED_[A-Z0-9_]+=/.test(line.trim()))
     .join("\n")
     .trim();
   if (kept) await writeFile(envPath, `${kept}\n`);

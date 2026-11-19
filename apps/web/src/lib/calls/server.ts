@@ -3,7 +3,7 @@ import { and, eq, gt, inArray, isNull, lt, ne, or, sql } from "drizzle-orm";
 import { after } from "next/server";
 import { z } from "zod";
 import { ctxFor, type Ctx } from "@/lib/context";
-import { BRAND } from "@letsvibe/domain";
+import { BRAND } from "@lovora/domain";
 import { sign, verifySignature } from "@/lib/auth/session";
 import { getDb, withSchema } from "@/lib/db/client";
 import { callSignals, calls } from "@/lib/db/schema";

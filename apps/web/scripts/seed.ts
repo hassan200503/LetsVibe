@@ -2,31 +2,43 @@
  * Seeds a generic demo couple so a fresh clone has something to explore.
  * Safe to run repeatedly: existing demo rows are kept.
  *
- * Passcodes come from SEED_ALEX_PASSCODE / SEED_SAM_PASSCODE. When they are
- * missing, random passphrases are generated and appended to .env.local (which
- * git ignores); they are never printed.
+ * Sign-in details come from SEED_ALEX_EMAIL / SEED_ALEX_PASSWORD (and Sam's).
+ * When a password is missing, a random passphrase is generated and appended to
+ * .env.local (which git ignores); it is never printed. The same applies to the
+ * one-time recovery code.
  */
 import { appendFileSync, existsSync, readFileSync } from "node:fs";
 import bcrypt from "bcryptjs";
 import { passphrase } from "../src/lib/auth/passphrase";
-import { BRAND } from "@letsvibe/domain";
+import { hashRecoveryCode, newRecoveryCode } from "../src/lib/auth/recovery";
+import { BRAND } from "@lovora/domain";
 import { eq } from "drizzle-orm";
 import { getDb } from "../src/lib/db/client";
 import { coupleMembers, couples, interests, people, preferences, profiles, projects, radarItems, radarLanes, skills } from "../src/lib/db/schema";
 
 type DemoSlug = "alex" | "sam";
 const DEMO_SLUGS = new Set<DemoSlug>(["alex", "sam"]);
+const DEMO_EMAILS: Record<DemoSlug, string> = { alex: "alex@example.com", sam: "sam@example.com" };
 
-function passcodeFor(slug: DemoSlug): string {
-  const key = `SEED_${slug.toUpperCase()}_PASSCODE`;
-  const existing = process.env[key];
+function ensureEnv(key: string, create: () => string): string {
+  const existing = process.env[key]?.trim();
   if (existing) return existing;
-  const generated = passphrase();
+  const generated = create();
   const envFile = ".env.local";
   const current = existsSync(envFile) ? readFileSync(envFile, "utf8") : "";
   appendFileSync(envFile, `${current && !current.endsWith("\n") ? "\n" : ""}${key}=${generated}\n`);
-  console.log(`  generated a passcode for ${slug} -> saved in .env.local as ${key}`);
+  process.env[key] = generated;
+  console.log(`  generated ${key} -> saved in .env.local`);
   return generated;
+}
+
+function credentials(slug: DemoSlug) {
+  const prefix = `SEED_${slug.toUpperCase()}`;
+  return {
+    email: ensureEnv(`${prefix}_EMAIL`, () => DEMO_EMAILS[slug]),
+    password: ensureEnv(`${prefix}_PASSWORD`, passphrase),
+    recoveryCode: ensureEnv(`${prefix}_RECOVERY`, newRecoveryCode),
+  };
 }
 
 async function main() {
@@ -41,11 +53,19 @@ async function main() {
 
   const bySlug = new Map(existing.map((p) => [p.slug, p]));
 
-  async function ensurePerson(values: Omit<typeof people.$inferInsert, "passwordHash">) {
+  async function ensurePerson(values: Omit<typeof people.$inferInsert, "passwordHash" | "email">) {
     const found = bySlug.get(values.slug);
-    if (found) return found;
-    const passwordHash = await bcrypt.hash(passcodeFor(values.slug as DemoSlug), 12);
-    const [row] = await db.insert(people).values({ ...values, passwordHash }).returning();
+    if (found?.email) return found;
+    const secret = credentials(values.slug as DemoSlug);
+    const passwordHash = await bcrypt.hash(secret.password, 12);
+    const recoveryHash = hashRecoveryCode(secret.recoveryCode);
+    if (found) {
+      // Upgrades a demo person created before accounts used email sign-in.
+      await db.update(people).set({ email: secret.email, passwordHash, recoveryHash }).where(eq(people.id, found.id));
+      console.log(`  added sign-in details for ${found.displayName}`);
+      return { ...found, email: secret.email };
+    }
+    const [row] = await db.insert(people).values({ ...values, email: secret.email, passwordHash, recoveryHash }).returning();
     console.log(`  created ${values.displayName}`);
     return row;
   }

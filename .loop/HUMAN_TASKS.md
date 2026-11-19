@@ -6,15 +6,15 @@ The loop cannot make legal, billing, store, production-access or irreversible de
 
 - [ ] **Install pnpm and gitleaks (H1)** — E0-002 needs pnpm; CI secret scanning needs gitleaks — run `corepack enable` then `corepack prepare pnpm@latest --activate`; install gitleaks from https://github.com/gitleaks/gitleaks#installing; confirm Windows is the only dev machine.
   Answer:
-- [ ] **Create staging and production Supabase projects (H2)** — the migration, RLS work and staging tests cannot start without them — create two projects on Pro (the default spend cap allows only 500 Realtime connections; plan for 1,500 concurrent), store secrets in a password manager and Vercel envs, and give the loop staging credentials only.
+- [ ] **Create staging and production Neon projects (H2)** — migrations and staging tests need isolated databases — create two Neon projects (or branches) and give the loop staging credentials only. Supabase is no longer required for auth or storage per ADR-005; revisit only if managed RLS is chosen.
   Answer:
 - [ ] **Approve the monthly budget (H3)** — paid plans are required for a commercial service; Vercel Hobby is non-commercial — list approved vendors (Vercel Pro, Supabase, TURN, email, Sentry, EAS, AI) and a hard monthly cap; add it to docs/RUNBOOK.md.
   Answer:
-- [ ] **Choose a transactional email provider and sender domain (H4)** — Supabase Auth OTP and export/deletion emails need a verified sender — pick Resend/Postmark/SES, add SPF/DKIM/DMARC, provide the from-address, and create the API key in the secret store.
+- [ ] **Choose a transactional email provider and sender domain (H4)** — email verification and password-reset-by-email need a verified sender — pick Resend/Postmark/SES, add SPF/DKIM/DMARC, provide the from-address, and create the API key in the secret store. Until then accounts rely on the one-time recovery code.
   Answer:
 - [ ] **Confirm product identity (H5)** — policies, store listings and data regions depend on it — decide product name, domain, support email, legal entity and launch countries; run a trademark/name check.
   Answer:
-- [ ] **Approve the existing pilot-account migration (H6)** — the current slug/passcode login cannot remain — confirm the two accounts will claim by verified email without data loss, and name the person who verifies data before the old login is removed.
+- [ ] **Verify the demo-account migration (H6)** — slug/passcode login is removed; `pnpm seed` upgrades the two local demo accounts to email + password without touching couple data, and production has no public users yet. Before launch, verify the seeded accounts on staging and confirm no production data existed under the old login.
   Answer:
 - [ ] **Require CI and protect main (H30)** — repository settings cannot be enforced from code — in GitHub open Settings ? Rules/Branches, protect `main`, require the `CI / check` status check, require a pull request and dismiss stale approvals; then tick this box.
   Answer:

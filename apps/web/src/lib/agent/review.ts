@@ -268,7 +268,7 @@ export function buildPrompt(input: { diff: string; gates: string; maxDiff?: numb
   const diff = truncate(input.diff, maxDiff);
   const gates = truncate(input.gates, maxGates);
   return [
-    "You are reviewing a pull request in the Let'sVibe repository (a private social app for couples, pnpm monorepo, Next.js + TypeScript, Drizzle/Postgres).",
+    "You are reviewing a pull request in the Lovora repository (a private social app for couples, pnpm monorepo, Next.js + TypeScript, Drizzle/Postgres).",
     "Report real defects, security or privacy regressions, tenancy leaks, missing tests and accessibility problems. Do not praise and do not restate the diff.",
     "Return JSON only: {\"findings\":[{\"severity\":\"critical|high|medium|low\",\"rule\":\"short-kebab-name\",\"file\":\"path\",\"line\":number|null,\"message\":\"what is wrong and why it matters\",\"suggestion\":\"concrete fix, or the command that proves it\"}]}",
     "A finding must name an exact file from the diff. Use line: null when a finding spans a file. If there is nothing real to report, return {\"findings\":[]}.",

@@ -75,9 +75,9 @@ function relativeFile(file: string | undefined): string | undefined {
 function focusedTest(file: string | undefined): string | null {
   const normal = relativeFile(file);
   if (!normal) return null;
-  if (normal.startsWith("src/")) return `pnpm --filter @letsvibe/web exec vitest run ${normal}`;
+  if (normal.startsWith("src/")) return `pnpm --filter @lovora/web exec vitest run ${normal}`;
   const pkg = normal.match(/^packages\/([\w-]+)\/(.+)$/);
-  if (pkg) return `pnpm --filter @letsvibe/${pkg[1]} exec vitest run ${pkg[2]}`;
+  if (pkg) return `pnpm --filter @lovora/${pkg[1]} exec vitest run ${pkg[2]}`;
   return null;
 }
 
