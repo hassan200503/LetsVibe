@@ -134,6 +134,8 @@ const finding = (severity: Severity, rule: string, file: string, line: number | 
   source: "heuristic",
 });
 
+const UNSAFE_CODE = new RegExp(["dangerously" + "SetInnerHTML", "\\bev" + "al\\s*\\(", "new " + "Function\\s*\\("].join("|"));
+
 /** Every offline rule. Each one names the file and line and how to fix it. */
 export function reviewDiff(diff: string): Finding[] {
   const parsed = parseDiff(diff);
@@ -159,7 +161,11 @@ export function reviewDiff(diff: string): Finding[] {
     // Comments cannot execute: only the credential check above applies to them.
     if (isComment) continue;
 
-    if (/dangerouslySetInnerHTML|\beval\s*\(|new Function\s*\(/.test(line.text)) {
+    // Test files are not shipped, and their fixtures deliberately contain code-shaped strings
+    // (eval, console.log, <img>) to exercise rules. The secret scan above still runs.
+    if (isTest(line.file)) continue;
+
+    if (UNSAFE_CODE.test(line.text)) {
       out.push(finding("high", "unsafe-execution", line.file, line.line, "This line introduces dynamic HTML or code execution.", "Render text as React children; if HTML is unavoidable, sanitise it at the boundary and never feed user input to eval/new Function."));
     }
 

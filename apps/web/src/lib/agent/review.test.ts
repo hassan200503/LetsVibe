@@ -112,6 +112,21 @@ describe("offline rules", () => {
     expect(rules(diff)).not.toContain("image-alt");
   });
 
+  it("ignores code-shaped fixtures inside test files, but still scans them for secrets", () => {
+    const fakeKey = ["AI", "za", "SyD-1234567890abcdefghijklmnopqrstu"].join("");
+    const diff = diffFor("apps/web/src/lib/agent/review.test.ts", [
+      'console.log("token", token);',
+      "<img src={url} />",
+      'const value = eval("1");',
+      `const key = "${fakeKey}";`,
+    ]);
+    const seen = rules(diff);
+    expect(seen).not.toContain("sensitive-log");
+    expect(seen).not.toContain("image-alt");
+    expect(seen).not.toContain("unsafe-execution");
+    expect(seen).toContain("secret-in-diff");
+  });
+
   it("does not flag log lines that only name a file, comments or an explicit omission", () => {
     const diff = [
       diffFor("apps/web/scripts/seed.ts", ['console.log(`generated a passcode for ${slug} -> saved in .env.local`);']),
