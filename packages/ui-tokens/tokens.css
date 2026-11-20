@@ -1,7 +1,9 @@
 :root {
   --bg: #f7f3ec;
+  --canvas: #f1ece3;
   --surface: #fffdf9;
   --surface-2: #f1ebe1;
+  --scrim: rgb(23 19 15 / 0.42);
   --ink: #17130f;
   --muted: #6c645a;
   --line: #e5ddd0;
@@ -56,6 +58,26 @@
   --type-prose-size: 1.02rem;
   --type-prose-line: 1.75;
   --type-mono-label-size: 0.66rem;
+  --type-page-title-size: clamp(1.9rem, 4.2vw, 2.75rem);
+  --type-page-title-line: 1.08;
+  --type-page-title-tracking: -0.022em;
+  --type-page-title-weight: 600;
+  --type-section-title-size: 1.35rem;
+  --type-section-title-line: 1.25;
+  --type-section-title-tracking: -0.01em;
+  --type-section-title-weight: 600;
+  --type-card-title-size: 1.02rem;
+  --type-card-title-line: 1.35;
+  --type-card-title-weight: 600;
+  --type-body-size: 0.95rem;
+  --type-body-line: 1.6;
+  --type-small-size: 0.82rem;
+  --type-small-line: 1.45;
+  --type-meta-size: 0.72rem;
+  --type-meta-line: 1.35;
+  --type-meta-tracking: 0.01em;
+  --type-label-size: 0.8rem;
+  --type-label-weight: 600;
   --space-0: 0;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -76,13 +98,23 @@
   --space-button-glass-x: 1.3rem;
   --space-chip-y: 0.22rem;
   --space-chip-x: 0.7rem;
+  --space-rail: 15.5rem;
+  --space-rail-compact: 5rem;
+  --space-container: 72rem;
+  --space-container-wide: 84rem;
+  --space-header: 3.75rem;
+  --space-mobile-nav: 4.25rem;
+  --space-touch: 2.75rem;
   --radius-code: 6px;
+  --radius-control: 10px;
   --radius-field: 12px;
   --radius-panel: 14px;
+  --radius-media: 16px;
   --radius-toast: 18px;
-  --radius-card: 20px;
+  --radius-card: 18px;
   --radius-glow: 22px;
   --radius-tile: 24px;
+  --radius-sheet: 28px;
   --radius-pill: 999px;
   --shadow-button: 0 1px 0 rgb(255 255 255 / 0.18) inset, 0 6px 18px -8px var(--glow);
   --shadow-card: 0 1px 0 color-mix(in oklab, var(--ink) 3%, transparent), 0 10px 30px -18px color-mix(in oklab, var(--ink) 22%, transparent);
@@ -92,8 +124,13 @@
   --shadow-tile: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 1px 2px color-mix(in oklab, var(--ink) 4%, transparent), 0 18px 40px -28px color-mix(in oklab, var(--ink) 30%, transparent);
   --shadow-toast: 0 24px 60px -24px rgb(0 0 0 / 0.35);
   --shadow-stage: 0 1px 0 rgb(255 255 255 / 0.07) inset, 0 50px 120px -50px rgb(18 6 20 / 0.6);
+  --shadow-hairline: 0 1px 2px color-mix(in oklab, var(--ink) 4%, transparent);
+  --shadow-pop: 0 2px 6px -2px color-mix(in oklab, var(--ink) 12%, transparent), 0 12px 32px -12px color-mix(in oklab, var(--ink) 22%, transparent);
+  --shadow-sheet: 0 24px 80px -24px color-mix(in oklab, var(--ink) 38%, transparent);
+  --motion-duration-press: 110ms;
   --motion-duration-fast: 150ms;
   --motion-duration-base: 200ms;
+  --motion-duration-enter: 240ms;
   --motion-duration-lift: 350ms;
   --motion-duration-reveal: 320ms;
   --motion-duration-slow: 600ms;
@@ -139,8 +176,10 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0b0a0e;
+    --canvas: #0f0d12;
     --surface: #141218;
     --surface-2: #1c1a21;
+    --scrim: rgb(0 0 0 / 0.62);
     --ink: #f2ede5;
     --muted: #a59e9f;
     --line: #2b2831;
@@ -191,8 +230,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   :root {
+    --motion-duration-press: 0.01ms;
     --motion-duration-fast: 0.01ms;
     --motion-duration-base: 0.01ms;
+    --motion-duration-enter: 0.01ms;
     --motion-duration-lift: 0.01ms;
     --motion-duration-reveal: 0.01ms;
     --motion-duration-slow: 0.01ms;

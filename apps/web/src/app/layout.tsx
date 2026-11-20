@@ -49,8 +49,19 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
               <PulseProvider>
                 <CallProvider>
                   <RoomProvider>
+                    <a
+                      href="#main"
+                      className="sr-only z-[100] rounded-full bg-surface px-4 py-2 text-sm font-semibold shadow-[var(--shadow-pop)] focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+                    >
+                      Skip to content
+                    </a>
                     <Nav />
-                    <main className="flex-1 pb-28 sm:pb-0">{children}</main>
+                    <main
+                      id="main"
+                      className="flex-1 pb-[calc(var(--space-mobile-nav)+env(safe-area-inset-bottom)+0.75rem)] md:pb-0 md:pl-[var(--space-rail-compact)] xl:pl-[var(--space-rail)]"
+                    >
+                      {children}
+                    </main>
                     <ServiceWorker />
                     {ctx.partner && <ReachPrompt partnerName={ctx.partner.displayName.split(" ")[0]} />}
                   </RoomProvider>

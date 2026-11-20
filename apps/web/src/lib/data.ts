@@ -4,6 +4,7 @@ import type { PgColumn } from "drizzle-orm/pg-core";
 import { getDb } from "@/lib/db/client";
 import { knowledgeEntries, learningRecords, memories, people, photos, projects, radarItems, radarLanes, savedDiscoveries, sharedLearning, skills, trends } from "@/lib/db/schema";
 import { type Ctx, visibleTo } from "@/lib/context";
+import { storyKindMeta } from "@/lib/story/kinds";
 
 /**
  * Read models for the personal and shared areas. Every personal query takes the
@@ -166,7 +167,7 @@ export async function searchAll(ctx: Ctx, q: string): Promise<SearchHit[]> {
 
   const d = (v: string | Date) => (typeof v === "string" ? v : v.toISOString());
   return [
-    ...mem.map((m) => ({ kind: m.kind === "plan" ? "Plan" : m.kind === "discovery" ? "Saved to Our Story" : "Memory", title: m.title, snippet: m.body ?? m.why, href: "/story", owner: name(m.addedBy)?.displayName, date: m.occurredOn })),
+    ...mem.map((m) => ({ kind: storyKindMeta(m.kind).label, title: m.title, snippet: m.body ?? m.why, href: "/story", owner: name(m.addedBy)?.displayName, date: m.occurredOn })),
     ...learn.map((l) => ({ kind: "Things we are learning", title: l.title, snippet: l.notes, href: "/learning", owner: name(l.addedBy)?.displayName, date: l.occurredOn })),
     ...recs.map((r) => ({ kind: name(r.personId)?.journalTitle ?? "Journal", title: r.title, snippet: r.description, href: `/world/${name(r.personId)?.slug}/journal?q=${encodeURIComponent(q)}`, owner: name(r.personId)?.displayName, date: r.occurredOn })),
     ...projs.map((p) => ({ kind: "Project", title: p.name, snippet: p.description, href: `/world/${name(p.personId)?.slug}/projects`, owner: name(p.personId)?.displayName })),

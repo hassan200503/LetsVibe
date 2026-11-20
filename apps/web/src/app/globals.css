@@ -14,11 +14,21 @@
 
 @theme inline {
   --color-bg: var(--bg);
+  --color-canvas: var(--canvas);
+  --color-scrim: var(--scrim);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-line: var(--line);
+  --color-focus: var(--focus);
+  --radius-app-control: var(--radius-control);
+  --radius-app-media: var(--radius-media);
+  --radius-app-card: var(--radius-card);
+  --radius-app-sheet: var(--radius-sheet);
+  --shadow-app-hairline: var(--shadow-hairline);
+  --shadow-app-pop: var(--shadow-pop);
+  --shadow-app-sheet: var(--shadow-sheet);
   --color-accent: var(--accent);
   --color-accent-ink: var(--accent-ink);
   --color-accent-soft: var(--accent-soft);
@@ -64,6 +74,19 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    /* A guard, not a fix: layouts must still fit, and `clip` keeps sticky chrome working. */
+    overflow-x: clip;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
   }
 
   ::selection {
@@ -124,52 +147,92 @@
 
   .field {
     width: 100%;
+    min-height: 2.75rem;
     border: 1px solid var(--line);
     background: var(--surface);
     color: var(--ink);
     border-radius: var(--radius-field);
     padding: var(--space-field-y) var(--space-field-x);
     font-size: var(--type-field-size);
+    line-height: 1.4;
     transition:
-      border-color var(--motion-duration-base) var(--motion-ease-standard),
-      box-shadow var(--motion-duration-base) var(--motion-ease-standard);
+      border-color var(--motion-duration-base) var(--motion-ease-out),
+      box-shadow var(--motion-duration-base) var(--motion-ease-out),
+      background-color var(--motion-duration-base) var(--motion-ease-out);
+  }
+  .field::placeholder {
+    color: color-mix(in oklab, var(--muted) 78%, transparent);
+  }
+  .field:hover:not(:focus) {
+    border-color: color-mix(in oklab, var(--muted) 32%, var(--line));
   }
   .field:focus {
     outline: none;
-    border-color: color-mix(in oklab, var(--accent) 60%, var(--line));
-    box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 14%, transparent);
+    border-color: color-mix(in oklab, var(--accent) 62%, var(--line));
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 13%, transparent);
   }
   textarea.field {
     min-height: 6rem;
     resize: vertical;
   }
+  select.field {
+    cursor: pointer;
+  }
+  /* On the night stage the same controls read as smoked glass, not white boxes. */
+  .stage .field {
+    background: rgb(0 0 0 / 0.32);
+    border-color: rgb(255 255 255 / 0.14);
+    color: #f6efe4;
+  }
+  .stage .field::placeholder {
+    color: rgb(255 255 255 / 0.34);
+  }
+  .stage .field:hover:not(:focus) {
+    border-color: rgb(255 255 255 / 0.24);
+  }
+  .stage .field:focus {
+    border-color: rgb(226 199 148 / 0.7);
+    box-shadow: 0 0 0 3px rgb(226 199 148 / 0.15);
+  }
+  .stage .field:focus-visible {
+    outline: none;
+  }
 
   .btn {
     display: inline-flex;
+    min-height: 2.5rem;
     align-items: center;
+    justify-content: center;
     gap: 0.45rem;
     border-radius: var(--radius-pill);
     padding: var(--space-button-y) var(--space-button-x);
     font-weight: 600;
     font-size: var(--type-button-size);
     letter-spacing: 0.005em;
+    line-height: 1.2;
     background: var(--accent);
     color: var(--accent-ink);
     box-shadow: var(--shadow-button);
     transition:
-      transform var(--motion-duration-fast) var(--motion-ease-standard),
-      filter var(--motion-duration-fast) var(--motion-ease-standard),
-      box-shadow var(--motion-duration-base) var(--motion-ease-standard);
+      transform var(--motion-duration-press) var(--motion-ease-out),
+      filter var(--motion-duration-fast) var(--motion-ease-out),
+      box-shadow var(--motion-duration-base) var(--motion-ease-out),
+      background-color var(--motion-duration-base) var(--motion-ease-out);
   }
   .btn:hover {
     filter: brightness(1.06);
   }
   .btn:active {
-    transform: translateY(1px) scale(0.99);
+    transform: translateY(1px) scale(0.985);
   }
   .btn:disabled {
     opacity: 0.55;
     cursor: not-allowed;
+  }
+  .btn-lg {
+    min-height: 2.875rem;
+    padding-inline: 1.35rem;
+    font-size: 0.95rem;
   }
   .btn-ghost {
     background: transparent;
@@ -181,25 +244,130 @@
     background: var(--surface-2);
     filter: none;
   }
+  .btn-soft {
+    background: var(--accent-soft);
+    color: var(--accent);
+    box-shadow: none;
+  }
+  .btn-soft:hover {
+    filter: none;
+    background: color-mix(in oklab, var(--accent-soft) 72%, var(--accent) 8%);
+  }
+  .btn-quiet {
+    background: transparent;
+    color: var(--muted);
+    box-shadow: none;
+  }
+  .btn-quiet:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+    filter: none;
+  }
+
+  /* Square icon controls: 40px by default, 32px when inline. */
+  .icon-btn {
+    display: inline-grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    border-radius: var(--radius-pill);
+    color: var(--muted);
+    transition:
+      background-color var(--motion-duration-fast) var(--motion-ease-out),
+      color var(--motion-duration-fast) var(--motion-ease-out),
+      transform var(--motion-duration-press) var(--motion-ease-out);
+  }
+  .icon-btn:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .icon-btn:active {
+    transform: scale(0.94);
+  }
+  .icon-btn[aria-pressed="true"] {
+    color: var(--accent);
+  }
+  .icon-btn-sm {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  /* Segmented control for filters and view switches. */
+  .segmented {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    border: 1px solid color-mix(in oklab, var(--line) 70%, transparent);
+  }
+  .seg-tab {
+    display: inline-flex;
+    min-height: 2.5rem;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: var(--radius-pill);
+    padding: 0.45rem 0.9rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+    transition:
+      background-color var(--motion-duration-fast) var(--motion-ease-out),
+      color var(--motion-duration-fast) var(--motion-ease-out),
+      box-shadow var(--motion-duration-fast) var(--motion-ease-out);
+  }
+  .seg-tab:hover {
+    color: var(--ink);
+  }
+  .seg-tab[aria-selected="true"],
+  .seg-tab[aria-pressed="true"],
+  .seg-tab[data-active="true"] {
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--shadow-hairline);
+  }
 
   .chip {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.32rem;
     border-radius: var(--radius-pill);
     padding: var(--space-chip-y) var(--space-chip-x);
     font-size: var(--type-chip-size);
     font-weight: 600;
+    line-height: 1.35;
     background: var(--accent-soft);
     color: var(--accent);
     white-space: nowrap;
+  }
+  .chip-quiet {
+    background: var(--surface-2);
+    color: var(--muted);
+  }
+  .chip-outline {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
   }
 
   .card {
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--radius-card);
-    box-shadow: var(--shadow-card);
+    box-shadow: var(--shadow-hairline);
+  }
+  .card-hover {
+    transition:
+      border-color var(--motion-duration-base) var(--motion-ease-out),
+      box-shadow var(--motion-duration-lift) var(--motion-ease-lux),
+      transform var(--motion-duration-lift) var(--motion-ease-lux);
+  }
+  .card-hover:hover {
+    border-color: color-mix(in oklab, var(--muted) 24%, var(--line));
+    box-shadow: var(--shadow-pop);
+    transform: translateY(-2px);
   }
 
   .eyebrow {
@@ -208,6 +376,105 @@
     text-transform: uppercase;
     font-weight: var(--type-eyebrow-weight);
     color: var(--accent);
+  }
+
+  /* Interface type ladder — one place to keep chrome consistent. */
+  .type-page-title {
+    font-family: var(--font-display-stack);
+    font-size: var(--type-page-title-size);
+    line-height: var(--type-page-title-line);
+    letter-spacing: var(--type-page-title-tracking);
+    font-weight: var(--type-page-title-weight);
+  }
+  .type-section-title {
+    font-size: var(--type-section-title-size);
+    line-height: var(--type-section-title-line);
+    letter-spacing: var(--type-section-title-tracking);
+    font-weight: var(--type-section-title-weight);
+  }
+  .type-card-title {
+    font-size: var(--type-card-title-size);
+    line-height: var(--type-card-title-line);
+    font-weight: var(--type-card-title-weight);
+    letter-spacing: -0.008em;
+  }
+  .type-body {
+    font-size: var(--type-body-size);
+    line-height: var(--type-body-line);
+  }
+  .type-small {
+    font-size: var(--type-small-size);
+    line-height: var(--type-small-line);
+  }
+  .type-meta {
+    font-size: var(--type-meta-size);
+    line-height: var(--type-meta-line);
+    letter-spacing: var(--type-meta-tracking);
+    color: var(--muted);
+  }
+  .type-label {
+    font-size: var(--type-label-size);
+    font-weight: var(--type-label-weight);
+  }
+
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: var(--surface-2);
+    border-radius: var(--radius-control);
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--surface) 65%, transparent), transparent);
+    animation: skeleton-sweep 1.6s var(--motion-ease-in-out) infinite;
+  }
+  @keyframes skeleton-sweep {
+    to {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes heart-pop {
+    0% {
+      transform: scale(0.6);
+    }
+    55% {
+      transform: scale(1.18);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton::after {
+      animation: none;
+    }
+  }
+
+  .media-frame {
+    position: relative;
+    overflow: hidden;
+    background: var(--surface-2);
+    border-radius: var(--radius-media);
+  }
+  .media-frame img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .hairline {
+    border-color: var(--line);
+  }
+
+  .scrollbar-none-safe {
+    scrollbar-width: none;
+  }
+  .scrollbar-none-safe::-webkit-scrollbar {
+    display: none;
   }
 
   /* Indigo gets a faint engineering grid. */
@@ -311,6 +578,8 @@
     isolation: isolate;
     overflow: hidden;
     color: #f4ede2;
+    /* Token utilities (`text-muted`, `type-meta`) stay legible on the night stage. */
+    --muted: #b6aeb2;
     background:
       radial-gradient(70% 90% at 88% 0%, rgb(122 32 64 / 0.42), transparent 62%), radial-gradient(60% 80% at 0% 100%, rgb(40 36 92 / 0.45), transparent 60%),
       radial-gradient(40% 50% at 55% 55%, rgb(214 182 124 / 0.07), transparent 70%), linear-gradient(180deg, #0e0b14 0%, #08070b 100%);
@@ -721,29 +990,40 @@
   }
 }
 
-/* ─── The orbit on the home stage ──────────────────────────────────────── */
+/* ─── Love stories trailer on the home stage ───────────────────────────── */
 @layer components {
-  .orbit .orbit-spin,
-  .orbit .orbit-dash,
-  .orbit .orbit-breathe {
-    transform-box: view-box;
-    transform-origin: 280px 280px;
-  }
   @media (prefers-reduced-motion: no-preference) {
-    .orbit .orbit-spin {
-      animation: u-rotate var(--motion-duration-orbit) var(--motion-ease-linear) infinite;
+    .ls-scene {
+      animation: ls-scene-in 360ms var(--motion-ease-lux) both;
     }
-    .orbit .orbit-dash {
-      animation: u-rotate var(--motion-duration-orbit-slow) var(--motion-ease-linear) infinite reverse;
+    .ls-bg {
+      animation: ls-bg-in 800ms var(--motion-ease-standard) both;
     }
-    .orbit .orbit-breathe {
-      animation: breathe var(--motion-duration-breathe) var(--motion-ease-in-out) infinite;
+    .ls-progress {
+      transform-origin: left;
+      animation-name: ls-progress;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
     }
   }
-  @keyframes breathe {
-    50% {
-      transform: scale(1.12);
-      opacity: 0.75;
+  @keyframes ls-scene-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+  @keyframes ls-bg-in {
+    from {
+      opacity: 0;
+      transform: scale(1.04);
+    }
+  }
+  @keyframes ls-progress {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
     }
   }
 }

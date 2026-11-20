@@ -15,8 +15,8 @@ export async function generateMetadata({ params }: PageProps<"/world/[slug]">) {
 function Stat({ n, label }: { n: number; label: string }) {
   return (
     <div className="card p-4">
-      <p className="font-display text-3xl font-semibold text-accent">{n}</p>
-      <p className="text-xs text-muted">{label}</p>
+      <p className="font-display text-[1.9rem] font-semibold leading-none tracking-tight text-accent">{n}</p>
+      <p className="type-meta mt-2">{label}</p>
     </div>
   );
 }
@@ -40,32 +40,32 @@ export default async function WorldDashboard({ params }: PageProps<"/world/[slug
   const main = topics[0];
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-10 sm:space-y-12">
       {/* Introduction & interests */}
       <section className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-        <div>
-          <h2 className="font-display text-2xl font-semibold">{own ? "About you" : `About ${first}`}</h2>
+        <div className="min-w-0">
+          <h2 className="type-section-title font-display">{own ? "About you" : `About ${first}`}</h2>
           {person.intro ? (
-            <div className="mt-3 space-y-3 leading-relaxed">
+            <div className="type-body mt-3 space-y-3 leading-relaxed [overflow-wrap:anywhere]">
               {person.intro.split(/\n{2,}/).map((p, i) => (
                 <p key={i}>{p}</p>
               ))}
             </div>
           ) : (
-            <p className="mt-3 text-muted">{own ? "Write a few lines about yourself in Settings." : `${first} hasn't written an introduction yet.`}</p>
+            <p className="mt-3 text-sm text-muted">{own ? "Write a few lines about yourself in Settings." : `${first} hasn't written an introduction yet.`}</p>
           )}
           {own && (
-            <Link href="/settings" className="mt-3 inline-block text-sm text-accent hover:underline">
+            <Link href="/settings#profile" className="mt-3 inline-flex min-h-8 items-center text-sm font-semibold text-accent hover:underline">
               Edit profile
             </Link>
           )}
         </div>
-        <div>
-          <h2 className="font-display text-2xl font-semibold">Interests</h2>
+        <div className="min-w-0">
+          <h2 className="type-section-title font-display">Interests</h2>
           <ul className="mt-3 grid grid-cols-2 gap-2">
             {topics.map((t) => (
               <li key={t}>
-                <Link href={`/discover/${t}`} className="card flex items-center gap-3 p-3 transition hover:border-accent">
+                <Link href={`/discover/${t}`} className="card card-hover flex min-h-12 items-center gap-3 p-3">
                   <span className="text-2xl" aria-hidden>
                     {TOPICS[t].emoji}
                   </span>
@@ -78,7 +78,7 @@ export default async function WorldDashboard({ params }: PageProps<"/world/[slug
       </section>
 
       {/* Now */}
-      <section className="grid gap-5 md:grid-cols-3">
+      <section className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
         <div className="card p-5">
           <p className="eyebrow">Current learning goal</p>
           {goal ? (
@@ -148,20 +148,20 @@ export default async function WorldDashboard({ params }: PageProps<"/world/[slug
       {/* Today's discovery + latest per interest */}
       <section>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-display text-2xl font-semibold">What&apos;s new in {own ? "your" : `${first}'s`} world</h2>
-          <Link href={own ? "/discover" : `/discover?as=${person.slug}`} className="text-sm font-semibold text-accent hover:underline">
+          <h2 className="type-section-title font-display">What&apos;s new in {own ? "your" : `${first}'s`} world</h2>
+          <Link href={own ? "/discover" : `/discover?as=${person.slug}`} className="inline-flex min-h-8 items-center text-sm font-semibold text-accent hover:underline">
             Open For You →
           </Link>
         </div>
-        <div className="mt-4 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          <div>
+        <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <div className="min-w-0">
             <p className="eyebrow mb-2">Today&apos;s {main ? TOPICS[main].label : ""} discovery</p>
             {today ? <TrendCardView item={today} /> : <p className="card p-5 text-sm text-muted">Nothing fresh enough yet today.</p>}
           </div>
           {latest
             .filter(([t, item]) => item && t !== main)
             .map(([t, item]) => (
-              <div key={t}>
+              <div key={t} className="min-w-0">
                 <p className="eyebrow mb-2">Latest in {TOPICS[t].label}</p>
                 <TrendCardView item={item!} compact />
               </div>
@@ -172,8 +172,8 @@ export default async function WorldDashboard({ params }: PageProps<"/world/[slug
       {/* Radar summary */}
       <section>
         <div className="flex items-baseline justify-between">
-          <h2 className="font-display text-2xl font-semibold">{person.radarTitle}</h2>
-          <Link href={`/world/${person.slug}/radar`} className="text-sm font-semibold text-accent hover:underline">
+          <h2 className="type-section-title font-display">{person.radarTitle}</h2>
+          <Link href={`/world/${person.slug}/radar`} className="inline-flex min-h-8 items-center text-sm font-semibold text-accent hover:underline">
             Open →
           </Link>
         </div>

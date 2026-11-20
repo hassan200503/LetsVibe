@@ -130,7 +130,7 @@ export function TrendCardView({ item, compact = false, priority = false }: { ite
   const t = TOPICS[item.topic];
   const living = isLiving(item);
   return (
-    <article data-world={TOPIC_WORLD[item.topic] ?? "us"} className="feed-card card flex flex-col overflow-hidden rise">
+    <article data-world={TOPIC_WORLD[item.topic] ?? "us"} className="feed-card card flex min-w-0 flex-col overflow-hidden rise">
       {!compact && <Visual item={item} priority={priority} />}
       <div className="flex flex-1 flex-col p-4">
         <div className="flex flex-wrap items-center gap-2">
@@ -139,12 +139,12 @@ export function TrendCardView({ item, compact = false, priority = false }: { ite
           </span>
           {!living && <span className="text-xs text-muted">{item.category}</span>}
         </div>
-        <h3 className="font-display mt-2 text-lg font-semibold leading-snug">
-          <Link href={`/discover/item/${item.id}`} className="hover:underline">
+        <h3 className="font-display mt-2 text-lg font-semibold leading-snug [overflow-wrap:anywhere]">
+          <Link href={`/discover/item/${item.id}`} className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60">
             {item.title}
           </Link>
         </h3>
-        {living ? <LivingDetails item={item} /> : item.summary && <p className="mt-2 line-clamp-4 text-sm leading-relaxed text-muted">{item.summary}</p>}
+        {living ? <LivingDetails item={item} /> : item.summary && <p className="mt-2 line-clamp-4 text-sm leading-relaxed text-muted [overflow-wrap:anywhere]">{item.summary}</p>}
         <div className="mt-auto pt-4">
           <p className="text-xs text-muted">
             <span className="font-semibold text-ink">{item.sourceName}</span>
@@ -154,7 +154,7 @@ export function TrendCardView({ item, compact = false, priority = false }: { ite
           </p>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
             <Reactions item={item} />
-            <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-accent hover:underline">
+            <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer" className="-my-1.5 inline-flex min-h-9 items-center text-sm font-semibold text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60">
               {ORIGINAL_LABEL[item.contentType] ?? "Read original"} →
             </a>
           </div>

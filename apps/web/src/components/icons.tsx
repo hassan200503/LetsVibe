@@ -1,5 +1,3 @@
-import { useId } from "react";
-
 /**
  * Line icons drawn on a 24px grid with one stroke weight, so every control in
  * the app reads as one family. Decorative by default; pass a `title` when an
@@ -165,10 +163,178 @@ export const IconChevronLeft = (p: P) => (
     <path d="m14.5 5-7 7 7 7" />
   </Svg>
 );
+export const IconChevronRight = (p: P) => (
+  <Svg {...p}>
+    <path d="m9.5 5 7 7-7 7" />
+  </Svg>
+);
 export const IconChevronDown = (p: P) => (
   <Svg {...p}>
     <path d="m5 9 7 7 7-7" />
   </Svg>
+);
+export const IconMore = (p: P) => (
+  <Svg {...p}>
+    <circle cx="5.5" cy="12" r="1.1" fill="currentColor" stroke="none" />
+    <circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none" />
+    <circle cx="18.5" cy="12" r="1.1" fill="currentColor" stroke="none" />
+  </Svg>
+);
+export const IconMenu = (p: P) => (
+  <Svg {...p}>
+    <path d="M4 7h16M4 12h16M4 17h10" />
+  </Svg>
+);
+export const IconBookmark = (p: P) => (
+  <Svg {...p}>
+    <path d="M6.5 4.5h11a1 1 0 0 1 1 1v14L12 15.2l-6.5 4.3v-14a1 1 0 0 1 1-1Z" />
+  </Svg>
+);
+export const IconBookmarkFilled = (p: P) => (
+  <Svg {...p}>
+    <path d="M6.5 4.5h11a1 1 0 0 1 1 1v14L12 15.2l-6.5 4.3v-14a1 1 0 0 1 1-1Z" fill="currentColor" />
+  </Svg>
+);
+export const IconHeartFilled = (p: P) => (
+  <Svg {...p}>
+    <path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20Z" fill="currentColor" />
+  </Svg>
+);
+export const IconStar = (p: P) => (
+  <Svg {...p}>
+    <path d="m12 3.8 2.5 5.1 5.6.8-4 4 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4-4 5.6-.8L12 3.8Z" />
+  </Svg>
+);
+export const IconStarFilled = (p: P) => (
+  <Svg {...p}>
+    <path d="m12 3.8 2.5 5.1 5.6.8-4 4 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4-4 5.6-.8L12 3.8Z" fill="currentColor" />
+  </Svg>
+);
+export const IconShare = (p: P) => (
+  <Svg {...p}>
+    <path d="M12 15.5V4.5M8 8l4-3.5L16 8" />
+    <path d="M5 12.5v6a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-6" />
+  </Svg>
+);
+export const IconSettings = (p: P) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="3" />
+    <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.95 19.3a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.95a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 8.95 4.6a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9.4c.3.63.92 1.03 1.56 1.03H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.03Z" />
+  </Svg>
+);
+export const IconLock = (p: P) => (
+  <Svg {...p}>
+    <rect x="5" y="10.5" width="14" height="9.5" rx="2.2" />
+    <path d="M8.2 10.5V8a3.8 3.8 0 0 1 7.6 0v2.5" />
+  </Svg>
+);
+export const IconGlobe = (p: P) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M3.8 12h16.4M12 3.5c2.2 2.3 3.4 5.3 3.4 8.5S14.2 18.7 12 21c-2.2-2.3-3.4-5.3-3.4-8.5S9.8 5.8 12 3.5Z" />
+  </Svg>
+);
+export const IconGrid = (p: P) => (
+  <Svg {...p}>
+    <rect x="4" y="4" width="7" height="7" rx="1.6" />
+    <rect x="13" y="4" width="7" height="7" rx="1.6" />
+    <rect x="4" y="13" width="7" height="7" rx="1.6" />
+    <rect x="13" y="13" width="7" height="7" rx="1.6" />
+  </Svg>
+);
+export const IconFilm = (p: P) => (
+  <Svg {...p}>
+    <rect x="3.5" y="5" width="17" height="14" rx="2.2" />
+    <path d="M7.5 5v14M16.5 5v14M3.5 9.5h4M3.5 14.5h4M16.5 9.5h4M16.5 14.5h4" />
+  </Svg>
+);
+export const IconMusic = (p: P) => (
+  <Svg {...p}>
+    <path d="M9 18V6.5l10-2V16" />
+    <circle cx="6.5" cy="18" r="2.5" />
+    <circle cx="16.5" cy="16" r="2.5" />
+  </Svg>
+);
+export const IconCamera = (p: P) => (
+  <Svg {...p}>
+    <path d="M4 8.5h3l1.5-2h7l1.5 2h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1Z" />
+    <circle cx="12" cy="13.5" r="3.2" />
+  </Svg>
+);
+export const IconUser = (p: P) => (
+  <Svg {...p}>
+    <circle cx="12" cy="8" r="3.6" />
+    <path d="M5 20a7 7 0 0 1 14 0" />
+  </Svg>
+);
+export const IconUsers = (p: P) => (
+  <Svg {...p}>
+    <circle cx="9" cy="8.5" r="3.2" />
+    <path d="M3.5 19.5a5.5 5.5 0 0 1 11 0" />
+    <path d="M15.5 5.6a3.2 3.2 0 0 1 0 5.8M17 14.4a5.5 5.5 0 0 1 3.5 5.1" />
+  </Svg>
+);
+export const IconBook = (p: P) => (
+  <Svg {...p}>
+    <path d="M4.5 5.5A1.5 1.5 0 0 1 6 4h5v16H6a1.5 1.5 0 0 1-1.5-1.5v-13Z" />
+    <path d="M19.5 5.5A1.5 1.5 0 0 0 18 4h-5v16h5a1.5 1.5 0 0 0 1.5-1.5v-13Z" />
+    <path d="M12 4v16" opacity="0" />
+  </Svg>
+);
+export const IconCalendar = (p: P) => (
+  <Svg {...p}>
+    <rect x="4" y="5.5" width="16" height="14.5" rx="2.2" />
+    <path d="M4 10h16M8.5 3.5V7M15.5 3.5V7" />
+  </Svg>
+);
+export const IconMapPin = (p: P) => (
+  <Svg {...p}>
+    <path d="M12 21s6.5-5.7 6.5-10.4a6.5 6.5 0 1 0-13 0C5.5 15.3 12 21 12 21Z" />
+    <circle cx="12" cy="10.4" r="2.3" />
+  </Svg>
+);
+export const IconLink = (p: P) => (
+  <Svg {...p}>
+    <path d="M10 13.5a4 4 0 0 0 5.7 0l2.1-2.1a4 4 0 0 0-5.6-5.6L11 7" />
+    <path d="M14 10.5a4 4 0 0 0-5.7 0l-2.1 2.1a4 4 0 0 0 5.6 5.6L13 17" />
+  </Svg>
+);
+export const IconInfo = (p: P) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 11v5M12 8h.01" strokeWidth={2} />
+  </Svg>
+);
+export const IconAlert = (p: P) => (
+  <Svg {...p}>
+    <path d="M12 4 2.8 19.5h18.4L12 4Z" />
+    <path d="M12 10v4M12 17h.01" strokeWidth={2} />
+  </Svg>
+);
+export const IconLogOut = (p: P) => (
+  <Svg {...p}>
+    <path d="M14 4.5H6.5A1.5 1.5 0 0 0 5 6v12a1.5 1.5 0 0 0 1.5 1.5H14" />
+    <path d="M11 12h9.5M17 8.5l3.5 3.5-3.5 3.5" />
+  </Svg>
+);
+export const IconEye = (p: P) => (
+  <Svg {...p}>
+    <path d="M2.8 12S6.3 5.8 12 5.8 21.2 12 21.2 12 17.7 18.2 12 18.2 2.8 12 2.8 12Z" />
+    <circle cx="12" cy="12" r="2.8" />
+  </Svg>
+);
+export const IconEyeOff = (p: P) => (
+  <Svg {...p}>
+    <path d="M4 4.5 20 19.5" />
+    <path d="M9.6 6.2A9.7 9.7 0 0 1 12 5.8c5.7 0 9.2 6.2 9.2 6.2a17 17 0 0 1-3.1 3.8M6.4 8A16.8 16.8 0 0 0 2.8 12S6.3 18.2 12 18.2c1 0 1.9-.2 2.8-.5" />
+    <path d="M10 10.3a2.8 2.8 0 0 0 3.8 3.9" />
+  </Svg>
+);
+export const IconSpinner = ({ className = "", size = 18 }: { className?: string; size?: number }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} className={`shrink-0 animate-spin ${className}`} aria-hidden>
+    <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeOpacity="0.25" strokeWidth="2.4" />
+    <path d="M21 12a9 9 0 0 0-9-9" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+  </svg>
 );
 export const IconArrowRight = (p: P) => (
   <Svg {...p}>
@@ -258,31 +424,18 @@ export const IconSignal = ({ bars = 3, ...p }: P & { bars?: 0 | 1 | 2 | 3 }) => 
   </Svg>
 );
 
-/** The mark: two stars on one orbit, each trailing light toward the other. */
+/** The mark: two hearts meeting as one, the same mark as the app icon. */
 export function Monogram({ size = 26, className = "" }: { size?: number; className?: string }) {
-  const id = useId().replace(/:/g, "");
   return (
-    <svg viewBox="10 10 44 44" width={size} height={size} className={className} aria-hidden>
-      <defs>
-        <linearGradient id={`${id}a`} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="var(--gold)" stopOpacity="0" />
-          <stop offset="1" stopColor="var(--gold)" />
-        </linearGradient>
-        <linearGradient id={`${id}b`} x1="1" y1="0" x2="0" y2="0">
-          <stop offset="0" stopColor="var(--gold)" stopOpacity="0" />
-          <stop offset="1" stopColor="var(--gold)" />
-        </linearGradient>
-        <radialGradient id={`${id}s`}>
-          <stop offset="0" stopColor="#fff4dc" />
-          <stop offset="0.6" stopColor="#e7c68a" />
-          <stop offset="1" stopColor="#b98a4a" />
-        </radialGradient>
-      </defs>
-      <circle cx="32" cy="32" r="17" fill="none" stroke="var(--gold)" strokeOpacity="0.3" strokeWidth="1.1" />
-      <path d="M15.26 34.95 A17 17 0 0 1 46.72 23.5" fill="none" stroke={`url(#${id}a)`} strokeWidth="3" strokeLinecap="round" />
-      <path d="M48.74 29.05 A17 17 0 0 1 17.28 40.5" fill="none" stroke={`url(#${id}b)`} strokeWidth="3" strokeLinecap="round" />
-      <circle cx="46.72" cy="23.5" r="4.6" fill={`url(#${id}s)`} />
-      <circle cx="17.28" cy="40.5" r="4.6" fill={`url(#${id}s)`} />
-    </svg>
+    // eslint-disable-next-line @next/next/no-img-element -- static 192px brand mark, served as-is
+    <img
+      src="/icon-192.png"
+      width={size}
+      height={size}
+      alt=""
+      draggable={false}
+      aria-hidden
+      className={`shrink-0 rounded-[23%] object-cover ${className}`}
+    />
   );
 }

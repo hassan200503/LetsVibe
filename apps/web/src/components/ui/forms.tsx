@@ -82,6 +82,7 @@ export function RecoveryForm({
   children,
   className = "",
   submit = "Continue",
+  submitClass = "btn",
   continueHref = "/",
   title = "Save your recovery code",
 }: {
@@ -89,6 +90,7 @@ export function RecoveryForm({
   children: React.ReactNode;
   className?: string;
   submit?: string;
+  submitClass?: string;
   continueHref?: string;
   title?: string;
 }) {
@@ -131,8 +133,8 @@ export function RecoveryForm({
   return (
     <form action={run} className={className}>
       {children}
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <button className="btn" disabled={pending}>
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <button className={submitClass} disabled={pending}>
           {pending ? "Working…" : submit}
         </button>
         {state?.error && (
@@ -170,7 +172,7 @@ export function ConfirmButton({ onConfirm, label = "Delete", question = "Delete 
       onClick={() => {
         if (confirm(question)) start(async () => void (await onConfirm()));
       }}
-      className={`text-xs text-muted hover:text-red-600 ${className}`}
+      className={`inline-flex min-h-8 items-center rounded-full px-2.5 text-xs text-muted transition hover:bg-surface-2 hover:text-red-600 ${className}`}
     >
       {pending ? "…" : label}
     </button>

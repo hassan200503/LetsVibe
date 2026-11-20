@@ -1,0 +1,13 @@
+# Local-only files that must never be uploaded to Vercel.
+.git
+.vercel
+**/node_modules
+**/.next
+**/.turbo
+apps/web/.data
+**/*.log
+
+# Secrets and machine-local env (Vercel supplies its own env vars).
+.env
+.env.*
+PASSWORDS.local.md

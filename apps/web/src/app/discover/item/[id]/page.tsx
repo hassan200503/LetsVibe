@@ -8,6 +8,7 @@ import { getTrend } from "@/lib/trends/query";
 import { TOPICS } from "@/lib/trends/topics";
 import { TrendCardView } from "@/components/feed/trend-card";
 import { Container } from "@/components/ui/page-header";
+import { IconArrowUpRight, IconChevronLeft } from "@/components/icons";
 import { day } from "@/lib/ui/time";
 
 export default async function ItemPage({ params }: PageProps<"/discover/item/[id]">) {
@@ -29,48 +30,50 @@ export default async function ItemPage({ params }: PageProps<"/discover/item/[id
   ).filter((n) => n.note);
   const t = TOPICS[item.topic];
   return (
-    <Container className="pt-8">
-      <Link href={`/discover/${item.topic}`} className="text-sm text-muted hover:text-ink">
-        ← {t.emoji} {t.label}
+    <Container className="pt-5 pb-10 sm:pt-7">
+      <Link href={`/discover/${item.topic}`} className="inline-flex min-h-10 items-center gap-1.5 rounded-full pr-3 text-sm text-muted transition hover:text-ink">
+        <IconChevronLeft size={15} /> {t.emoji} {t.label}
       </Link>
-      <div className="mt-4 grid gap-8 md:grid-cols-[minmax(0,26rem)_1fr]">
-        <TrendCardView item={item} />
-        <div>
-          <h2 className="font-display text-xl font-semibold">About this discovery</h2>
-          <dl className="mt-3 grid grid-cols-[8rem_1fr] gap-y-2 text-sm">
-            <dt className="text-muted">Source</dt>
-            <dd>{item.sourceName}</dd>
-            <dt className="text-muted">Topic</dt>
-            <dd>
-              {t.label} · {item.category}
-            </dd>
-            <dt className="text-muted">{item.contentType === "observation" ? "Shared" : "Published"}</dt>
-            <dd>{day(item.publishedAt)}</dd>
-            {item.sourceUpdatedAt && (
-              <>
-                <dt className="text-muted">Last updated</dt>
-                <dd>{day(item.sourceUpdatedAt)}</dd>
-              </>
-            )}
-            <dt className="text-muted">Retrieved</dt>
-            <dd>{day(item.fetchedAt)}</dd>
-            {item.imageLicense && (
-              <>
-                <dt className="text-muted">Image licence</dt>
-                <dd>{item.imageLicense}</dd>
-              </>
-            )}
+      <div className="mt-3 grid gap-8 md:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] md:gap-10">
+        <div className="md:sticky md:top-4 md:self-start">
+          <TrendCardView item={item} />
+        </div>
+        <div className="min-w-0">
+          <p className="eyebrow flex items-center gap-2 text-accent">
+            <span className="h-px w-6 bg-current opacity-45" aria-hidden />
+            Discovery
+          </p>
+          <h2 className="type-section-title mt-2">About this discovery</h2>
+          <dl className="mt-4 divide-y divide-line rounded-[18px] border border-line bg-surface">
+            {[
+              ["Source", item.sourceName],
+              ["Topic", `${t.label} · ${item.category}`],
+              [item.contentType === "observation" ? "Shared" : "Published", day(item.publishedAt)],
+              ...(item.sourceUpdatedAt ? [["Last updated", day(item.sourceUpdatedAt)] as const] : []),
+              ["Retrieved", day(item.fetchedAt)],
+              ...(item.imageLicense ? [["Image licence", item.imageLicense] as const] : []),
+            ].map(([k, v]) => (
+              <div key={k} className="flex items-baseline gap-4 px-4 py-3 text-sm">
+                <dt className="w-28 shrink-0 text-xs font-semibold uppercase tracking-[0.08em] text-muted">{k}</dt>
+                <dd className="min-w-0 [overflow-wrap:anywhere]">{v}</dd>
+              </div>
+            ))}
           </dl>
-          <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer" className="btn mt-5">
-            Read the original at {item.sourceName} →
+          <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost mt-5">
+            Read the original at {item.sourceName} <IconArrowUpRight size={15} />
           </a>
           {notes.length > 0 && (
-            <div className="mt-8">
-              <h3 className="font-semibold">Notes</h3>
-              <ul className="mt-2 space-y-2">
+            <div className="mt-9">
+              <h3 className="type-section-title text-base">Notes</h3>
+              <ul className="mt-3 space-y-2">
                 {notes.map((n) => (
-                  <li key={n.personId} className="card p-3 text-sm">
-                    <span className="font-semibold">{n.name.split(" ")[0]}:</span> {n.note}
+                  <li key={n.personId} className="flex gap-3 rounded-[16px] border border-line bg-surface-2/60 p-3.5 text-sm">
+                    <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent-soft text-[0.7rem] font-semibold uppercase text-accent" aria-hidden>
+                      {n.name[0]}
+                    </span>
+                    <p className="min-w-0 [overflow-wrap:anywhere]">
+                      <span className="font-semibold">{n.name.split(" ")[0]}:</span> {n.note}
+                    </p>
                   </li>
                 ))}
               </ul>

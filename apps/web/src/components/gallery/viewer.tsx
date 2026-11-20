@@ -8,7 +8,7 @@ import type { MediaCard } from "@/lib/media/queries";
 import { Avatar } from "@/components/avatar";
 import { useMe, useMembers } from "@/components/me-context";
 import { ago, day } from "@/lib/ui/time";
-import { IconHeadphones } from "@/components/icons";
+import { IconArrowDown, IconChevronLeft, IconChevronRight, IconHeadphones, IconMusic, IconTrash, IconUser, IconX } from "@/components/icons";
 
 const EMOJI = ["❤️", "😍", "🥹", "😂", "🔥", "😮"];
 
@@ -66,9 +66,7 @@ function Stage({ item }: { item: MediaCard }) {
   if (item.kind === "song" && item.url) {
     return (
       <div data-world={item.by.theme} className="w-full max-w-md rounded-3xl bg-gradient-to-br from-accent to-accent-2 p-8 text-center text-white shadow-2xl">
-        <p className="text-6xl" aria-hidden>
-          ♪
-        </p>
+        <IconMusic size={54} className="mx-auto opacity-90" aria-hidden />
         <p className="font-display mt-4 text-2xl font-semibold">{item.title ?? "A song"}</p>
         {item.artist && <p className="opacity-80">{item.artist}</p>}
         <StableMedia key={item.id} kind="song" src={item.url} />
@@ -150,17 +148,17 @@ export function Viewer({ items, index, onIndex, onClose, onChanged }: { items: M
       }}
     >
       <div className="relative flex min-h-0 flex-1 items-center justify-center p-3 sm:p-6">
-        <button onClick={onClose} className="absolute right-3 top-3 z-10 grid size-10 place-items-center rounded-full bg-white/10 text-xl hover:bg-white/20" aria-label="Close">
-          ✕
+        <button onClick={onClose} className="absolute right-3 top-3 z-10 grid size-10 place-items-center rounded-full bg-white/10 transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-on-dark" aria-label="Close">
+          <IconX size={18} />
         </button>
         {index > 0 && (
-          <button onClick={() => onIndex(index - 1)} className="absolute left-2 top-1/2 z-10 hidden size-11 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-2xl hover:bg-white/20 sm:grid" aria-label="Previous">
-            ‹
+          <button onClick={() => onIndex(index - 1)} className="absolute left-2 top-1/2 z-10 hidden size-11 -translate-y-1/2 place-items-center rounded-full bg-white/10 transition hover:bg-white/20 sm:grid" aria-label="Previous">
+            <IconChevronLeft size={22} />
           </button>
         )}
         {index < items.length - 1 && (
-          <button onClick={() => onIndex(index + 1)} className="absolute right-2 top-1/2 z-10 hidden size-11 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-2xl hover:bg-white/20 sm:grid" aria-label="Next">
-            ›
+          <button onClick={() => onIndex(index + 1)} className="absolute right-2 top-1/2 z-10 hidden size-11 -translate-y-1/2 place-items-center rounded-full bg-white/10 transition hover:bg-white/20 sm:grid" aria-label="Next">
+            <IconChevronRight size={22} />
           </button>
         )}
         <Stage item={item} />
@@ -225,12 +223,12 @@ export function Viewer({ items, index, onIndex, onClose, onChanged }: { items: M
                 })
               }
             >
-              👤 Set as my profile picture
+              <IconUser size={16} /> Set as my profile picture
             </button>
           )}
           {item.url && (
             <a href={item.url} download className="btn btn-ghost border-white/20 text-white">
-              ⬇ Save
+              <IconArrowDown size={16} /> Save
             </a>
           )}
           {item.by.slug === me.slug && (
@@ -247,7 +245,7 @@ export function Viewer({ items, index, onIndex, onClose, onChanged }: { items: M
                 });
               }}
             >
-              🗑 Delete
+              <IconTrash size={16} /> Delete
             </button>
           )}
         </div>

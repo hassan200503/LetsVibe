@@ -61,13 +61,17 @@ export default async function PremiumPage() {
               Pricing hasn&apos;t been decided, so there is nothing to buy on this screen and no card details are collected. Nothing here charges you. If you need more room before
               then, ask support and they can adjust your limits; the change is audited.
             </p>
-            <button type="button" className="btn btn-primary mt-4" disabled aria-describedby="billing-note">
-              Coming soon
-            </button>
-            <span id="billing-note" className="ml-3 text-xs text-muted">Purchases are disabled in this version.</span>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <button type="button" className="btn" disabled aria-describedby="billing-note">
+                Coming soon
+              </button>
+              <span id="billing-note" className="text-xs text-muted">Purchases are disabled in this version.</span>
+            </div>
           </div>
           <p className="mt-4 text-sm">
-            <a href="/settings#plan" className="text-accent underline underline-offset-4">Back to your plan and usage</a>
+            <a href="/settings#plan" className="inline-flex min-h-8 items-center text-accent underline-offset-4 hover:underline">
+              Back to your plan and usage
+            </a>
           </p>
         </section>
       </Container>

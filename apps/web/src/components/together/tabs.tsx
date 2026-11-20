@@ -22,7 +22,7 @@ export function TogetherTabs() {
           href={t.href}
           aria-current={t.on ? "page" : undefined}
           aria-label={t.full}
-          className={`flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium transition sm:px-4 ${t.on ? "bg-ink text-bg shadow" : "text-muted hover:text-ink"}`}
+          className={`flex min-h-9 items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 sm:px-4 ${t.on ? "bg-ink text-bg shadow" : "text-muted hover:text-ink"}`}
         >
           <Icon size={16} /> {t.label}
           {t.long && <span className="hidden sm:inline">{t.long}</span>}

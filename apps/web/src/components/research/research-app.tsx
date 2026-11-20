@@ -440,17 +440,23 @@ export function ResearchApp({
   );
 
   return (
-    <div data-world="us" className="mx-auto grid max-w-6xl gap-8 px-4 pb-40 pt-6 sm:pt-10 lg:grid-cols-[15.5rem_1fr]">
+    <div data-world="us" className="mx-auto grid max-w-6xl gap-8 px-4 pb-40 pt-6 sm:px-6 sm:pt-10 lg:grid-cols-[15.5rem_1fr]">
       <aside className="hidden lg:block">
         <div className="sticky top-24 max-h-[calc(100dvh-7rem)] overflow-y-auto pr-1">{history}</div>
       </aside>
 
       {drawer && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm lg:hidden" onClick={(e) => e.target === e.currentTarget && setDrawer(false)}>
-          <div className="drawer-in h-full w-[84%] max-w-xs overflow-y-auto border-r border-line bg-bg p-4 pt-5 shadow-[20px_0_60px_-30px_rgb(0_0_0/0.5)]" style={{ paddingTop: "max(1.25rem, env(safe-area-inset-top))" }}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Research history"
+            className="drawer-in h-full w-[84%] max-w-xs overflow-y-auto border-r border-line bg-bg p-4 shadow-[20px_0_60px_-30px_rgb(0_0_0/0.5)]"
+            style={{ paddingTop: "max(1.5rem, env(safe-area-inset-top))" }}
+          >
             <div className="mb-4 flex items-center justify-between">
               <p className="font-lux text-2xl">History</p>
-              <button onClick={() => setDrawer(false)} aria-label="Close history" className="grid size-9 place-items-center rounded-full text-muted hover:bg-surface-2">
+              <button onClick={() => setDrawer(false)} aria-label="Close history" className="grid size-10 place-items-center rounded-full text-muted transition hover:bg-surface-2 hover:text-ink">
                 <IconX size={18} />
               </button>
             </div>

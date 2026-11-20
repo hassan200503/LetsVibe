@@ -15,7 +15,7 @@ export default async function GalleryPage({ searchParams }: PageProps<"/gallery"
   const names = ctx.members.map((m) => m.displayName.split(" ")[0]).join(" & ");
   return (
     <>
-      <PageHeader world="us" eyebrow="Our gallery 📸" title="Everything we share, in one place">
+      <PageHeader world="us" eyebrow="Our gallery" title="Everything we share, in one place">
         Photos, videos and songs from {names}. Whatever one of you posts appears for the other straight away — react, comment, or press
         <strong> Play together</strong> to enjoy it at the same moment, wherever you both are.
       </PageHeader>
