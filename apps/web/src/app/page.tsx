@@ -332,7 +332,7 @@ export default async function Home() {
           <div className="mt-9 grid gap-4 lg:grid-cols-[1.25fr_1fr]">
             {moment && (
               <Link
-                href={moment.type === "photo" ? "/gallery" : "/story"}
+                href={moment.type === "photo" ? "/gallery/all" : "/story"}
                 className={`group relative flex min-h-[26rem] flex-col justify-end overflow-hidden rounded-[28px] ${momentPhoto ? "bg-night" : "stage"}`}
               >
                 {momentPhoto ? (
@@ -373,7 +373,7 @@ export default async function Home() {
             )}
             <div className={`flex flex-col gap-4 ${moment ? "" : "lg:col-span-2"}`}>
               {media.length > 0 && (
-                <Link href="/gallery" className="grid auto-rows-[7.5rem] grid-cols-3 gap-1.5 overflow-hidden rounded-[24px]" aria-label="Open our gallery">
+                <Link href="/gallery/all" className="grid auto-rows-[7.5rem] grid-cols-3 gap-1.5 overflow-hidden rounded-[24px]" aria-label="Open our gallery">
                   {media.slice(0, 5).map((p, i) => (
                     <span key={p.id} className={`relative block overflow-hidden bg-surface-2 ${i === 0 ? "col-span-2 row-span-2" : ""}`}>
                       {/* eslint-disable-next-line @next/next/no-img-element -- signed private thumbnail */}

@@ -7,6 +7,7 @@ import { addYouTube } from "@/lib/actions/media";
 import { kindOf, uploadToGallery } from "@/lib/media/client-upload";
 import { UsageMeter } from "@/components/ui/usage";
 import { IconCamera, IconFilm, IconMusic } from "@/components/icons";
+import { YouTubeDiscovery } from "./discover";
 
 type Job = { key: string; file: File; pct: number; stage: string; error?: string; done?: boolean; ctrl: AbortController };
 type Storage = { used: number; limit: number };
@@ -26,7 +27,10 @@ export function Uploader({ enabled, disabledReason, storage }: { enabled: boolea
   const [yt, ytAction, ytPending] = useActionState(addYouTube, null);
 
   useEffect(() => {
-    if (yt?.ok) qc.invalidateQueries({ queryKey: ["gallery"] });
+    if (yt?.ok) {
+      void qc.invalidateQueries({ queryKey: ["gallery"] });
+      void qc.invalidateQueries({ queryKey: ["gallery-stats"] });
+    }
   }, [yt, qc]);
 
   // Warn before closing the tab mid-upload.
@@ -47,7 +51,8 @@ export function Uploader({ enabled, disabledReason, storage }: { enabled: boolea
       uploadToGallery(job.file, { caption: caption || undefined }, (pct, stage) => update(job.key, { pct, stage }), job.ctrl.signal)
         .then(() => {
           update(job.key, { done: true, pct: 100, stage: "Shared ❤️" });
-          qc.invalidateQueries({ queryKey: ["gallery"] });
+          void qc.invalidateQueries({ queryKey: ["gallery"] });
+          void qc.invalidateQueries({ queryKey: ["gallery-stats"] });
           router.refresh();
         })
         .catch((e) => update(job.key, { error: job.ctrl.signal.aborted ? "Cancelled" : e instanceof Error ? e.message : "Upload failed" }))
@@ -68,90 +73,98 @@ export function Uploader({ enabled, disabledReason, storage }: { enabled: boolea
     pump();
   }
 
-  if (!enabled) {
-    return (
-      <div className="card p-5 text-sm">
-        <p className="font-semibold">Uploads are almost ready</p>
-        <p className="mt-1 text-muted">{disabledReason}</p>
-        <p className="mt-2 text-muted">Meanwhile you can already add songs and videos from YouTube below.</p>
-        <YouTubeForm action={ytAction} pending={ytPending} state={yt} />
-      </div>
-    );
-  }
-
   return (
-    <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-      <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDrag(true);
-        }}
-        onDragLeave={() => setDrag(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDrag(false);
-          add(e.dataTransfer.files);
-        }}
-        className={`card-glow relative flex flex-col items-center justify-center gap-2 border-2 border-dashed p-6 text-center transition ${drag ? "scale-[1.01] border-accent bg-accent-soft" : "border-line hover:border-accent/50"}`}
-      >
-        <span className="flex items-center gap-2" aria-hidden>
-          {[IconCamera, IconFilm, IconMusic].map((Icon, i) => (
-            <span key={i} className="grid size-10 place-items-center rounded-[12px] bg-accent-soft text-accent">
-              <Icon size={18} />
+    <div className="space-y-6">
+      <section aria-labelledby="upload-device-title">
+        <div className="mb-3">
+          <h2 id="upload-device-title" className="type-section-title text-base">
+            Upload from your device
+          </h2>
+          <p className="mt-0.5 text-xs text-muted">Pick from your phone or computer — photos are resized for you.</p>
+        </div>
+        {!enabled ? (
+          <div className="card p-5 text-sm">
+            <p className="font-semibold">Uploads are almost ready</p>
+            <p className="mt-1 text-muted">{disabledReason}</p>
+            <p className="mt-2 text-muted">Meanwhile you can already add songs and videos from YouTube below.</p>
+          </div>
+        ) : (
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDrag(true);
+            }}
+            onDragLeave={() => setDrag(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDrag(false);
+              add(e.dataTransfer.files);
+            }}
+            className={`card-glow relative flex flex-col items-center justify-center gap-2 border-2 border-dashed p-6 text-center transition ${drag ? "scale-[1.01] border-accent bg-accent-soft" : "border-line hover:border-accent/50"}`}
+          >
+            <span className="flex items-center gap-2" aria-hidden>
+              {[IconCamera, IconFilm, IconMusic].map((Icon, i) => (
+                <span key={i} className="grid size-10 place-items-center rounded-[12px] bg-accent-soft text-accent">
+                  <Icon size={18} />
+                </span>
+              ))}
             </span>
-          ))}
-        </span>
-        <p className="type-section-title mt-1">Share photos, videos &amp; songs</p>
-        <p className="type-small max-w-sm text-muted">Drop them here or choose from your phone. They appear for both of you instantly.</p>
-        <input
-          value={caption}
-          onChange={(e) => setCaption(e.target.value)}
-          placeholder="Add a caption for this batch (optional)"
-          className="field mt-2 max-w-md text-sm"
-          aria-label="Caption"
-        />
-        {storage && (
-          <div className="mt-1 w-full max-w-md text-left">
-            <UsageMeter label="Shared storage" kind="bytes" used={storage.used} limit={storage.limit} compact />
+            <p className="type-section-title mt-1">Share photos, videos &amp; songs</p>
+            <p className="type-small max-w-sm text-muted">Drop them here or choose from your phone. They appear for both of you instantly.</p>
+            <input
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              placeholder="Add a caption for this batch (optional)"
+              className="field mt-2 max-w-md text-sm"
+              aria-label="Caption"
+            />
+            {storage && (
+              <div className="mt-1 w-full max-w-md text-left">
+                <UsageMeter label="Shared storage" kind="bytes" used={storage.used} limit={storage.limit} compact />
+              </div>
+            )}
+            <button type="button" className="btn mt-1 px-6 py-3" disabled={full} onClick={() => input.current?.click()}>
+              {full ? "Storage full" : "Choose files"}
+            </button>
+            <input
+              ref={input}
+              type="file"
+              multiple
+              accept="image/*,video/*,audio/*"
+              aria-label="Choose files to upload"
+              tabIndex={-1}
+              disabled={full}
+              className="sr-only"
+              onChange={(e) => {
+                if (e.target.files) add(e.target.files);
+                e.target.value = "";
+              }}
+            />
+            <p className={`text-[0.7rem] ${full ? "text-red-600 dark:text-red-400" : "text-muted"}`}>
+              {full
+                ? "Your shared storage is full. Delete something in the gallery below to make room."
+                : "Photos are resized for you · videos up to 150 MB · audio up to 30 MB. For long videos, add them to YouTube (unlisted) and paste the link."}
+            </p>
           </div>
         )}
-        <button type="button" className="btn mt-1 px-6 py-3" disabled={full} onClick={() => input.current?.click()}>
-          {full ? "Storage full" : "Choose files"}
-        </button>
-        <input
-          ref={input}
-          type="file"
-          multiple
-          accept="image/*,video/*,audio/*"
-          aria-label="Choose files to upload"
-          tabIndex={-1}
-          disabled={full}
-          className="sr-only"
-          onChange={(e) => {
-            if (e.target.files) add(e.target.files);
-            e.target.value = "";
-          }}
-        />
-        <p className={`text-[0.7rem] ${full ? "text-red-600 dark:text-red-400" : "text-muted"}`}>
-          {full
-            ? "Your shared storage is full. Delete something in the gallery below to make room."
-            : "Photos are resized for you · videos up to 150 MB · audio up to 30 MB. For long videos, add them to YouTube (unlisted) and paste the link."}
-        </p>
-      </div>
+      </section>
 
-      <div className="card p-5">
+      <section className="card p-5" aria-labelledby="youtube-add-title">
         <div className="flex items-center gap-2.5">
           <span className="grid size-8 place-items-center rounded-full bg-accent-soft text-accent" aria-hidden>
             <IconMusic size={15} />
           </span>
-          <p className="type-section-title text-base">Add a song or video from YouTube</p>
+          <h2 id="youtube-add-title" className="type-section-title text-base">
+            Add a song or video from YouTube
+          </h2>
         </div>
         <p className="mt-1.5 text-xs text-muted">Full songs, music videos, anything on YouTube. Nothing is uploaded, so there&apos;s no size limit.</p>
         <YouTubeForm action={ytAction} pending={ytPending} state={yt} />
-      </div>
+        <YouTubeDiscovery />
+      </section>
 
       {jobs.length > 0 && (
-        <ul className="space-y-2 lg:col-span-2" aria-live="polite">
+        <ul className="space-y-2" aria-live="polite">
           {jobs.map((j) => {
             const KindIcon = j.file.type.startsWith("video") ? IconFilm : j.file.type.startsWith("audio") ? IconMusic : IconCamera;
             return (

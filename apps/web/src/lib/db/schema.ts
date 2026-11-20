@@ -579,6 +579,8 @@ export const media = pgTable(
     path: text("path"),
     thumbPath: text("thumb_path"),
     youtubeId: text("youtube_id"),
+    /** movies | music | shorts | animation | news — the YouTube shelf this came from */
+    collection: text("collection"),
     mime: text("mime"),
     bytes: integer("bytes"),
     width: integer("width"),
@@ -593,6 +595,7 @@ export const media = pgTable(
   (t) => [
     index("media_couple_created").on(t.coupleId, t.createdAt, t.id),
     index("media_couple_kind").on(t.coupleId, t.kind, t.createdAt),
+    index("media_couple_collection").on(t.coupleId, t.collection, t.createdAt),
     // Lets reactions and comments point at this row and this couple together.
     uniqueIndex("media_id_couple").on(t.id, t.coupleId),
   ],
