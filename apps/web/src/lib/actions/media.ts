@@ -7,7 +7,7 @@ import { getDb } from "@/lib/db/client";
 import { media, mediaComments, mediaReactions, people, roomEvents } from "@/lib/db/schema";
 import { requireCtx } from "@/lib/context";
 import { ALLOWED_TYPES, LIMITS, inspect, newPath, ownsPath, remove, storageMode, type StorageMode } from "@/lib/media/storage";
-import { youtubeIdFrom } from "@/lib/media/youtube";
+import { isDiscoverCategory, youtubeIdFrom } from "@/lib/media/youtube";
 import { storageAvailable } from "@/lib/entitlements/server";
 
 export type Prepared = { ok: true; mode: Exclude<StorageMode, "none">; path: string; thumbPath: string | null } | { ok: false; error: string };
@@ -99,6 +99,25 @@ export async function saveUploaded(input: z.infer<typeof saved>): Promise<{ ok: 
   return { ok: true, id: row.id };
 }
 
+async function youtubeMeta(id: string): Promise<{ title: string | null; artist: string | null }> {
+  try {
+    const res = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(`https://www.youtube.com/watch?v=${id}`)}`, {
+      signal: AbortSignal.timeout(6000),
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const j = (await res.json()) as { title?: string; author_name?: string };
+      return {
+        title: j.title?.slice(0, 200) ?? null,
+        artist: j.author_name?.replace(/ - Topic$/, "").slice(0, 200) ?? null,
+      };
+    }
+  } catch {
+    // The title is a nicety; the video plays without it.
+  }
+  return { title: null, artist: null };
+}
+
 /** Songs and videos from YouTube: full tracks, no storage used. */
 export async function addYouTube(_: unknown, fd: FormData): Promise<{ ok?: boolean; error?: string; message?: string }> {
   const ctx = await requireCtx();
@@ -106,21 +125,55 @@ export async function addYouTube(_: unknown, fd: FormData): Promise<{ ok?: boole
   if (!id) return { error: "That doesn't look like a YouTube link." };
   const kind = fd.get("kind") === "video" ? "video" : "song";
   const caption = String(fd.get("caption") ?? "").trim().slice(0, 2000) || null;
-  let title: string | null = null;
-  let artist: string | null = null;
-  try {
-    const res = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(`https://www.youtube.com/watch?v=${id}`)}`, { signal: AbortSignal.timeout(6000) });
-    if (res.ok) {
-      const j = (await res.json()) as { title?: string; author_name?: string };
-      title = j.title?.slice(0, 200) ?? null;
-      artist = j.author_name?.replace(/ - Topic$/, "").slice(0, 200) ?? null;
-    }
-  } catch {
-    // The title is a nicety; the video plays without it.
-  }
+  const meta = await youtubeMeta(id);
   const db = await getDb();
-  await db.insert(media).values({ coupleId: ctx.relationship.id, addedBy: ctx.me.id, kind, source: "youtube", youtubeId: id, title, artist, caption });
+  await db.insert(media).values({ coupleId: ctx.relationship.id, addedBy: ctx.me.id, kind, source: "youtube", youtubeId: id, title: meta.title, artist: meta.artist, caption });
   revalidatePath("/gallery");
+  return { ok: true, message: kind === "song" ? "Song added 🎶" : "Video added 🎬" };
+}
+
+/** One tap from the live shelves or search: the result gets added with the metadata already on screen. */
+const fromSearch = z.object({
+  videoId: z.string().regex(/^[\w-]{11}$/),
+  collection: z.string().nullable().optional(),
+  kind: z.enum(["song", "video"]).optional(),
+  title: z.string().max(200).nullable().optional(),
+  channel: z.string().max(200).nullable().optional(),
+  durationSec: z.number().nonnegative().max(60 * 60 * 12).nullable().optional(),
+});
+
+export async function addYouTubeFromSearch(input: z.infer<typeof fromSearch>): Promise<{ ok: boolean; message?: string; error?: string }> {
+  const ctx = await requireCtx();
+  const parsed = fromSearch.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "That video doesn't look right." };
+  const { videoId, durationSec } = parsed.data;
+  const collection = isDiscoverCategory(parsed.data.collection) ? parsed.data.collection : null;
+  const kind = parsed.data.kind ?? (collection === "music" ? "song" : "video");
+  const givenTitle = parsed.data.title?.trim().slice(0, 200) || null;
+  const givenArtist = parsed.data.channel?.replace(/ - Topic$/, "").trim().slice(0, 200) || null;
+
+  const db = await getDb();
+  const [existing] = await db
+    .select({ id: media.id })
+    .from(media)
+    .where(and(eq(media.coupleId, ctx.relationship.id), eq(media.source, "youtube"), eq(media.youtubeId, videoId)))
+    .limit(1);
+  if (existing) return { ok: true, message: "Already in your gallery" };
+
+  const meta = givenTitle ? { title: givenTitle, artist: givenArtist } : await youtubeMeta(videoId);
+  await db.insert(media).values({
+    coupleId: ctx.relationship.id,
+    addedBy: ctx.me.id,
+    kind,
+    source: "youtube",
+    youtubeId: videoId,
+    collection,
+    title: meta.title,
+    artist: meta.artist,
+    durationSec: durationSec ?? null,
+  });
+  revalidatePath("/gallery");
+  revalidatePath("/gallery/all");
   return { ok: true, message: kind === "song" ? "Song added 🎶" : "Video added 🎬" };
 }
 

@@ -1,13 +1,14 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { MediaCard } from "@/lib/media/queries";
 import { markGallerySeen } from "@/lib/actions/media";
+import { DISCOVER_CATEGORIES, isDiscoverCategory, type DiscoverCategory } from "@/lib/media/youtube";
 import { Avatar } from "@/components/avatar";
 import { useMembers } from "@/components/me-context";
 import { EmptyState } from "@/components/ui/empty-state";
-import { IconCamera } from "@/components/icons";
+import { IconCamera, IconX } from "@/components/icons";
 import { Viewer } from "./viewer";
 
 const TABS = [
@@ -17,7 +18,17 @@ const TABS = [
   { k: "song", label: "Songs", icon: "🎵" },
 ] as const;
 
+const SHELF_EMOJI: Record<DiscoverCategory, string> = {
+  movies: "🎬",
+  music: "🎵",
+  shorts: "⚡",
+  animation: "🎨",
+  news: "📰",
+};
+
 const fmt = (s: number | null) => (s ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}` : "");
+
+type Page = { items: MediaCard[]; nextCursor: string | null };
 
 function Tile({ item, onOpen }: { item: MediaCard; onOpen: () => void }) {
   const members = useMembers();
@@ -73,25 +84,49 @@ function Tile({ item, onOpen }: { item: MediaCard; onOpen: () => void }) {
   );
 }
 
-export function GalleryGrid({ initialKind }: { initialKind?: string | null }) {
+export function GalleryGrid({
+  initialKind,
+  initialCollection,
+  initialSource,
+  initialPage,
+  showHeading = true,
+}: {
+  initialKind?: string | null;
+  initialCollection?: string | null;
+  initialSource?: string | null;
+  initialPage?: Page;
+  showHeading?: boolean;
+}) {
   const members = useMembers();
-  const [kind, setKind] = useState<string | null>(initialKind ?? null);
+  const qc = useQueryClient();
+  const startKind = initialKind ?? null;
+  const startCollection = isDiscoverCategory(initialCollection) ? initialCollection : null;
+  const startSource = initialSource === "youtube" || initialSource === "upload" ? initialSource : null;
+  const [kind, setKind] = useState<string | null>(startKind);
   const [by, setBy] = useState<string | null>(null);
+  const [collection, setCollection] = useState<DiscoverCategory | null>(startCollection);
+  const [source, setSource] = useState<"youtube" | "upload" | null>(startSource);
   const [open, setOpen] = useState<number | null>(null);
 
+  // The server already rendered one page for exactly this filter set; reuse it.
+  const isServerView = kind === startKind && by === null && collection === startCollection && source === startSource;
+
   const q = useInfiniteQuery({
-    queryKey: ["gallery", kind, by],
-    queryFn: async ({ pageParam }) => {
+    queryKey: ["gallery", kind, by, collection, source],
+    queryFn: async ({ pageParam, signal }) => {
       const qs = new URLSearchParams();
       if (kind) qs.set("kind", kind);
       if (by) qs.set("by", by);
+      if (collection) qs.set("collection", collection);
+      if (source) qs.set("source", source);
       if (pageParam) qs.set("cursor", pageParam);
-      const res = await fetch(`/api/gallery?${qs}`);
+      const res = await fetch(`/api/gallery?${qs}`, { signal });
       if (!res.ok) throw new Error("Couldn't load the gallery");
-      return (await res.json()) as { items: MediaCard[]; nextCursor: string | null };
+      return (await res.json()) as Page;
     },
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextCursor,
+    initialData: isServerView && initialPage ? { pages: [initialPage], pageParams: [null] } : undefined,
     staleTime: 15_000,
     refetchInterval: 30_000,
   });
@@ -99,9 +134,12 @@ export function GalleryGrid({ initialKind }: { initialKind?: string | null }) {
 
   // Opening the gallery counts as having seen what's new (after a moment, so the badges are visible first).
   useEffect(() => {
-    const t = setTimeout(() => markGallerySeen(), 4000);
+    const t = setTimeout(() => {
+      void markGallerySeen();
+      void qc.invalidateQueries({ queryKey: ["gallery-stats"] });
+    }, 4000);
     return () => clearTimeout(t);
-  }, []);
+  }, [qc]);
 
   const sentinel = useRef<HTMLDivElement>(null);
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = q;
@@ -113,8 +151,18 @@ export function GalleryGrid({ initialKind }: { initialKind?: string | null }) {
     return () => io.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  const extraFilter = collection || source;
+
   return (
-    <section>
+    <section aria-labelledby={showHeading ? "shared-gallery-title" : undefined} aria-label={showHeading ? undefined : "Shared gallery"}>
+      {showHeading && (
+        <div className="mb-4">
+          <h2 id="shared-gallery-title" className="font-display text-xl font-semibold tracking-tight">
+            Shared gallery
+          </h2>
+          <p className="mt-0.5 text-xs text-muted">Every photo, video and song you&apos;ve shared — newest first.</p>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-2.5">
         <div className="segmented max-w-full overflow-x-auto no-scrollbar" role="group" aria-label="Filter by kind">
           {TABS.map((t) => (
@@ -136,16 +184,48 @@ export function GalleryGrid({ initialKind }: { initialKind?: string | null }) {
         </div>
       </div>
 
+      {extraFilter && (
+        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+          {collection && (
+            <button type="button" className="chip" onClick={() => setCollection(null)} aria-label={`Clear ${DISCOVER_CATEGORIES[collection].label} filter`}>
+              <span aria-hidden>{SHELF_EMOJI[collection]}</span> {DISCOVER_CATEGORIES[collection].label}
+              <IconX size={12} />
+            </button>
+          )}
+          {source && (
+            <button type="button" className="chip" onClick={() => setSource(null)} aria-label={`Clear ${source === "youtube" ? "YouTube" : "uploaded"} filter`}>
+              {source === "youtube" ? "From YouTube" : "Uploaded by us"}
+              <IconX size={12} />
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="mt-5 grid grid-cols-2 gap-1.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
         {items.map((it, i) => (
           <Tile key={it.id} item={it} onOpen={() => setOpen(i)} />
         ))}
         {(q.isPending || isFetchingNextPage) && Array.from({ length: q.isPending ? 8 : 4 }, (_, i) => <div key={i} className="skeleton aspect-square rounded-[14px] sm:rounded-[16px]" />)}
       </div>
-      {q.isSuccess && items.length === 0 && (
+      {q.isSuccess && items.length === 0 && !extraFilter && (
         <EmptyState className="mt-4" icon={<IconCamera size={20} />} title="Your gallery is waiting for its first memory">
           A selfie, a voice note, a song that reminds you of each other — whatever you share appears here for both of you.
         </EmptyState>
+      )}
+      {q.isSuccess && items.length === 0 && extraFilter && (
+        <div className="card mt-4 flex flex-wrap items-center justify-center gap-3 px-6 py-5 text-center text-sm text-muted">
+          Nothing in this filter yet.
+          <button
+            className="btn btn-ghost"
+            onClick={() => {
+              setCollection(null);
+              setSource(null);
+              setKind(null);
+            }}
+          >
+            Clear filters
+          </button>
+        </div>
       )}
       {q.isError && (
         <div className="card mt-4 flex flex-wrap items-center justify-center gap-3 px-6 py-5 text-center text-sm text-muted">
@@ -166,7 +246,10 @@ export function GalleryGrid({ initialKind }: { initialKind?: string | null }) {
             if (i >= items.length - 3 && hasNextPage) fetchNextPage();
           }}
           onClose={() => setOpen(null)}
-          onChanged={() => q.refetch()}
+          onChanged={() => {
+            void q.refetch();
+            void qc.invalidateQueries({ queryKey: ["gallery-stats"] });
+          }}
         />
       )}
     </section>

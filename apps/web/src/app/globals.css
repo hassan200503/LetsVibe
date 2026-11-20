@@ -476,6 +476,14 @@
   .scrollbar-none-safe::-webkit-scrollbar {
     display: none;
   }
+  /* Horizontal shelves and filter rails: swipeable without a visible bar. */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 
   /* Indigo gets a faint engineering grid. */
   .bg-indigo {

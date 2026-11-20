@@ -39,6 +39,12 @@ Until you add your own, calls fall back to Metered's free public relay (Open Rel
 
 On a free key, Google Search grounding may not be available and busy models sometimes answer "high demand". Research copes: studies come from OpenAlex (free, no key), each model is tried in turn, and every answer says what it was based on.
 
+### Gallery: live YouTube search (free key)
+
+**Gallery** (`/gallery`) has a live YouTube search box and five horizontal shelves — Movies, Music, Shorts, Animation and News — plus one-tap **Add** into the shared gallery. The summary card shows real counts by kind and by shelf, and opens `/gallery/all` for the full gallery. Create a key: console.cloud.google.com → **APIs & Services → Library** → enable **YouTube Data API v3** → **Credentials → Create credentials → API key** (restrict it to the YouTube Data API). Add `YOUTUBE_API_KEY` in Vercel → Project → Settings → Environment Variables (Production) and redeploy. Optional: `YOUTUBE_REGION_CODE` (defaults to `KE`).
+
+The free tier is 10,000 units/day. A search costs 100 units; results are requested with only the fields the cards render, and the first card paints before duration and views arrive from a second, 1-unit details call. Everything is cached globally for 30 minutes, so both of you — and repeat visits — share the same upstream calls. If the daily limit is reached, the panel explains it and recovers when Google's quota resets. Videos stay on YouTube's privacy-enhanced player; nothing is downloaded.
+
 ### Call alerts when the site is closed
 
 Nothing to configure: push keys are derived from `DATABASE_URL` (or `SESSION_SECRET`). After signing in on each phone or computer, tap **Turn on notifications** when asked (or later in **Settings → Calls & alerts**). From then on calls ring and messages pop up on that device even when the site is closed or you've signed out. On an iPhone, first open the site in Safari → Share → **Add to Home Screen**, then sign in from the Home Screen app and turn alerts on there.

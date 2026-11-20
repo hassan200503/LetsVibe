@@ -1,16 +1,17 @@
 import "server-only";
-import { and, count, desc, eq, gt, inArray, ne, sql, type SQL } from "drizzle-orm";
+import { and, count, desc, eq, gt, inArray, max, ne, sql, type SQL } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { media, mediaComments, mediaReactions, people } from "@/lib/db/schema";
 import type { Ctx } from "@/lib/context";
 import { viewUrls } from "./storage";
-import { youtubeThumb } from "./youtube";
+import { DISCOVER_ORDER, isDiscoverCategory, youtubeThumb, type DiscoverCategory } from "./youtube";
 
 export type MediaCard = {
   id: string;
   kind: "photo" | "video" | "song";
   source: "upload" | "youtube";
   youtubeId: string | null;
+  collection: string | null;
   title: string | null;
   artist: string | null;
   caption: string | null;
@@ -55,6 +56,7 @@ export async function toCards(ctx: Ctx, rows: Row[], full = true): Promise<Media
     kind: r.kind as MediaCard["kind"],
     source: r.source as MediaCard["source"],
     youtubeId: r.youtubeId,
+    collection: r.collection,
     title: r.title,
     artist: r.artist,
     caption: r.caption,
@@ -83,6 +85,7 @@ const withPerson = {
   path: media.path,
   thumbPath: media.thumbPath,
   youtubeId: media.youtubeId,
+  collection: media.collection,
   mime: media.mime,
   bytes: media.bytes,
   width: media.width,
@@ -108,7 +111,10 @@ function dec(c: string | null | undefined): [string, string] | null {
 }
 
 /** One page of the shared gallery, newest first, keyset-paginated. */
-export async function galleryPage(ctx: Ctx, opts: { kind?: string | null; by?: string | null; cursor?: string | null; limit?: number }) {
+export async function galleryPage(
+  ctx: Ctx,
+  opts: { kind?: string | null; by?: string | null; collection?: string | null; source?: string | null; cursor?: string | null; limit?: number },
+) {
   const db = await getDb();
   const limit = Math.min(opts.limit ?? 24, 60);
   const c = dec(opts.cursor);
@@ -117,6 +123,8 @@ export async function galleryPage(ctx: Ctx, opts: { kind?: string | null; by?: s
     eq(media.coupleId, ctx.relationship.id),
     eq(media.origin, "gallery"),
     opts.kind && ["photo", "video", "song"].includes(opts.kind) ? eq(media.kind, opts.kind) : undefined,
+    opts.source === "youtube" || opts.source === "upload" ? eq(media.source, opts.source) : undefined,
+    isDiscoverCategory(opts.collection) ? eq(media.collection, opts.collection) : undefined,
     by ? eq(media.addedBy, by.id) : undefined,
     c ? sql`(${media.createdAt}, ${media.id}) < (${c[0]}::timestamptz, ${c[1]}::uuid)` : undefined,
   ];
@@ -171,6 +179,58 @@ export async function unseenCount(ctx: Ctx): Promise<number> {
       ),
     );
   return row?.n ?? 0;
+}
+
+export type GalleryStats = {
+  total: number;
+  photos: number;
+  videos: number;
+  songs: number;
+  uploads: number;
+  youtube: number;
+  /** What was saved from each live shelf; paste-a-link additions have no shelf. */
+  shelves: Record<DiscoverCategory, number>;
+  latestAt: string | null;
+  unseen: number;
+};
+
+/** One round trip for the "Shared gallery" summary on /gallery. */
+export async function galleryStats(ctx: Ctx): Promise<GalleryStats> {
+  const db = await getDb();
+  const couple = eq(media.coupleId, ctx.relationship.id);
+  const inGallery = eq(media.origin, "gallery");
+  const [rows, unseen, [latest]] = await Promise.all([
+    db
+      .select({ kind: media.kind, source: media.source, collection: media.collection, n: count() })
+      .from(media)
+      .where(and(couple, inGallery))
+      .groupBy(media.kind, media.source, media.collection),
+    unseenCount(ctx),
+    db.select({ at: max(media.createdAt) }).from(media).where(and(couple, inGallery)),
+  ]);
+
+  const stats: GalleryStats = {
+    total: 0,
+    photos: 0,
+    videos: 0,
+    songs: 0,
+    uploads: 0,
+    youtube: 0,
+    shelves: Object.fromEntries(DISCOVER_ORDER.map((key) => [key, 0])) as Record<DiscoverCategory, number>,
+    latestAt: latest?.at ? new Date(latest.at).toISOString() : null,
+    unseen,
+  };
+
+  for (const row of rows) {
+    stats.total += row.n;
+    if (row.kind === "photo") stats.photos += row.n;
+    else if (row.kind === "video") stats.videos += row.n;
+    else if (row.kind === "song") stats.songs += row.n;
+    if (row.source === "upload") stats.uploads += row.n;
+    else if (row.source === "youtube") stats.youtube += row.n;
+    if (isDiscoverCategory(row.collection)) stats.shelves[row.collection] += row.n;
+  }
+  return stats;
 }
 
 export async function recentMedia(ctx: Ctx, limit = 6): Promise<MediaCard[]> {
