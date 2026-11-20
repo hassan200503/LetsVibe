@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Fraunces, Inter, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { Providers } from "@/components/providers";
 import { Nav } from "@/components/nav";
 import { MeProvider } from "@/components/me-context";
@@ -71,6 +72,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             )}
           </MeProvider>
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
