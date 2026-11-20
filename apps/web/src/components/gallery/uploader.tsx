@@ -6,6 +6,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { addYouTube } from "@/lib/actions/media";
 import { kindOf, uploadToGallery } from "@/lib/media/client-upload";
 import { UsageMeter } from "@/components/ui/usage";
+import { IconCamera, IconFilm, IconMusic } from "@/components/icons";
 
 type Job = { key: string; file: File; pct: number; stage: string; error?: string; done?: boolean; ctrl: AbortController };
 type Storage = { used: number; limit: number };
@@ -91,13 +92,17 @@ export function Uploader({ enabled, disabledReason, storage }: { enabled: boolea
           setDrag(false);
           add(e.dataTransfer.files);
         }}
-        className={`card-glow relative flex flex-col items-center justify-center gap-2 border-2 border-dashed p-6 text-center transition ${drag ? "scale-[1.01] border-accent bg-accent-soft" : "border-transparent"}`}
+        className={`card-glow relative flex flex-col items-center justify-center gap-2 border-2 border-dashed p-6 text-center transition ${drag ? "scale-[1.01] border-accent bg-accent-soft" : "border-line hover:border-accent/50"}`}
       >
-        <span className="text-4xl" aria-hidden>
-          📸🎬🎵
+        <span className="flex items-center gap-2" aria-hidden>
+          {[IconCamera, IconFilm, IconMusic].map((Icon, i) => (
+            <span key={i} className="grid size-10 place-items-center rounded-[12px] bg-accent-soft text-accent">
+              <Icon size={18} />
+            </span>
+          ))}
         </span>
-        <p className="font-display text-xl font-semibold">Share photos, videos & songs</p>
-        <p className="text-sm text-muted">Drop them here or choose from your phone. They appear for both of you instantly.</p>
+        <p className="type-section-title mt-1">Share photos, videos &amp; songs</p>
+        <p className="type-small max-w-sm text-muted">Drop them here or choose from your phone. They appear for both of you instantly.</p>
         <input
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
@@ -135,34 +140,44 @@ export function Uploader({ enabled, disabledReason, storage }: { enabled: boolea
       </div>
 
       <div className="card p-5">
-        <p className="font-semibold">🎶 Add a song or video from YouTube</p>
-        <p className="mt-1 text-xs text-muted">Full songs, music videos, anything on YouTube. Nothing is uploaded, so there&apos;s no size limit.</p>
+        <div className="flex items-center gap-2.5">
+          <span className="grid size-8 place-items-center rounded-full bg-accent-soft text-accent" aria-hidden>
+            <IconMusic size={15} />
+          </span>
+          <p className="type-section-title text-base">Add a song or video from YouTube</p>
+        </div>
+        <p className="mt-1.5 text-xs text-muted">Full songs, music videos, anything on YouTube. Nothing is uploaded, so there&apos;s no size limit.</p>
         <YouTubeForm action={ytAction} pending={ytPending} state={yt} />
       </div>
 
       {jobs.length > 0 && (
         <ul className="space-y-2 lg:col-span-2" aria-live="polite">
-          {jobs.map((j) => (
-            <li key={j.key} className="card flex items-center gap-3 px-4 py-2.5 text-sm">
-              <span aria-hidden>{j.file.type.startsWith("video") ? "🎬" : j.file.type.startsWith("audio") ? "🎵" : "🖼️"}</span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium">{j.file.name}</p>
-                {j.error ? (
-                  <p className="text-xs text-red-600">{j.error}</p>
-                ) : (
-                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-valuenow={Math.round(j.pct)} aria-valuemin={0} aria-valuemax={100}>
-                    <div className={`h-full rounded-full transition-all ${j.done ? "bg-emerald-500" : "bg-accent"}`} style={{ width: `${Math.max(2, j.pct)}%` }} />
-                  </div>
+          {jobs.map((j) => {
+            const KindIcon = j.file.type.startsWith("video") ? IconFilm : j.file.type.startsWith("audio") ? IconMusic : IconCamera;
+            return (
+              <li key={j.key} className="card flex items-center gap-3 px-4 py-2.5 text-sm">
+                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-surface-2 text-muted" aria-hidden>
+                  <KindIcon size={15} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{j.file.name}</p>
+                  {j.error ? (
+                    <p className="text-xs text-red-600">{j.error}</p>
+                  ) : (
+                    <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-valuenow={Math.round(j.pct)} aria-valuemin={0} aria-valuemax={100}>
+                      <div className={`h-full rounded-full transition-all ${j.done ? "bg-emerald-500" : "bg-accent"}`} style={{ width: `${Math.max(2, j.pct)}%` }} />
+                    </div>
+                  )}
+                </div>
+                <span className="shrink-0 text-right text-xs text-muted">{j.error ? "" : j.done ? j.stage : `${j.stage} ${Math.round(j.pct)}%`}</span>
+                {!j.done && !j.error && (
+                  <button type="button" className="shrink-0 rounded-full px-2 py-1 text-xs text-muted transition hover:bg-surface-2 hover:text-red-600" onClick={() => j.ctrl.abort()}>
+                    Cancel
+                  </button>
                 )}
-              </div>
-              <span className="w-24 text-right text-xs text-muted">{j.error ? "" : j.done ? j.stage : `${j.stage} ${Math.round(j.pct)}%`}</span>
-              {!j.done && !j.error && (
-                <button className="text-xs text-muted hover:text-red-600" onClick={() => j.ctrl.abort()}>
-                  Cancel
-                </button>
-              )}
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
@@ -177,12 +192,12 @@ function YouTubeForm({ action, pending, state }: { action: (fd: FormData) => voi
   return (
     <form ref={form} action={action} className="mt-3 space-y-2">
       <input name="url" required placeholder="Paste a YouTube or YouTube Music link" className="field text-sm" aria-label="YouTube link" />
-      <div className="flex flex-wrap items-center gap-3 text-sm">
-        <label className="flex items-center gap-1.5">
-          <input type="radio" name="kind" value="song" defaultChecked /> 🎵 Song
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <label className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-full border border-line px-3.5 transition has-checked:border-accent has-checked:bg-accent-soft has-checked:text-accent has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent/60">
+          <input type="radio" name="kind" value="song" defaultChecked className="size-3.5 accent-[var(--color-accent)]" /> <IconMusic size={14} aria-hidden /> Song
         </label>
-        <label className="flex items-center gap-1.5">
-          <input type="radio" name="kind" value="video" /> 🎬 Video
+        <label className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-full border border-line px-3.5 transition has-checked:border-accent has-checked:bg-accent-soft has-checked:text-accent has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent/60">
+          <input type="radio" name="kind" value="video" className="size-3.5 accent-[var(--color-accent)]" /> <IconFilm size={14} aria-hidden /> Video
         </label>
       </div>
       <input name="caption" placeholder="Why this one? (optional)" className="field text-sm" aria-label="Note" />

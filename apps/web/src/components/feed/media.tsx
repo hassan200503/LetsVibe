@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { proxied, srcSet } from "@/lib/ui/img";
+import { IconHeadphones, IconMusic, IconPause, IconPlay } from "@/components/icons";
 
 /**
  * A fast, resilient image: small WebP from the image CDN first, the original if
@@ -52,8 +53,8 @@ export function VideoPlayer({ youtubeId, title, thumb }: { youtubeId: string; ti
   return (
     <div className="relative aspect-video w-full overflow-hidden rounded-t-[17px] bg-black">
       {!playing && (
-        <button type="button" onClick={together} disabled={joining} className="absolute right-2 top-2 z-10 rounded-full bg-black/65 px-3 py-1 text-xs font-semibold text-white backdrop-blur transition hover:bg-black/80">
-          {joining ? "Opening…" : "Watch together"}
+        <button type="button" onClick={together} disabled={joining} className="absolute right-2 top-2 z-10 inline-flex h-8 items-center gap-1.5 rounded-full bg-black/65 px-3 text-xs font-semibold text-white backdrop-blur transition hover:bg-black/80">
+          <IconHeadphones size={13} /> {joining ? "Opening…" : "Watch together"}
         </button>
       )}
       {playing ? (
@@ -68,8 +69,8 @@ export function VideoPlayer({ youtubeId, title, thumb }: { youtubeId: string; ti
         <button type="button" onClick={() => setPlaying(true)} className="group absolute inset-0" aria-label={`Play video: ${title}`}>
           <SmartImage src={thumb} alt="" className="size-full object-cover" />
           <span className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-          <span className="absolute left-1/2 top-1/2 grid size-16 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-2xl text-black shadow-xl transition group-hover:scale-110">
-            ▶
+          <span className="absolute left-1/2 top-1/2 grid size-16 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-black shadow-xl transition group-hover:scale-110">
+            <IconPlay size={26} />
           </span>
           <span className="absolute bottom-2 left-3 rounded-md bg-black/60 px-2 py-0.5 text-[0.7rem] font-semibold text-white">Video · with sound</span>
         </button>
@@ -133,12 +134,13 @@ export function SoundPlayer({ id, src, label, credit }: { id: string; src: strin
         aria-label={playing ? `Pause ${label}` : `Play ${label}`}
         className="grid size-11 shrink-0 place-items-center rounded-full bg-accent text-lg text-accent-ink shadow transition hover:scale-105"
       >
-        {state === "loading" ? <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" /> : playing ? "❚❚" : "▶"}
+        {state === "loading" ? <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" /> : playing ? <IconPause size={17} /> : <IconPlay size={17} />}
       </button>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-xs font-semibold">
-          🎵 {label}
-          {state === "error" && <span className="ml-1 font-normal text-red-600"> · couldn&apos;t load, try again</span>}
+        <p className="flex min-w-0 items-center gap-1 text-xs font-semibold">
+          <IconMusic size={12} className="shrink-0 text-accent" aria-hidden />
+          <span className="truncate">{label}</span>
+          {state === "error" && <span className="shrink-0 font-normal text-red-600"> · couldn&apos;t load, try again</span>}
         </p>
         <input
           type="range"

@@ -12,15 +12,18 @@ import { TogetherNow } from "@/components/home/together-now";
 import { QuestionCard } from "@/components/home/question-card";
 import { JourneyClock } from "@/components/home/journey-clock";
 import { RememberLines } from "@/components/home/remember";
-import { Orbit, Starfield } from "@/components/home/sky";
+import { Starfield } from "@/components/home/sky";
+import { LoveStoriesTrailer } from "@/components/home/love-stories";
 import { Avatar } from "@/components/avatar";
-import { IconArrowRight, IconCompass, IconFlask, IconHeart, IconImage, IconMessage, IconSparkle, Monogram } from "@/components/icons";
+import { IconArrowRight, IconCompass, IconFlask, IconHeart, IconImage, IconMapPin, IconMessage, IconSparkle, IconStar, Monogram } from "@/components/icons";
 import { personTopics, todaysDiscovery, type TrendCard } from "@/lib/trends/query";
 import { TOPICS, type TopicKey } from "@/lib/trends/topics";
 import { TrendCardView } from "@/components/feed/trend-card";
+import { storyKindMeta } from "@/lib/story/kinds";
 import { day, nowMs } from "@/lib/ui/time";
 
 const KIND: Record<string, string> = { memory: "A memory", milestone: "A milestone", adventure: "An adventure", plan: "A plan", discovery: "A discovery" };
+const STORY_ICON = { memory: IconHeart, milestone: IconStar, adventure: IconCompass, plan: IconMapPin, discovery: IconSparkle } as const;
 const ordinal = (n: number) => `${n}${["th", "st", "nd", "rd"][n % 100 > 10 && n % 100 < 14 ? 0 : n % 10 < 4 ? n % 10 : 0]}`;
 const firstOf = (p?: { displayName: string }) => p?.displayName.split(" ")[0] ?? "";
 const longDate = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
@@ -103,8 +106,8 @@ function WorldCard({ person, topics }: { person: PublicPerson; topics: TopicKey[
 
 function Today({ title, item, world }: { title: string; item: TrendCard | null; world: string }) {
   return (
-    <div data-world={world} className="flex flex-col">
-      <p className="mb-3 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-accent">{title}</p>
+    <div data-world={world} className="flex min-w-0 flex-col">
+      <p className="mb-3 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-accent [overflow-wrap:anywhere]">{title}</p>
       {item ? <TrendCardView item={item} /> : <p className="tile flex-1 p-6 text-sm text-muted">Nothing fresh enough yet today — sources are checked through the day.</p>}
     </div>
   );
@@ -226,10 +229,8 @@ export default async function Home() {
                   </Link>
                 </div>
               </div>
-              <div className="pointer-events-none absolute -right-20 top-4 w-[300px] opacity-35 sm:-right-12 sm:w-[420px] lg:relative lg:right-auto lg:top-auto lg:w-auto lg:opacity-100">
-                <div className="fade-late" style={{ "--d": "400ms" } as React.CSSProperties}>
-                  <Orbit left={firstOf(ctx.me)} right={firstOf(partner ?? undefined)} className="mx-auto h-auto w-full max-w-[520px]" />
-                </div>
+              <div className="fade-late relative mx-auto w-full max-w-[26rem] lg:z-10 lg:max-w-none" style={{ "--d": "400ms" } as React.CSSProperties}>
+                <LoveStoriesTrailer />
               </div>
             </div>
 
@@ -313,7 +314,7 @@ export default async function Home() {
           eyebrow={todayMemory ? "On this day" : "From our journey"}
           title={todayMemory ? `${yearsAgo} year${yearsAgo === 1 ? "" : "s"} ago today` : "Every step, remembered"}
           action={
-            <Link href="/story" className="group inline-flex items-center gap-1.5 text-sm font-semibold text-gold-ink">
+            <Link href="/story" className="group -my-2 inline-flex min-h-9 items-center gap-1.5 text-sm font-semibold text-gold-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60">
               The whole story <IconArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
             </Link>
           }
@@ -384,7 +385,10 @@ export default async function Home() {
                 </Link>
               )}
               <ol className="tile divide-y divide-line overflow-hidden">
-                {recent.map(({ m, by, byTheme }) => (
+                {recent.map(({ m, by, byTheme }) => {
+                  const meta = storyKindMeta(m.kind);
+                  const KindIcon = STORY_ICON[meta.kind];
+                  return (
                   <li key={m.id}>
                     <Link href="/story" className="flex items-center gap-4 px-5 py-4 transition hover:bg-surface-2/60">
                       {m.photoUrl ? (
@@ -392,18 +396,19 @@ export default async function Home() {
                         <img src={m.photoUrl} alt="" className="size-12 shrink-0 rounded-xl object-cover" loading="lazy" />
                       ) : (
                         <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-gold-soft text-gold-ink" aria-hidden>
-                          {m.kind === "plan" ? <IconCompass size={20} /> : m.kind === "discovery" ? <IconSparkle size={19} /> : <IconHeart size={19} />}
+                          <KindIcon size={19} />
                         </span>
                       )}
                       <div className="min-w-0 flex-1">
                         <p className="font-lux truncate text-xl font-medium leading-tight">{m.title}</p>
                         <p className="mt-0.5 text-xs text-muted">
-                          {day(m.occurredOn)} · <span data-world={byTheme} className="text-accent">{by.split(" ")[0]}</span>
+                          {meta.label} · {day(m.occurredOn)} · <span data-world={byTheme} className="text-accent">{by.split(" ")[0]}</span>
                         </p>
                       </div>
                     </Link>
                   </li>
-                ))}
+                  );
+                })}
                 {recent.length === 0 && (
                   <li className="px-5 py-6 text-sm text-muted">
                     <Link href="/story#add" className="text-accent underline-offset-4 hover:underline">
@@ -431,7 +436,7 @@ export default async function Home() {
       <section className="mx-auto max-w-6xl px-4 pt-16 sm:pt-24">
         <SectionHead eyebrow="Our shared world" title="Discovered today" />
         <p className="mt-3 max-w-2xl text-muted">Chosen each morning from what real sources published in the last few days. The same all day; something new tomorrow.</p>
-        <div className="mt-9 grid gap-6 md:grid-cols-3">
+        <div className="mt-9 grid grid-cols-1 gap-6 md:grid-cols-3">
           <Today title={`${firstOf(ctx.me)} · ${mainTopic(ctx.me.id) ? TOPICS[mainTopic(ctx.me.id)!].label : "Discovery"}`} item={mine} world={ctx.me.theme} />
           {partner && <Today title={`${firstOf(partner)} · ${mainTopic(partner.id) ? TOPICS[mainTopic(partner.id)!].label : "Discovery"}`} item={theirs} world={partner.theme} />}
           <Today title="For both of you" item={shared} world="us" />

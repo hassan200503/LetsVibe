@@ -32,6 +32,12 @@ describe("security headers", () => {
     expect(contentSecurityPolicy("n", { dev: true })).toContain("'unsafe-eval'");
   });
 
+  it("lets the browser upload directly to Vercel Blob", () => {
+    const connect = contentSecurityPolicy("n", { dev: false }).match(/connect-src[^;]*/)?.[0];
+    expect(connect).toContain("https://vercel.com");
+    expect(connect).toContain("https://*.blob.vercel-storage.com");
+  });
+
   it("reports only the directive and masked blocked origin", () => {
     const report = summarizeCspReport({
       "csp-report": {

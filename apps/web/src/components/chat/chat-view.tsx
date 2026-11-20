@@ -453,7 +453,7 @@ export function ChatView({ variant = "page" }: { variant?: "page" | "panel" }) {
 
   const page = variant === "page";
   const shell = page
-    ? "fixed inset-x-0 top-0 z-[45] flex h-dvh flex-col bg-bg sm:static sm:z-auto sm:mx-auto sm:mb-5 sm:mt-4 sm:h-[calc(100dvh-10.25rem)] sm:max-w-3xl sm:overflow-hidden sm:rounded-[28px] sm:border sm:border-line sm:shadow-[0_30px_80px_-40px_rgb(0_0_0/0.35)]"
+    ? "fixed inset-x-0 top-0 z-[45] flex h-dvh flex-col bg-bg md:static md:z-auto md:mx-auto md:mb-6 md:mt-3 md:h-[calc(100dvh-9.75rem)] md:max-w-3xl md:overflow-hidden md:rounded-[28px] md:border md:border-line md:shadow-[0_30px_80px_-40px_rgb(0_0_0/0.35)]"
     : "flex h-full min-h-0 flex-col overflow-hidden rounded-[24px] border border-line bg-bg";
 
   return (
@@ -599,7 +599,7 @@ export function ChatView({ variant = "page" }: { variant?: "page" | "panel" }) {
                 submit();
               }}
             >
-              <input ref={photoInput} type="file" accept="image/*" className="sr-only" tabIndex={-1} onChange={(e) => void choosePhoto(e.target.files?.[0])} />
+              <input ref={photoInput} type="file" accept="image/*" aria-label="Attach a photo" className="sr-only" tabIndex={-1} onChange={(e) => void choosePhoto(e.target.files?.[0])} />
               <button
                 type="button"
                 onClick={() => photoInput.current?.click()}

@@ -1,7 +1,10 @@
 export const baseLight = {
   bg: "#f7f3ec",
+  /** The rail and other persistent chrome sit a shade deeper than the page. */
+  canvas: "#f1ece3",
   surface: "#fffdf9",
   surface2: "#f1ebe1",
+  scrim: "rgb(23 19 15 / 0.42)",
   ink: "#17130f",
   muted: "#6c645a",
   line: "#e5ddd0",
@@ -41,8 +44,10 @@ export const baseLight = {
 
 export const baseDark = {
   bg: "#0b0a0e",
+  canvas: "#0f0d12",
   surface: "#141218",
   surface2: "#1c1a21",
+  scrim: "rgb(0 0 0 / 0.62)",
   ink: "#f2ede5",
   muted: "#a59e9f",
   line: "#2b2831",
@@ -139,6 +144,27 @@ export const type = {
   proseSize: "1.02rem",
   proseLine: "1.75",
   monoLabelSize: "0.66rem",
+  /** Interface ladder: one scale for app chrome and dense content. */
+  pageTitleSize: "clamp(1.9rem, 4.2vw, 2.75rem)",
+  pageTitleLine: "1.08",
+  pageTitleTracking: "-0.022em",
+  pageTitleWeight: "600",
+  sectionTitleSize: "1.35rem",
+  sectionTitleLine: "1.25",
+  sectionTitleTracking: "-0.01em",
+  sectionTitleWeight: "600",
+  cardTitleSize: "1.02rem",
+  cardTitleLine: "1.35",
+  cardTitleWeight: "600",
+  bodySize: "0.95rem",
+  bodyLine: "1.6",
+  smallSize: "0.82rem",
+  smallLine: "1.45",
+  metaSize: "0.72rem",
+  metaLine: "1.35",
+  metaTracking: "0.01em",
+  labelSize: "0.8rem",
+  labelWeight: "600",
 } as const;
 
 export const space = {
@@ -162,16 +188,27 @@ export const space = {
   buttonGlassX: "1.3rem",
   chipY: "0.22rem",
   chipX: "0.7rem",
+  /** Chrome measurements shared by the web shell. */
+  rail: "15.5rem",
+  railCompact: "5rem",
+  container: "72rem",
+  containerWide: "84rem",
+  header: "3.75rem",
+  mobileNav: "4.25rem",
+  touch: "2.75rem",
 } as const;
 
 export const radii = {
   code: "6px",
+  control: "10px",
   field: "12px",
   panel: "14px",
+  media: "16px",
   toast: "18px",
-  card: "20px",
+  card: "18px",
   glow: "22px",
   tile: "24px",
+  sheet: "28px",
   pill: "999px",
 } as const;
 
@@ -192,12 +229,18 @@ export const shadows = {
   toast: "0 24px 60px -24px rgb(0 0 0 / 0.35)",
   stage:
     "0 1px 0 rgb(255 255 255 / 0.07) inset, 0 50px 120px -50px rgb(18 6 20 / 0.6)",
+  /** Interface chrome: quiet, close to the surface, never decorative. */
+  hairline: "0 1px 2px color-mix(in oklab, var(--ink) 4%, transparent)",
+  pop: "0 2px 6px -2px color-mix(in oklab, var(--ink) 12%, transparent), 0 12px 32px -12px color-mix(in oklab, var(--ink) 22%, transparent)",
+  sheet: "0 24px 80px -24px color-mix(in oklab, var(--ink) 38%, transparent)",
 } as const;
 
 export const motion = {
   duration: {
+    press: "110ms",
     fast: "150ms",
     base: "200ms",
+    enter: "240ms",
     lift: "350ms",
     reveal: "320ms",
     slow: "600ms",

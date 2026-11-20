@@ -5,6 +5,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FeedHealth, FeedPage, TrendCard } from "@/lib/trends/query";
 import { TOPICS, type TopicKey } from "@/lib/trends/topics";
 import { ago } from "@/lib/ui/time";
+import { EmptyState } from "@/components/ui/empty-state";
+import { IconAlert, IconCompass } from "@/components/icons";
 import { TrendCardView } from "./trend-card";
 
 export type FeedParams = { feed: "topic" | "for-you" | "together" | "saved"; topic?: TopicKey; category?: string | null; kind?: string | null; as?: string };
@@ -55,13 +57,13 @@ function FreshnessBadge({ health, topics }: { health: FeedHealth; topics: TopicK
 
 function Skeleton() {
   return (
-    <div className="card animate-pulse overflow-hidden" aria-hidden>
-      <div className="aspect-[16/7] bg-surface-2" />
-      <div className="space-y-2 p-4">
-        <div className="h-3 w-24 rounded bg-surface-2" />
-        <div className="h-5 w-11/12 rounded bg-surface-2" />
-        <div className="h-3 w-full rounded bg-surface-2" />
-        <div className="h-3 w-2/3 rounded bg-surface-2" />
+    <div className="card overflow-hidden" aria-hidden>
+      <div className="skeleton aspect-[16/9] rounded-none" />
+      <div className="space-y-2.5 p-4">
+        <div className="skeleton h-3 w-24 rounded" />
+        <div className="skeleton h-5 w-11/12 rounded" />
+        <div className="skeleton h-3 w-full rounded" />
+        <div className="skeleton h-3 w-2/3 rounded" />
       </div>
     </div>
   );
@@ -108,13 +110,16 @@ export function InfiniteFeed({ params, topics, empty }: { params: FeedParams; to
     <section aria-busy={q.isFetching} aria-live="polite">
       {health && <FreshnessBadge health={health} topics={topics} />}
       {(health?.degraded || (q.isError && items.length > 0)) && (
-        <div role="status" className="mt-3 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-200">
-          Some discoveries are temporarily unavailable. Your saved content is still here.
-          {health && health.failingSources.length > 0 && <span className="block text-xs opacity-80">Waiting on: {health.failingSources.join(", ")} — we&apos;ll retry automatically.</span>}
+        <div role="status" className="mt-3 flex items-start gap-2.5 rounded-xl border border-warn/30 bg-warn-soft px-4 py-3 text-sm text-warn">
+          <IconAlert size={16} className="mt-0.5 shrink-0" />
+          <span>
+            Some discoveries are temporarily unavailable. Your saved content is still here.
+            {health && health.failingSources.length > 0 && <span className="mt-0.5 block text-xs opacity-80">Waiting on: {health.failingSources.join(", ")} — we&apos;ll retry automatically.</span>}
+          </span>
         </div>
       )}
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((it, i) => (
           <TrendCardView key={it.id} item={it} priority={i < 3} />
         ))}
@@ -122,17 +127,14 @@ export function InfiniteFeed({ params, topics, empty }: { params: FeedParams; to
       </div>
 
       {q.isError && items.length === 0 && (
-        <div className="card mt-4 p-6 text-center">
-          <p>Some discoveries are temporarily unavailable. Your saved content is still here.</p>
-          <button className="btn mt-3" onClick={() => q.refetch()}>
-            Try again
-          </button>
-        </div>
+        <EmptyState className="mt-4" icon={<IconAlert size={20} />} title="Some discoveries are temporarily unavailable" action={<button className="btn" onClick={() => q.refetch()}>Try again</button>}>
+          Your saved content is still here, and the feeds will pick up again on their own.
+        </EmptyState>
       )}
-      {q.isSuccess && items.length === 0 && (empty ?? <p className="card mt-4 p-6 text-center text-muted">Nothing here yet — new discoveries arrive as sources publish.</p>)}
+      {q.isSuccess && items.length === 0 && (empty ?? <EmptyState className="mt-4" icon={<IconCompass size={20} />} title="Nothing here yet">New discoveries arrive as sources publish — the feed checks through the day.</EmptyState>)}
 
       <div ref={sentinel} className="h-px" />
-      {q.isSuccess && !hasNextPage && items.length > 0 && <p className="py-10 text-center text-sm text-muted">You&apos;ve reached the edge of this universe — for now. New discoveries arrive through the day.</p>}
+      {q.isSuccess && !hasNextPage && items.length > 0 && <p className="type-meta py-10 text-center">You&apos;ve reached the edge of this universe — for now.</p>}
       {q.isError && items.length > 0 && hasNextPage && (
         <div className="py-6 text-center">
           <button className="btn btn-ghost" onClick={() => fetchNextPage()}>

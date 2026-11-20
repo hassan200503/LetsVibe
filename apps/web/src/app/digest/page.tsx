@@ -3,8 +3,11 @@ import { requireCtx } from "@/lib/context";
 import { digest } from "@/lib/data";
 import { personTopics } from "@/lib/trends/query";
 import { TOPICS, type TopicKey } from "@/lib/trends/topics";
+import { Avatar } from "@/components/avatar";
 import { Container, PageHeader } from "@/components/ui/page-header";
+import { IconChevronLeft, IconChevronRight } from "@/components/icons";
 import { day, nowMs } from "@/lib/ui/time";
+import { storyKindMeta } from "@/lib/story/kinds";
 
 export const metadata = { title: "This Week" };
 
@@ -24,31 +27,36 @@ export default async function DigestPage({ searchParams }: PageProps<"/digest">)
 
   return (
     <>
-      <PageHeader world="us" eyebrow="Weekly digest 🗞️" title={back === 0 ? "This week in our world" : `The week of ${day(from)}`}>
-        {day(from)} – {day(to)}.{" "}
-        <Link href={`/digest?weeks=${back + 1}`} className="underline">
-          Previous week
-        </Link>
-        {back > 0 && (
+      <PageHeader
+        world="us"
+        eyebrow="Weekly digest"
+        title={back === 0 ? "This week in our world" : `The week of ${day(from)}`}
+        actions={
           <>
-            {" · "}
-            <Link href={back === 1 ? "/digest" : `/digest?weeks=${back - 1}`} className="underline">
-              Next week
+            <Link href={`/digest?weeks=${back + 1}`} className="btn btn-ghost">
+              <IconChevronLeft size={15} /> Previous
             </Link>
+            {back > 0 && (
+              <Link href={back === 1 ? "/digest" : `/digest?weeks=${back - 1}`} className="btn btn-ghost">
+                Next <IconChevronRight size={15} />
+              </Link>
+            )}
           </>
-        )}
+        }
+      >
+        {day(from)} – {day(to)}. Everything the two of you found, made and noticed.
       </PageHeader>
       <Container world="us">
-        <section className="grid gap-4 sm:grid-cols-4">
+        <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
-            [d.memories.filter((m) => m.kind !== "plan" && m.kind !== "discovery").length, "memories added"],
+            [d.memories.filter((m) => m.kind !== "plan" && m.kind !== "discovery").length, "moments added"],
             [d.memories.filter((m) => m.photoUrl).length, "photos"],
             [d.memories.filter((m) => m.kind === "plan").length, "plans made"],
-            [d.memories.filter((m) => m.kind === "discovery").length + d.learning.length, "shared discoveries & lessons"],
+            [d.memories.filter((m) => m.kind === "discovery").length + d.learning.length, "discoveries & lessons"],
           ].map(([n, label]) => (
-            <div key={label as string} className="card p-4">
-              <p className="font-display text-3xl font-semibold text-accent">{n}</p>
-              <p className="text-xs text-muted">{label}</p>
+            <div key={label as string} className="card p-4 sm:p-5">
+              <p className="font-display text-[2.2rem] font-semibold leading-none tracking-tight text-accent">{n}</p>
+              <p className="type-meta mt-2">{label}</p>
             </div>
           ))}
         </section>
@@ -60,7 +68,10 @@ export default async function DigestPage({ searchParams }: PageProps<"/digest">)
           const records = d.records.filter((r) => r.personId === m.id);
           return (
             <section key={m.id} data-world={m.theme} className="mt-12">
-              <h2 className="font-display text-2xl font-semibold">This week in {first}&apos;s world</h2>
+              <div className="flex items-center gap-3">
+                <Avatar name={m.displayName} url={m.avatarUrl} theme={m.theme} size={32} />
+                <h2 className="type-section-title font-display">This week in {first}&apos;s world</h2>
+              </div>
               <div className="mt-4 grid gap-3 md:grid-cols-2">
                 {topics.map((t) => {
                   const h = highlight.get(t);
@@ -70,14 +81,14 @@ export default async function DigestPage({ searchParams }: PageProps<"/digest">)
                         {TOPICS[t].emoji} {TOPICS[t].label}
                       </p>
                       {h ? (
-                        <a href={h.source_url} target="_blank" rel="noopener noreferrer" className="mt-1 block font-semibold hover:underline">
+                        <a href={h.source_url} target="_blank" rel="noopener noreferrer" className="mt-1.5 block font-semibold leading-snug hover:underline [overflow-wrap:anywhere]">
                           {h.title}
-                          <span className="block text-xs font-normal text-muted">
+                          <span className="type-meta mt-1 block font-normal">
                             {h.source_name} · {day(h.published_at)}
                           </span>
                         </a>
                       ) : (
-                        <p className="mt-1 text-sm text-muted">Nothing published this week.</p>
+                        <p className="mt-1.5 text-sm text-muted">Nothing published this week.</p>
                       )}
                     </div>
                   );
@@ -86,23 +97,26 @@ export default async function DigestPage({ searchParams }: PageProps<"/digest">)
               {(records.length > 0 || saved.length > 0) && (
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                   {records.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold">{m.journalTitle}</h3>
-                      <ul className="mt-2 space-y-1 text-sm">
+                    <div className="rounded-[18px] border border-line bg-surface p-4">
+                      <h3 className="type-label">{m.journalTitle}</h3>
+                      <ul className="mt-2 space-y-1.5 text-sm">
                         {records.map((r) => (
-                          <li key={r.id}>· {r.title}</li>
+                          <li key={r.id} className="flex gap-2">
+                            <span className="text-accent" aria-hidden>·</span>
+                            <span className="min-w-0 [overflow-wrap:anywhere]">{r.title}</span>
+                          </li>
                         ))}
                       </ul>
                     </div>
                   )}
                   {saved.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold">Saved</h3>
-                      <ul className="mt-2 space-y-1 text-sm">
+                    <div className="rounded-[18px] border border-line bg-surface p-4">
+                      <h3 className="type-label">Saved</h3>
+                      <ul className="mt-2 space-y-1.5 text-sm">
                         {[...new Map(saved.map((s) => [s.t.id, s.t])).values()].slice(0, 8).map((t) => (
-                          <li key={t.id}>
-                            ·{" "}
-                            <a href={t.sourceUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                          <li key={t.id} className="flex gap-2">
+                            <span className="text-accent" aria-hidden>·</span>
+                            <a href={t.sourceUrl} target="_blank" rel="noopener noreferrer" className="min-w-0 hover:underline [overflow-wrap:anywhere]">
                               {t.title}
                             </a>
                           </li>
@@ -117,19 +131,19 @@ export default async function DigestPage({ searchParams }: PageProps<"/digest">)
         })}
 
         <section className="mt-12">
-          <h2 className="font-display text-2xl font-semibold">This week in our world</h2>
+          <h2 className="type-section-title font-display">This week in our world</h2>
           {d.memories.length + d.learning.length === 0 ? (
-            <p className="card mt-4 p-6 text-muted">A quiet week for our story. There&apos;s still time to add one.</p>
+            <p className="card mt-4 p-6 text-sm text-muted">A quiet week for our story. There&apos;s still time to add one.</p>
           ) : (
             <ul className="mt-4 space-y-2">
               {d.memories.map((m) => (
-                <li key={m.id} className="card p-3 text-sm">
-                  {m.kind === "plan" ? (m.planDone ? "✅" : "🗺️") : m.kind === "discovery" ? "✨" : "❤️"} {m.title}
+                <li key={m.id} className="card px-4 py-3 text-sm">
+                  <span aria-hidden>{m.kind === "plan" && m.planDone ? "✅" : storyKindMeta(m.kind).icon}</span> {m.title}
                 </li>
               ))}
               {d.learning.map((l) => (
-                <li key={l.id} className="card p-3 text-sm">
-                  📚 {l.title}
+                <li key={l.id} className="card px-4 py-3 text-sm">
+                  <span aria-hidden>📚</span> {l.title}
                 </li>
               ))}
             </ul>

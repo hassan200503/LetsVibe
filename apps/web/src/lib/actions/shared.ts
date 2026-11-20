@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getDb } from "@/lib/db/client";
 import { knowledgeEntries, memories, photos, savedDiscoveries, sharedLearning, trends } from "@/lib/db/schema";
 import { requireCtx } from "@/lib/context";
+import { STORY_KIND_VALUES, storyKindMeta, type StoryKind } from "@/lib/story/kinds";
 import { type ActionState, firstError, formObject, isoDate, optText, optUrl, reqText, today } from "./util";
 
 // ─── Reactions on discoveries ─────────────────────────────────────────────
@@ -97,10 +98,13 @@ export async function saveToVault(trendId: string): Promise<ActionState> {
 
 // ─── Our Story ────────────────────────────────────────────────────────────
 
+const KIND_VALUES = [...STORY_KIND_VALUES] as [StoryKind, ...StoryKind[]];
+
 const memory = z.object({
-  kind: z.enum(["memory", "milestone", "plan", "adventure"]).default("memory"),
+  kind: z.enum(KIND_VALUES).default("memory"),
   title: reqText(200),
   body: optText(5000),
+  why: optText(1000),
   occurredOn: isoDate,
   place: optText(200),
   // An uploaded photo (/api/photos/<id>) or an external https link.
@@ -115,13 +119,20 @@ export async function addMemory(_: ActionState, fd: FormData): Promise<ActionSta
   await db.insert(memories).values({ ...parsed.data, coupleId: ctx.relationship.id, addedBy: ctx.me.id });
   revalidatePath("/story");
   revalidatePath("/");
-  return { ok: true, message: parsed.data.kind === "plan" ? "Plan added" : "Memory kept ❤️" };
+  const meta = storyKindMeta(parsed.data.kind);
+  return {
+    ok: true,
+    message: parsed.data.kind === "plan" ? "Plan added 🗺️" : parsed.data.kind === "discovery" ? "Discovery saved ✨" : `${meta.label} kept ${meta.icon}`,
+  };
 }
 
 export async function togglePlanDone(id: string) {
   const ctx = await requireCtx();
   const db = await getDb();
-  const [m] = await db.select().from(memories).where(and(eq(memories.id, id), eq(memories.coupleId, ctx.relationship.id)));
+  const [m] = await db
+    .select()
+    .from(memories)
+    .where(and(eq(memories.id, id), eq(memories.coupleId, ctx.relationship.id), eq(memories.kind, "plan")));
   if (!m) return;
   await db.update(memories).set({ planDone: !m.planDone }).where(eq(memories.id, id));
   revalidatePath("/story");

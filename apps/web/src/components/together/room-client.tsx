@@ -10,7 +10,7 @@ import { sendNudge } from "@/lib/actions/together";
 import { youtubeIdFrom, youtubeThumb } from "@/lib/media/youtube";
 import { Avatar } from "@/components/avatar";
 import { ChatView } from "@/components/chat/chat-view";
-import { IconHeadphones, IconMessage, IconNext, IconPause, IconPlay } from "@/components/icons";
+import { IconHeadphones, IconMessage, IconMusic, IconNext, IconPause, IconPlay, IconPlus, IconX } from "@/components/icons";
 import { useMe, useMembers } from "@/components/me-context";
 import { usePulse } from "@/components/pulse";
 import { ago } from "@/lib/ui/time";
@@ -94,7 +94,7 @@ export function RoomClient({ initial }: { initial: RoomPayload }) {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={youtubeThumb(ytId, "mq")} alt="" className={`mx-auto size-28 rounded-2xl object-cover shadow-2xl ${state?.playing ? "animate-[spin_12s_linear_infinite] rounded-full" : ""}`} />
                     )}
-                    {!ytId && <p className={`text-6xl ${state?.playing ? "animate-pulse" : ""}`}>♪</p>}
+                    {!ytId && <IconMusic size={54} className={`mx-auto block ${state?.playing ? "animate-pulse" : ""}`} aria-hidden />}
                     <p className="font-display mt-4 text-2xl font-semibold">{title}</p>
                     {state?.current?.artist && <p className="opacity-80">{state.current.artist}</p>}
                   </div>
@@ -177,19 +177,21 @@ export function RoomClient({ initial }: { initial: RoomPayload }) {
             <ul className="mt-2 space-y-2">
               {state.queue.map((q, i) => (
                 <li key={q.id} className="card flex items-center gap-3 p-2 pr-3 text-sm">
-                  <span className="w-5 text-center text-muted">{i + 1}</span>
+                  <span className="w-5 text-center text-xs tabular-nums text-muted">{i + 1}</span>
                   {q.thumbUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={q.thumbUrl} alt="" className="size-10 rounded-lg object-cover" />
                   ) : (
-                    <span className="grid size-10 place-items-center rounded-lg bg-accent-soft">♪</span>
+                    <span className="grid size-10 place-items-center rounded-lg bg-accent-soft text-accent">
+                      <IconMusic size={16} />
+                    </span>
                   )}
                   <span className="min-w-0 flex-1 truncate">{q.title ?? q.caption ?? (q.kind === "video" ? "Video" : "Song")}</span>
-                  <button className="text-xs text-muted hover:text-ink" onClick={() => send({ type: "load", mediaId: q.id, play: true })}>
+                  <button className="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium text-accent transition hover:bg-accent-soft" onClick={() => send({ type: "load", mediaId: q.id, play: true })}>
                     Play now
                   </button>
-                  <button className="text-xs text-muted hover:text-red-600" onClick={() => send({ type: "dequeue", mediaId: q.id })} aria-label="Remove from queue">
-                    ✕
+                  <button className="grid size-8 shrink-0 place-items-center rounded-full text-muted transition hover:bg-surface-2 hover:text-red-600" onClick={() => send({ type: "dequeue", mediaId: q.id })} aria-label="Remove from queue">
+                    <IconX size={14} />
                   </button>
                 </li>
               ))}
@@ -223,23 +225,25 @@ export function RoomClient({ initial }: { initial: RoomPayload }) {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={m.thumbUrl} alt="" loading="lazy" className="size-full object-cover" />
                   ) : (
-                    <span className="grid size-full place-items-center text-3xl">♪</span>
+                    <span className="grid size-full place-items-center bg-accent-soft text-accent">
+                      <IconMusic size={22} />
+                    </span>
                   )}
                 </div>
                 <div className="p-2">
                   <p className="truncate text-xs font-semibold">{m.title ?? m.caption ?? (m.kind === "video" ? "Video" : "Song")}</p>
                   <div className="mt-1 flex gap-2 text-xs">
-                    <button className="font-semibold text-accent" onClick={() => send({ type: "load", mediaId: m.id, play: true })}>
-                      ▶ Play
+                    <button className="inline-flex items-center gap-1 font-semibold text-accent" onClick={() => send({ type: "load", mediaId: m.id, play: true })}>
+                      <IconPlay size={11} /> Play
                     </button>
-                    <button className="text-muted hover:text-ink" onClick={() => send({ type: "queue", mediaId: m.id })}>
-                      + Queue
+                    <button className="inline-flex items-center gap-1 text-muted transition hover:text-ink" onClick={() => send({ type: "queue", mediaId: m.id })}>
+                      <IconPlus size={11} /> Queue
                     </button>
                   </div>
                 </div>
               </div>
             ))}
-            {lib.isPending && Array.from({ length: 3 }, (_, i) => <div key={i} className="aspect-video animate-pulse rounded-2xl bg-surface-2" />)}
+            {lib.isPending && Array.from({ length: 3 }, (_, i) => <div key={i} className="skeleton aspect-video rounded-2xl" />)}
           </div>
 
           {!!lib.data?.discover.length && (

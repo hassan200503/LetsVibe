@@ -21,36 +21,38 @@ export default async function SourcesPage() {
         they ask for.
       </PageHeader>
       <Container world="us">
-        <div className="card overflow-x-auto">
+        <div className="card overflow-x-auto rounded-[18px]">
           <table className="w-full min-w-[40rem] text-sm">
-            <thead className="text-left text-xs uppercase tracking-wider text-muted">
+            <thead className="bg-surface-2/60 text-left text-[0.7rem] uppercase tracking-[0.1em] text-muted">
               <tr>
-                <th className="p-3">Source</th>
-                <th className="p-3">Feed</th>
-                <th className="p-3">Kind</th>
-                <th className="p-3">Last success</th>
-                <th className="p-3">Status</th>
+                <th className="px-4 py-2.5 font-semibold">Source</th>
+                <th className="px-4 py-2.5 font-semibold">Feed</th>
+                <th className="px-4 py-2.5 font-semibold">Kind</th>
+                <th className="px-4 py-2.5 font-semibold">Last success</th>
+                <th className="px-4 py-2.5 font-semibold">Status</th>
               </tr>
             </thead>
             <tbody>
               {SOURCES.map((s) => {
                 const st = states.get(s.key);
                 return (
-                  <tr key={s.key} className="border-t border-line">
-                    <td className="p-3 font-semibold">{s.name}</td>
-                    <td className="p-3">
+                  <tr key={s.key} className="border-t border-line transition hover:bg-surface-2/40">
+                    <td className="px-4 py-3 font-semibold">{s.name}</td>
+                    <td className="px-4 py-3">
                       {TOPICS[s.topic].emoji} {TOPICS[s.topic].label}
                     </td>
-                    <td className="p-3 text-muted">{TIER[s.tier]}</td>
-                    <td className="p-3 text-muted" suppressHydrationWarning>
+                    <td className="px-4 py-3 text-muted">{TIER[s.tier]}</td>
+                    <td className="px-4 py-3 text-muted" suppressHydrationWarning>
                       {st?.lastSuccessAt ? ago(st.lastSuccessAt) : "never"}
                     </td>
-                    <td className="p-3">
+                    <td className="px-4 py-3">
                       {!st || st.consecutiveFailures === 0 ? (
-                        <span className="text-emerald-700 dark:text-emerald-400">● OK</span>
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                          <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden /> OK
+                        </span>
                       ) : (
-                        <span className="text-amber-700 dark:text-amber-300" title={st.lastError ?? ""}>
-                          ● Retrying ({st.consecutiveFailures}× · {st.lastError})
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-300" title={st.lastError ?? ""}>
+                          <span className="size-1.5 rounded-full bg-amber-500" aria-hidden /> Retrying ({st.consecutiveFailures}× · {st.lastError})
                         </span>
                       )}
                     </td>
